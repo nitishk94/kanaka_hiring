@@ -1,0 +1,29 @@
+[2025-05-21 14:45:20,820] INFO in __init__: Flask application startup
+[2025-05-21 14:45:24,745] INFO in __init__: Flask application startup
+[2025-05-21 14:48:09,896] INFO in __init__: Flask application startup
+[2025-05-21 14:48:10,231] INFO in __init__: Flask application startup
+[2025-05-21 14:49:55,948] INFO in __init__: Flask application startup
+[2025-05-21 14:49:56,273] INFO in __init__: Flask application startup
+[2025-05-21 14:53:33,542] INFO in __init__: Flask application startup
+[2025-05-21 14:53:33,866] INFO in __init__: Flask application startup
+[2025-05-21 14:57:02,238] INFO in __init__: Flask application startup
+[2025-05-21 14:57:02,557] INFO in __init__: Flask application startup
+[2025-05-21 15:00:50,780] INFO in __init__: Flask application startup
+[2025-05-21 15:00:51,109] INFO in __init__: Flask application startup
+[2025-05-21 15:01:03,750] INFO in __init__: Flask application startup
+[2025-05-21 15:01:04,067] INFO in __init__: Flask application startup
+[2025-05-21 15:13:03,455] INFO in __init__: Flask application startup
+[2025-05-21 15:13:03,774] INFO in __init__: Flask application startup
+[2025-05-21 15:16:52,518] INFO in __init__: Flask application startup
+[2025-05-21 15:16:52,849] INFO in __init__: Flask application startup
+[2025-05-21 17:42:35,023] INFO in __init__: Flask application startup
+[2025-05-21 17:42:35,344] INFO in __init__: Flask application startup
+[2025-05-21 18:39:25,794] INFO in __init__: Flask application startup
+[2025-05-21 18:39:26,115] INFO in __init__: Flask application startup
+[2025-05-21 18:44:26,212] INFO in __init__: Flask application startup
+[2025-05-21 18:46:58,814] INFO in __init__: Flask application startup
+[2025-05-21 18:55:29,797] INFO in __init__: Flask application startup
+[2025-05-21 18:56:21,487] INFO in __init__: Flask application startup
+[2025-05-21 18:56:21,816] INFO in __init__: Flask application startup
+[2025-05-21 18:56:39,788] INFO in auth: New user registration: Username = john_doe, Email = john_doe@example.com
+[2025-05-21 18:56:54,453] INFO in auth: User logged in: john_doe@example.com
