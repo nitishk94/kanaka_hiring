@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR Dashboard - Kanaka ATS</title>
+    <title>Referrer Dashboard - Kanaka ATS</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -33,7 +33,7 @@
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
             <div>
-                <h1 class="text-3xl font-bold">HR Dashboard</h1>
+                <h1 class="text-3xl font-bold">Referrer Dashboard</h1>
                 <p class="text-gray-600">Welcome back, {{ current_user.username }}</p>
             </div>
             <div class="stats shadow">
@@ -47,13 +47,13 @@
                         </svg>
                     </div>
                     <div class="stat-title">Role</div>
-                    <div class="stat-value text-primary">{{ current_user.role.upper() }}</div>
+                    <div class="stat-value text-primary">{{ current_user.role.title() }}</div>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <a href="{{ url_for('hr.upload_applicants') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <a href="{{ url_for('referrer.refer') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <div class="card-body">
                     <div class="flex items-center gap-4">
                         <div class="bg-primary/10 p-4 rounded-lg">
@@ -64,14 +64,14 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="card-title">Upload Applicants</h2>
-                            <p class="text-gray-600">Add new applicants to the system</p>
+                            <h2 class="card-title">Refer Candidates</h2>
+                            <p class="text-gray-600">Submit a referral and upload CV of the candidate</p>
                         </div>
                     </div>
                 </div>
             </a>
 
-            <a href="{{ url_for('hr.applicants') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <a href="{{ url_for('referrer.status') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <div class="card-body">
                     <div class="flex items-center gap-4">
                         <div class="bg-secondary/10 p-4 rounded-lg">
@@ -83,8 +83,8 @@
                             </svg>
                         </div>
                         <div>
-                            <h2 class="card-title">View Applicants</h2>
-                            <p class="text-gray-600">View and manage applicant list</p>
+                            <h2 class="card-title">View Status</h2>
+                            <p class="text-gray-600">View the status of the referred candidates</p>
                         </div>
                     </div>
                 </div>

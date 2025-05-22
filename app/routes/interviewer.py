@@ -7,9 +7,9 @@ INTERVIEWER_ROLES = ('interviewer', 'admin')
 
 @bp.route('/dashboard')
 @login_required
-@role_required(*INTERVIEWER_ROLES)
+@role_required('interviewer')
 def dashboard():
-    return "Interviewer Dashboard"
+    return render_template('interviewer/dashboard.html')
 
 @bp.route('/interview/<int:id>')
 @login_required

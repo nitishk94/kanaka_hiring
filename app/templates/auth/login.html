@@ -43,6 +43,28 @@
         </div>
     </div>
 
+    {% if request.args.get('registration_success') %}
+        <div class="hero min-h-[calc(100vh-4rem)]">
+            <div class="hero-content text-center">
+                <div class="flex flex-col gap-6">
+                    <div class="card bg-success/10 w-96 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="card-title text-success">Registration Successful!</h2>
+                            <p>
+                                Thank you for registering with Kanaka ATS. An administrator will review your registration and approve your account. 
+                                <br>
+                                You can try logging in after that.
+                            </p>
+                            <div class="card-actions justify-end">
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-success">Got it</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="hero min-h-[calc(100vh-4rem)]">
         <div class="hero-content flex-col lg:flex-row-reverse">
             <div class="text-center lg:text-left lg:ml-8">

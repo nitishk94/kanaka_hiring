@@ -13,8 +13,21 @@
             <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
         </div>
         <div class="flex-none">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-ghost ml-2">Register</a>
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% elif current_user.role == 'hr' %}
+                    <a href="{{ url_for('hr.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% elif current_user.role == 'interviewer' %}
+                    <a href="{{ url_for('interviewer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% elif current_user.role == 'referrer' %}
+                    <a href="{{ url_for('referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost ml-2">Logout</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-ghost ml-2">Register</a>
+            {% endif %}
         </div>
     </div>
 
@@ -38,26 +51,6 @@
             </div>
         </div>
     </div>
-    {% elif request.args.get('registration_success') %}
-    <div class="hero min-h-[calc(100vh-4rem)]">
-        <div class="hero-content text-center">
-            <div class="flex flex-col gap-6">
-                <div class="card bg-success/10 w-96 shadow-sm">
-                    <div class="card-body">
-                        <h2 class="card-title text-success">Registration Successful!</h2>
-                        <p>
-                            Thank you for registering with Kanaka ATS. An administrator will review your registration and approve your account. 
-                            <br>
-                            You can try logging in after that.
-                        </p>
-                        <div class="card-actions justify-end">
-                            <a href="{{ url_for('main.home') }}" class="btn btn-success">Got it</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     {% else %}
     <div class="hero min-h-[calc(100vh-4rem)]">
         <div class="hero-content text-center">
@@ -65,8 +58,10 @@
                 <h1 class="text-5xl font-bold">Welcome to Kanaka ATS</h1>
                 <p class="py-6">Streamline your hiring process with our comprehensive Application Tracking System. Manage applicants, schedule interviews, and make data-driven hiring decisions.</p>
                 <div class="flex justify-center gap-4">
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Get Started</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Learn More</a>
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Get Started</a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Learn More</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

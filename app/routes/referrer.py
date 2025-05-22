@@ -7,9 +7,9 @@ REFERRAL_ROLES = ('referrer', 'admin')
 
 @bp.route('/dashboard')
 @login_required
-@role_required(*REFERRAL_ROLES)
+@role_required('referrer')
 def dashboard():
-    return "Referrer Dashboard"
+    return render_template('referrer/dashboard.html')
 
 @bp.route('/refer', methods=['POST'])
 @login_required

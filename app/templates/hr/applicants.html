@@ -14,17 +14,26 @@
         </div>
         <div class="flex-none">
             <a href="{{ url_for('hr.dashboard') }}" class="btn btn-ghost">Dashboard</a>
-            <a href="{{ url_for('hr.upload_applicants') }}" class="btn btn-primary">Upload Applicants</a>
         </div>
     </div>
 
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold">Applicants List</h1>
-            <div class="stats shadow">
-                <div class="stat">
-                    <div class="stat-title">Total Applicants</div>
-                    <div class="stat-value">{{ applicants|length }}</div>
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('hr.upload_applicants') }}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload Applicants
+                </a>
+                <div class="stats shadow">
+                    <div class="stat">
+                        <div class="stat-title">Total Applicants</div>
+                        <div class="stat-value">{{ applicants|length }}</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -37,8 +46,7 @@
                         <th>Email</th>
                         <th>Phone</th>
                         <th>Experience</th>
-                        <th>Location</th>
-                        <th>Applied Date</th>
+                        <th>Qualification</th>
                         <th>Current Stage</th>
                         <th>Actions</th>
                     </tr>
@@ -49,9 +57,8 @@
                         <td>{{ applicant.name }}</td>
                         <td>{{ applicant.email }}</td>
                         <td>{{ applicant.phone_number }}</td>
-                        <td>{{ applicant.experience }}</td>
-                        <td>{{ applicant.location }}</td>
-                        <td>{{ applicant.applied_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ applicant.experience }} years</td>
+                        <td>{{ applicant.qualification }}</td>
                         <td>
                             <div class="badge badge-{{ 'success' if applicant.current_stage == 'Hired' else 'warning' }}">
                                 {{ applicant.current_stage }}

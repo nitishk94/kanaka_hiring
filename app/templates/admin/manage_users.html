@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Users List - Kanaka ATS</title>
+    <title>Manage Users - Kanaka ATS</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -13,86 +13,63 @@
             <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
         </div>
         <div class="flex-none">
-            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">Dashboard</a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Dashboard</a>
         </div>
     </div>
 
-    <div class="container mx-auto px-4 py-8">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold">Users List</h1>
-            <div class="stats shadow">
-                <div class="stat">
-                    <div class="stat-title">Total Users</div>
-                    <div class="stat-value">{{ users|length }}</div>
-                </div>
+    <div class="hero min-h-[calc(100vh-4rem)]">
+        <div class="hero-content flex-col">
+            <h1 class="text-5xl font-bold">Manage Users</h1>
+            <div class="overflow-x-auto">
+                <table class="table w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr>
+                            <th class="border border-gray-300">Username</th>
+                            <th class="border border-gray-300">Email</th>
+                            <th class="border border-gray-300">Role</th>
+                            <th class="border border-gray-300">Edit</th>
+                            <th class="border border-gray-300">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="border border-gray-300">{{ user.username }}</td>
+                            <td class="border border-gray-300">{{ user.email }}</td>
+                            <td class="border border-gray-300">
+                                {% if not user.role %}
+                                    <form method="POST" action="{{ url_for('admin.manage_users') }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <select name="role" class="select select-bordered">
+                                            <option value="admin">Admin</option>
+                                            <option value="hr">HR</option>
+                                            <option value="interviewer">Interviewer</option>
+                                            <option value="referrer">Referrer</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">Change Role</button>
+                                    </form>
+                                {% else %}
+                                    {% if user.role == 'hr' %}
+                                        {{ user.role.upper() }}
+                                    {% else %}
+                                        {{ user.role.capitalize() }}
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td class="border border-gray-300">
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-primary">Edit User</a>
+                            </td>
+                            <td class="border border-gray-300">
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
+                                    <button type="submit" class="btn btn-error">Delete User</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
-            <table class="table table-zebra">
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>
-                            {% if not user.role %}
-                                <form action="{{ url_for('admin.manage_users') }}" method="POST" class="inline">
-                                    <input type="hidden" name="user_id" value="{{ user.id }}">
-                                    <div class="dropdown">
-                                        <div tabindex="0" role="button" class="btn m-1">Add Role</div>
-                                        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
-                                            <li>
-                                                <button type="submit" name="role" value="admin" class="w-full text-left px-4 py-2 hover:bg-base-200">
-                                                    Admin
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button type="submit" name="role" value="hr" class="w-full text-left px-4 py-2 hover:bg-base-200">
-                                                    HR
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button type="submit" name="role" value="interviewer" class="w-full text-left px-4 py-2 hover:bg-base-200">
-                                                    Interviewer
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button type="submit" name="role" value="referrer" class="w-full text-left px-4 py-2 hover:bg-base-200">
-                                                    Referrer
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </form>
-                            {% else %}
-                                <div class="badge badge-primary">{{ user.role.title() }}</div>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{{ url_for('admin.view_user', user_id=user.id) }}" class="btn btn-error btn-sm">View User</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% if not users %}
-        <div class="text-center py-8">
-            <div class="text-6xl mb-4"></div>
-            <h3 class="text-xl font-semibold mb-2">No Users Yet</h3>
-            <p class="text-gray-600 mb-4">Start by adding some users to see them here.</p>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Add User</a>
-        </div>
-        {% endif %}
     </div>
 </body>
 </html> 

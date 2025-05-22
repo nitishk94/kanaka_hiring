@@ -97,7 +97,14 @@ def filter_applicants():
 @login_required
 @role_required(*HR_ROLES)
 def view_applicant(id):
-    return f"View Applicant {id}"
+    applicant = Applicant.query.get_or_404(id)
+    return render_template('hr/view_applicant.html', applicant=applicant)
+
+@bp.route('/applicants/<int:id>/download_cv')
+@login_required
+@role_required(*HR_ROLES)
+def download_cv(id):
+    return f"Download CV for Applicant {id}"
 
 @bp.route('/applicants/<int:id>/status', methods=['POST'])
 @login_required

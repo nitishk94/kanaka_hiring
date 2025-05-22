@@ -35,7 +35,7 @@ def register():
         db.session.commit()
         
         current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
-        return redirect(url_for('main.home', registration_success=True))
+        return redirect(url_for('auth.login', registration_success=True))
 
     return render_template('auth/register.html')
 
