@@ -5,17 +5,23 @@ from app.auth.decorators import role_required
 from app.models.applicants import Applicant
 from app.extensions import db
 from datetime import date
+import os
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
+
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @bp.route('/dashboard')
 @login_required
 @role_required(*HR_ROLES)
 def dashboard():
-    return "HR Dashboard"
+    return render_template('hr/dashboard.html')
 
-@bp.route('/upload', methods=['POST'])
+@bp.route('/upload_applicants', methods=['GET', 'POST'])
 @login_required
 @role_required(*HR_ROLES)
 def upload_applicants():
@@ -28,7 +34,12 @@ def upload_applicants():
         if missing or not file:
             flash(f'Missing required fields: {", ".join(missing)}', 'warning')
             current_app.logger.info(f"Incomplete form")
-            return redirect(request.url)
+            return redirect(url_for('hr.upload_applicants'))
+
+        if not allowed_file(file.filename):
+            flash('Invalid file type. Please upload PDF, DOC, or DOCX files only.', 'warning')
+            current_app.logger.info(f"Invalid file type: {file.filename}")
+            return redirect(url_for('hr.upload_applicants'))
 
         name = request.form['name']
         email = request.form['email']
@@ -38,7 +49,12 @@ def upload_applicants():
         qualification = request.form['qualification']
         location = request.form['location']
         gender = request.form['gender']
-        is_kanaka_employee = request.form['is_kanaka_employee'].lower() in ['true', '1', 'yes', 'on']
+        is_kanaka_employee = request.form['is_kanaka_employee'] == 'yes'
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
 
         new_applicant = Applicant(
             name=name,
@@ -50,18 +66,17 @@ def upload_applicants():
             location=location,
             gender=gender,
             is_kanaka_employee=is_kanaka_employee,
-            applied_date=date.today(),
+            applied_date=date.today().strftime('%Y-%m-%d'),
             current_stage='Need to schedule test',
-            cv_file_name=secure_filename(file.filename),
-            cv = file.read()
+            cv_file_path=file_path
         )
 
         db.session.add(new_applicant)
         db.session.commit()
 
-        flash('New applicant successfully created!')
+        flash('New applicant successfully created!', 'success')
         current_app.logger.info(f"New applicant (Name = {new_applicant.name}) added by {current_user.username}")
-        return redirect(request.url)
+        return redirect(url_for('hr.upload_applicants'))
 
     return render_template('hr/upload.html')
 
@@ -69,7 +84,8 @@ def upload_applicants():
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
-    return "List of Applicants"
+    applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
+    return render_template('hr/applicants.html', applicants=applicants)
 
 @bp.route('/applicants/filter')
 @login_required

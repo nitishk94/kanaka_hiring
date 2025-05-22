@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicants List - Kanaka ATS</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-base-200">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
+        </div>
+        <div class="flex-none">
+            <a href="{{ url_for('hr.dashboard') }}" class="btn btn-ghost">Dashboard</a>
+            <a href="{{ url_for('hr.upload_applicants') }}" class="btn btn-primary">Upload Applicants</a>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">Applicants List</h1>
+            <div class="stats shadow">
+                <div class="stat">
+                    <div class="stat-title">Total Applicants</div>
+                    <div class="stat-value">{{ applicants|length }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Experience</th>
+                        <th>Location</th>
+                        <th>Applied Date</th>
+                        <th>Current Stage</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for applicant in applicants %}
+                    <tr>
+                        <td>{{ applicant.name }}</td>
+                        <td>{{ applicant.email }}</td>
+                        <td>{{ applicant.phone_number }}</td>
+                        <td>{{ applicant.experience }}</td>
+                        <td>{{ applicant.location }}</td>
+                        <td>{{ applicant.applied_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <div class="badge badge-{{ 'success' if applicant.current_stage == 'Hired' else 'warning' }}">
+                                {{ applicant.current_stage }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <a href="{{ url_for('hr.view_applicant', id=applicant.id) }}" 
+                                   class="btn btn-sm btn-info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    View Details
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not applicants %}
+        <div class="text-center py-8">
+            <div class="text-6xl mb-4">📝</div>
+            <h3 class="text-xl font-semibold mb-2">No Applicants Yet</h3>
+            <p class="text-gray-600 mb-4">Start by uploading some applicants to see them here.</p>
+            <a href="{{ url_for('hr.upload_applicants') }}" class="btn btn-primary">Upload Applicants</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html> 

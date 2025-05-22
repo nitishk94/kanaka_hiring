@@ -1,36 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanaka ATS - Home</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 2rem;
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-        }
-        .links {
-            margin-top: 20px;
-        }
-        a {
-            margin: 0 15px;
-            text-decoration: none;
-            color: #007BFF;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Welcome to Kanaka Application Tracking System</h1>
-    <p>Please log in or register to continue.</p>
-    <div class="links">
-        <a href="{{ url_for('auth.login') }}">Login</a>
-        <a href="{{ url_for('auth.register') }}">Register</a>
+<body class="min-h-screen bg-base-200">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
+        </div>
+        <div class="flex-none">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-ghost ml-2">Register</a>
+        </div>
     </div>
+
+    {% if request.args.get('pending_approval') %}
+    <div class="hero min-h-[calc(100vh-4rem)]">
+        <div class="hero-content text-center">
+            <div class="flex flex-col gap-6">
+                <div class="card bg-error/10 w-96 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="card-title text-error">Account Pending Approval</h2>
+                        <p>
+                            Your account is currently pending admin approval. Please wait for an administrator to review and approve your account.
+                            <br>
+                            Once your account is approved, you will be able to log in and access the system.
+                        </p>
+                        <div class="card-actions justify-end">
+                            <a href="{{ url_for('main.home') }}" class="btn btn-error">Dismiss</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif request.args.get('registration_success') %}
+    <div class="hero min-h-[calc(100vh-4rem)]">
+        <div class="hero-content text-center">
+            <div class="flex flex-col gap-6">
+                <div class="card bg-success/10 w-96 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="card-title text-success">Registration Successful!</h2>
+                        <p>
+                            Thank you for registering with Kanaka ATS. An administrator will review your registration and approve your account. 
+                            <br>
+                            You can try logging in after that.
+                        </p>
+                        <div class="card-actions justify-end">
+                            <a href="{{ url_for('main.home') }}" class="btn btn-success">Got it</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="hero min-h-[calc(100vh-4rem)]">
+        <div class="hero-content text-center">
+            <div class="max-w-md">
+                <h1 class="text-5xl font-bold">Welcome to Kanaka ATS</h1>
+                <p class="py-6">Streamline your hiring process with our comprehensive Application Tracking System. Manage applicants, schedule interviews, and make data-driven hiring decisions.</p>
+                <div class="flex justify-center gap-4">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Get Started</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </body>
 </html>

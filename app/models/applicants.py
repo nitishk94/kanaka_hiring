@@ -15,8 +15,7 @@ class Applicant(db.Model):
     is_kanaka_employee = db.Column(db.Boolean, default = False)
     applied_date = db.Column(db.DateTime)
     current_stage = db.Column(db.String(100))
-    cv_file_name = db.Column(db.String(255))
-    cv = db.Column(db.LargeBinary)
+    cv_file_path = db.Column(db.String(255))
     comments = db.Column(db.Text)
 
     history_entries = db.relationship("RecruitmentHistory", back_populates="applicant", cascade="all, delete-orphan")

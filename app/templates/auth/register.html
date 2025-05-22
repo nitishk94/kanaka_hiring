@@ -1,17 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
-    <form method="POST">
-        Username: <input type="text" name="username"><br>
-        Email: <input type="email" name="email"><br>
-        Password: <input type="password" name="password"><br>
-        Repeat Password: <input type="password" name="password"><br>
-        Role:
-        <select name="role">
-            <option value="admin">Admin</option>
-            <option value="hr">HR</option>
-            <option value="referrer">Referrer</option>
-            <option value="interviewer">Interviewer</option>
-        </select>
-        <button type="submit">Register</button>
-    </form>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Kanaka ATS</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .input.validator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: white;
+        }
+        .input.validator input {
+            border: none;
+            padding: 0;
+            width: 100%;
+            outline: none;
+        }
+        .input.validator input:focus {
+            outline: none;
+        }
+        .validator-hint {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.25rem;
+            margin-left: 2rem;
+        }
+        .validator-hint.hidden {
+            display: none;
+        }
+        .input.validator input:focus + .validator-hint {
+            display: block;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-base-200">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
+        </div>
+        <div class="flex-none">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
+        </div>
+    </div>
+
+    <div class="hero min-h-[calc(100vh-4rem)]">
+        <div class="hero-content flex-col lg:flex-row-reverse">
+            <div class="text-center lg:text-left lg:ml-8">
+                <h1 class="text-5xl font-bold">Create Account!</h1>
+                <p class="py-6">Join Kanaka Application Tracking System to help streamline the hiring process and manage applicants effectively.</p>
+            </div>
+            <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+                <form method="POST" class="card-body">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Username</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </g>
+                            </svg>
+                            <input
+                                type="text"
+                                name="username"
+                                required
+                                placeholder="Enter username"
+                                pattern="[A-Za-z][A-Za-z0-9\-]*"
+                                minlength="3"
+                                maxlength="30"
+                                title="Username must be 3-30 characters, start with a letter, and contain only letters, numbers, or dashes"
+                            />
+                        </label>
+                        <p class="validator-hint hidden">
+                            Username: 3-50 characters, start with a letter
+                            <br />Only letters, numbers, underscores or dashes allowed
+                        </p>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Email</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </g>
+                            </svg>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                placeholder="Enter email"
+                                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                                title="Please enter a valid email address"
+                            />
+                        </label>
+                        <p class="validator-hint hidden">
+                            Enter a valid email address
+                        </p>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Password</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+                                    <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                                </g>
+                            </svg>
+                            <input
+                                type="password"
+                                name="password"
+                                required
+                                placeholder="Password"
+                                minlength="8"
+                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                                title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
+                            />
+                        </label>
+                        <p class="validator-hint hidden">
+                            Must be more than 8 characters, including
+                            <br />At least one number
+                            <br />At least one lowercase letter
+                            <br />At least one uppercase letter
+                        </p>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Confirm Password</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
+                                    <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
+                                </g>
+                            </svg>
+                            <input
+                                type="password"
+                                name="password2"
+                                required
+                                placeholder="Confirm password"
+                                minlength="8"
+                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                                title="Must match the password above"
+                            />
+                        </label>
+                        <p class="validator-hint hidden">
+                            Must match the password above
+                        </p>
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                </form>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} mx-4 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                    {% if category == 'error' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    {% else %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    {% endif %}
+                                </svg>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</body>
 </html>

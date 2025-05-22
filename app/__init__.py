@@ -18,6 +18,10 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres@localhost:5432/kanaka_hiring'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = secrets.token_hex(32)
+    
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     db.init_app(app)
     login_manager.init_app(app)

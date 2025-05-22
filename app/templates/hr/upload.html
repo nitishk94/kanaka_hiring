@@ -1,57 +1,262 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>Upload CV</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CV - Kanaka ATS</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .input.validator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: white;
+        }
+        .input.validator input {
+            border: none;
+            padding: 0;
+            width: 100%;
+            outline: none;
+        }
+        .input.validator input:focus {
+            outline: none;
+        }
+        .validator-hint {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.25rem;
+            margin-left: 2rem;
+        }
+    </style>
 </head>
-<body>
-    <h2>Upload CV & Fill Information</h2>
-    <form method="POST" enctype="multipart/form-data">
-        <label>Name:</label><br>
-        <input type="text" name="name"><br><br>
+<body class="min-h-screen bg-base-200">
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
+        </div>
+        <div class="flex-none">
+            <a href="{{ url_for('hr.dashboard') }}" class="btn btn-ghost">Dashboard</a>
+        </div>
+    </div>
 
-        <label>Email:</label><br>
-        <input type="email" name="email"><br><br>
+    <div class="hero min-h-[calc(100vh-4rem)]">
+        <div class="hero-content flex-col lg:flex-row-reverse">
+            <div class="text-center lg:text-left lg:ml-8">
+                <h1 class="text-5xl font-bold">Upload CV</h1>
+                <p class="py-6">Upload applicant information and CV to start the hiring process. Please ensure all information is accurate and complete.</p>
+            </div>
+            <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+                <form method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="card-body">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Name</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </g>
+                            </svg>
+                            <input
+                                type="text"
+                                name="name"
+                                required
+                                placeholder="Enter full name"
+                                pattern="[A-Za-z\s]+"
+                                title="Please enter a valid name (letters and spaces only)"
+                            />
+                        </label>
+                    </div>
 
-        <label>Phone Number:</label><br>
-        <input type="number" name="phone_number"><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Email</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </g>
+                            </svg>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                placeholder="Enter email"
+                                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                                title="Please enter a valid email address"
+                            />
+                        </label>
+                    </div>
 
-        <label>Experience:</label><br>
-        <input type="text" name="experience"><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Phone Number</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </g>
+                            </svg>
+                            <input
+                                type="tel"
+                                name="phone_number"
+                                required
+                                placeholder="Enter phone number"
+                                pattern="[0-9]{10}"
+                                title="Please enter a valid 10-digit phone number"
+                            />
+                        </label>
+                    </div>
 
-        <label>Qualification:</label><br>
-        <input type="text" name="qualification"><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Age</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                                </g>
+                            </svg>
+                            <input
+                                type="number"
+                                name="age"
+                                required
+                                placeholder="Enter age"
+                                min="18"
+                                max="100"
+                                title="Age must be between 18 and 100"
+                            />
+                        </label>
+                    </div>
 
-        <label>Location:</label><br>
-        <input type="text" name="location"><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Experience</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </g>
+                            </svg>
+                            <input
+                                type="text"
+                                name="experience"
+                                required
+                                placeholder="Enter years of experience"
+                            />
+                        </label>
+                    </div>
 
-        <label>Gender:</label><br>
-        <select name="gender">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-        </select><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Qualification</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </g>
+                            </svg>
+                            <input
+                                type="text"
+                                name="qualification"
+                                required
+                                placeholder="Enter qualification"
+                            />
+                        </label>
+                    </div>
 
-        <label>Kanaka Employee:</label><br>
-        <select name="is_kanaka_employee">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Location</span>
+                        </label>
+                        <label class="input validator">
+                            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </g>
+                            </svg>
+                            <input
+                                type="text"
+                                name="location"
+                                required
+                                placeholder="Enter location"
+                            />
+                        </label>
+                    </div>
 
-        <label>Upload Resume (PDF, DOC, DOCX):</label><br>
-        <input type="file" name="cv"><br><br>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Gender</span>
+                        </label>
+                        <select name="gender" class="select select-bordered w-full" required>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
 
-        <button type="submit">Submit</button>
-    </form>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
-        {% for category, message in messages %}
-          <li style="color: {% if category == 'danger' %}red{% elif category == 'success' %}green{% else %}black{% endif %};">
-            {{ message }}
-          </li>
-        {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Kanaka Employee</span>
+                        </label>
+                        <select name="is_kanaka_employee" class="select select-bordered w-full" required>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Upload Resume</span>
+                        </label>
+                        <input
+                            type="file"
+                            name="cv"
+                            class="file-input file-input-bordered w-full"
+                            accept=".pdf,.doc,.docx"
+                            required
+                        />
+                        <label class="label">
+                            <span class="label-text-alt">Accepted formats: PDF, DOC, DOCX</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} mx-4 mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                    {% if category == 'error' %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    {% else %}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    {% endif %}
+                                </svg>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -2,8 +2,13 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models.users import User
 from app.extensions import db
+import re
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+def is_valid_email(email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -11,33 +16,67 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        role = request.form['role']
 
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists')
+        if not is_valid_email(email):
+            flash('Please enter a valid email address', 'error')
             return redirect(url_for('auth.register'))
 
-        user = User(username=username, email=email, role=role)
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists', 'error')
+            return redirect(url_for('auth.register'))
+
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists', 'error')
+            return redirect(url_for('auth.register'))
+
+        user = User(username=username, email=email)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('Registered successfully!')
+        
         current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('main.home', registration_success=True))
 
     return render_template('auth/register.html')
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        username_or_email = request.form['username_or_email']
         password = request.form['password']
-        user = User.query.filter_by(email=email).first()
+
+        if '@' in username_or_email and not is_valid_email(username_or_email):
+            flash('Please enter a valid email address', 'error')
+            return redirect(url_for('auth.login'))
+
+        user = None
+        if '@' in username_or_email:
+            user = User.query.filter_by(email=username_or_email).first()
+        else:
+            user = User.query.filter_by(username=username_or_email).first()
+
         if user and user.check_password(password):
+            if not user.role:
+                current_app.logger.info(f"Login attempt for unapproved user: {username_or_email}")
+                return redirect(url_for('main.home', pending_approval=True))
+            
             login_user(user)
-            current_app.logger.info(f"User logged in: {user.email}")
-            return render_template('home.html')
-        flash('Invalid email or password')
+            current_app.logger.info(f"User logged in: {user.email}, {user.role}")
+            if user.role == 'hr':
+                return redirect(url_for('hr.dashboard'))
+            elif user.role == 'admin':
+                return redirect(url_for('admin.dashboard'))
+            elif user.role == 'referrer':
+                return redirect(url_for('referrer.dashboard'))
+            elif user.role == 'interviewer':
+                return redirect(url_for('interviewer.dashboard'))
+            else:
+                flash('Invalid user role. Please contact support.', 'error')
+                current_app.logger.info(f"Invalid user: {username_or_email}")
+                return redirect(url_for('auth.login'))
+        
+        flash('Invalid username/email or password', 'error')
+        current_app.logger.info(f"Invalid login attempt: {username_or_email}")
         return redirect(url_for('auth.login'))
 
     return render_template('auth/login.html')
@@ -45,5 +84,9 @@ def login():
 @bp.route('/logout')
 @login_required
 def logout():
+    user_email = current_user.email if current_user.is_authenticated else 'Unknown'
+    current_app.logger.info(f"User logged out: {user_email}")
+
     logout_user()
-    return redirect(url_for('<home page>'))
+    flash("You have been logged out.", "info")
+    return redirect(url_for('main.home'))
