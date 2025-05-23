@@ -2,35 +2,6 @@
 
 {% block title %}Login{% endblock %}
 
-{% block extra_css %}
-<style>
-    .input.validator {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.5rem;
-        background-color: white;
-    }
-    .input.validator input {
-        border: none;
-        padding: 0;
-        width: 100%;
-        outline: none;
-    }
-    .input.validator input:focus {
-        outline: none;
-    }
-    .validator-hint {
-        font-size: 0.875rem;
-        color: #666;
-        margin-top: 0.25rem;
-        margin-left: 2rem;
-    }
-</style>
-{% endblock %}
-
 {% block flash_messages %}{% endblock %}
 
 {% block content %}
@@ -54,6 +25,12 @@
             </div>
         </div>
     </div>
+{% endif %}
+
+{% if session_timeout %}
+<div class="alert alert-warning">
+    Your session has expired. Please log in again.
+</div>
 {% endif %}
 
 <div class="hero min-h-[calc(100vh-4rem)]">

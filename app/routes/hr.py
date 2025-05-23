@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 from app.auth.decorators import role_required
@@ -6,14 +6,29 @@ from app.models.applicants import Applicant
 from app.extensions import db
 from datetime import date
 import os
+import zipfile
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
 
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
+ALLOWED_EXTENSIONS = {'pdf', 'docx'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_file(file):
+    header = file.read(4)
+    file.seek(0)
+    if header == b'%PDF-':
+        return True
+    elif header == b'PK\x03\x04':
+        z = zipfile.ZipFile(file)
+        if 'word/document.xml' in z.namelist():
+            return True
+        else:
+            return False
+    else:
+        return False
 
 @bp.route('/dashboard')
 @login_required
@@ -25,6 +40,10 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def upload_applicants():
+    if 'user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+        
     if request.method == 'POST':
         required_fields = ['name', 'email', 'phone_number', 'age', 'experience', 'qualification', 'location', 'gender',
                            'is_kanaka_employee']
@@ -34,12 +53,27 @@ def upload_applicants():
         if missing or not file:
             flash(f'Missing required fields: {", ".join(missing)}', 'warning')
             current_app.logger.info(f"Incomplete form")
-            return redirect(url_for('hr.upload_applicants'))
+            return render_template('hr/upload.html', form_data=request.form)
 
         if not allowed_file(file.filename):
-            flash('Invalid file type. Please upload PDF, DOC, or DOCX files only.', 'warning')
+            flash('Invalid file type. Please upload PDF or DOCX files only.', 'warning')
             current_app.logger.info(f"Invalid file type: {file.filename}")
-            return redirect(url_for('hr.upload_applicants'))
+            return render_template('hr/upload.html', form_data=request.form)
+        
+        if not validate_file(file):
+            flash('File is corrupted.', 'warning')
+            current_app.logger.warning(f"File is corrupted: {file.filename}")
+            return render_template('hr/upload.html', form_data=request.form)
+
+        MAX_FILE_SIZE = 5 * 1024 * 1024
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+
+        if file_size > MAX_FILE_SIZE:
+            flash('File size exceeds 5MB limit.', 'warning')
+            current_app.logger.info(f"File too large: {file.filename} ({file_size} bytes) uploaded by {current_user.username}")
+            return render_template('hr/upload.html', form_data=request.form)
 
         name = request.form['name']
         email = request.form['email']

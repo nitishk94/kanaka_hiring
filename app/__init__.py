@@ -27,6 +27,12 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = secrets.token_hex(32)
     
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+    
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -34,7 +40,6 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.session_protection = "strong"
-    app.permanent_session_lifetime = timedelta(minutes=10)
     migrate.init_app(app, db)
 
     if not os.path.exists('logs'):

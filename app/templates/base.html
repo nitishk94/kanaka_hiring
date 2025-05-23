@@ -6,6 +6,38 @@
     <title>{% block title %}{% endblock %} - Kanaka ATS</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .input.validator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: white;
+        }
+        .input.validator input {
+            border: none;
+            padding: 0;
+            width: 100%;
+            outline: none;
+        }
+        .input.validator input:focus {
+            outline: none;
+        }
+        .validator-hint {
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.25rem;
+            margin-left: 2rem;
+        }
+        .validator-hint.hidden {
+            display: none;
+        }
+        .input.validator input:focus + .validator-hint {
+            display: block;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -65,6 +97,20 @@
     <main class="container mx-auto px-4 mt-4">
         {% block content %}{% endblock %}
     </main>
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+    <script>
+        function checkSession() {
+            fetch("{{ url_for('main.check_session') }}")
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.active) {
+                        window.location.href = "{{ url_for('auth.login') }}";
+                    }
+                });
+        }
+        
+        setInterval(checkSession, 2 * 60 * 1000);
+    </script>
+    {% endblock %}
 </body>
 </html> 

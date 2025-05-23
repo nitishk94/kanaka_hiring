@@ -2,41 +2,6 @@
 
 {% block title %}Register{% endblock %}
 
-{% block extra_css %}
-<style>
-    .input.validator {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.5rem;
-        background-color: white;
-    }
-    .input.validator input {
-        border: none;
-        padding: 0;
-        width: 100%;
-        outline: none;
-    }
-    .input.validator input:focus {
-        outline: none;
-    }
-    .validator-hint {
-        font-size: 0.875rem;
-        color: #666;
-        margin-top: 0.25rem;
-        margin-left: 2rem;
-    }
-    .validator-hint.hidden {
-        display: none;
-    }
-    .input.validator input:focus + .validator-hint {
-        display: block;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="hero min-h-[calc(100vh-4rem)]">
     <div class="hero-content flex-col lg:flex-row-reverse">
@@ -66,6 +31,7 @@
                             minlength="3"
                             maxlength="30"
                             title="Username must be 3-30 characters, start with a letter, and contain only letters, numbers, or dashes"
+                            value="{{ form_data.username if form_data else '' }}"
                         />
                     </label>
                     <p class="validator-hint hidden">
@@ -92,6 +58,7 @@
                             placeholder="Enter email"
                             pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                             title="Please enter a valid email address"
+                            value="{{ form_data.email if form_data else '' }}"
                         />
                     </label>
                     <p class="validator-hint hidden">

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from app.auth.decorators import role_required
 from app.models.users import User
@@ -36,7 +36,6 @@ def manage_users():
         flash(f'Role {role.title()} assigned successfully', 'success')
         return redirect(url_for('admin.manage_users'))
 
-    # Handle role filtering for GET requests
     role = request.args.get('role', '')
     if role:
         users = User.query.filter_by(role=role).all()

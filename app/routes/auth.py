@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models.users import User
 from app.extensions import db
@@ -32,15 +32,15 @@ def register():
 
         if not is_valid_email(email):
             flash('Please enter a valid email address', 'error')
-            return redirect(url_for('auth.register'))
+            return render_template('auth/register.html', form_data=request.form)
 
         if User.query.filter_by(email=email).first():
             flash('Email already exists', 'error')
-            return redirect(url_for('auth.register'))
+            return render_template('auth/register.html', form_data=request.form)
 
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'error')
-            return redirect(url_for('auth.register'))
+            return render_template('auth/register.html', form_data=request.form)
 
         user = User(username=username, email=email)
         user.set_password(password)

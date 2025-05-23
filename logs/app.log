@@ -25,3 +25,7 @@
 [2025-05-23 11:57:50,761] INFO in auth: Invalid login attempt: shrivatsa26@gmail.com
 [2025-05-23 11:57:59,641] INFO in auth: User logged in: shrivatsa26@gmail.com, hr
 [2025-05-23 11:58:30,570] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-23 13:00:46,180] INFO in __init__: Flask application startup
+[2025-05-23 13:00:46,517] INFO in __init__: Flask application startup
+[2025-05-23 13:00:58,920] INFO in auth: User logged in: shrivatsa26@gmail.com, hr
+[2025-05-23 13:01:00,993] INFO in auth: User logged out: shrivatsa26@gmail.com
