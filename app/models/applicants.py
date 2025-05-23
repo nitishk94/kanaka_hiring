@@ -13,9 +13,12 @@ class Applicant(db.Model):
     location = db.Column(db.String(100))
     gender = db.Column(db.String(100))
     is_kanaka_employee = db.Column(db.Boolean, default = False)
-    applied_date = db.Column(db.DateTime)
+    is_referred = db.Column(db.Boolean, default = False)
+    applied_date = db.Column(db.Date)
     current_stage = db.Column(db.String(100))
     cv_file_path = db.Column(db.String(255))
     comments = db.Column(db.Text)
+    referred_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     history_entries = db.relationship("RecruitmentHistory", back_populates="applicant", cascade="all, delete-orphan")
+    referrer = db.relationship("User", back_populates="referred_applicants")

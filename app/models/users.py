@@ -11,6 +11,8 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20))
 
+    referred_applicants = db.relationship("Applicant", back_populates="referrer", foreign_keys="Applicant.referred_by") 
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")
 

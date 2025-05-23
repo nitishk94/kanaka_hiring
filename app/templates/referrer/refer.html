@@ -1,19 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Upload CV{% endblock %}
+{% block title %}Refer Candidate{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold mb-4">Upload CV</h1>
-        <p class="text-lg text-gray-600">Upload applicant information and CV to start the hiring process.</p>
+        <h1 class="text-4xl font-bold mb-4">Refer Candidate</h1>
+        <p class="text-lg text-gray-600">Refer a candidate to join Kanaka and start the hiring process.</p>
     </div>
 
     <div class="max-w-4xl mx-auto">
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title mb-4">Applicant Information</h2>
-                <form method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="space-y-6">
+                <h2 class="card-title mb-4">Candidate Information</h2>
+                <form method="POST" action="{{ url_for('referrer.refer_candidate') }}" enctype="multipart/form-data" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="form-control">
                             <label class="label" for="name">
@@ -143,17 +143,6 @@
                         </div>
 
                         <div class="form-control">
-                            <label class="label" for="is_kanaka_employee">
-                                <span class="label-text">Kanaka Employee</span>
-                            </label>
-                            <select id="is_kanaka_employee" name="is_kanaka_employee" class="select select-bordered" required>
-                                <option value="">Select option</option>
-                                <option value="yes" {% if form_data and form_data.is_kanaka_employee == 'yes' %}selected{% endif %}>Yes</option>
-                                <option value="no" {% if form_data and form_data.is_kanaka_employee == 'no' %}selected{% endif %}>No</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-control">
                             <label class="label" for="cvFile">
                                 <span class="label-text">CV Upload</span>
                             </label>
@@ -173,7 +162,7 @@
                     </div>
 
                     <div class="form-control mt-6">
-                        <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Submit Referral</button>
                     </div>
                 </form>
             </div>
@@ -208,8 +197,6 @@
                     errorElement.textContent = '';
                     submitBtn.disabled = false;
                 }
-            } else {
-                console.log('No file selected');
             }
         });
 
@@ -241,4 +228,4 @@
         });
     });
 </script>
-{% endblock %}
+{% endblock %} 

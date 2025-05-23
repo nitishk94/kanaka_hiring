@@ -35,4 +35,4 @@ def profile():
 
 @bp.route('/check_session')
 def check_session():
-    return jsonify({'active': 'user_id' in session})
+    return jsonify({'active': current_user.is_authenticated})

@@ -27,7 +27,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = secrets.token_hex(32)
     
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=15)
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -39,7 +39,7 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
-    login_manager.session_protection = "strong"
+    login_manager.session_protection = "basic"
     migrate.init_app(app, db)
 
     if not os.path.exists('logs'):

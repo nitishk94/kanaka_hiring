@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 from app.auth.decorators import role_required
@@ -40,7 +40,7 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def upload_applicants():
-    if 'user_id' not in session:
+    if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
         

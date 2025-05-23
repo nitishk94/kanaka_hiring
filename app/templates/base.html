@@ -106,6 +106,9 @@
                     if (!data.active) {
                         window.location.href = "{{ url_for('auth.login') }}";
                     }
+                })
+                .catch(error => {
+                    console.error('Session check failed:', error);
                 });
         }
         
