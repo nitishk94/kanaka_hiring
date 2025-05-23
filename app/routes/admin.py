@@ -36,8 +36,14 @@ def manage_users():
         flash(f'Role {role.title()} assigned successfully', 'success')
         return redirect(url_for('admin.manage_users'))
 
-    users = User.query.all()
-    return render_template('admin/manage_users.html', users=users)
+    # Handle role filtering for GET requests
+    role = request.args.get('role', '')
+    if role:
+        users = User.query.filter_by(role=role).all()
+    else:
+        users = User.query.all()
+        
+    return render_template('admin/manage_users.html', users=users, selected_role=role)
 
 @bp.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required

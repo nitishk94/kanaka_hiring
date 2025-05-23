@@ -31,6 +31,8 @@
 </style>
 {% endblock %}
 
+{% block flash_messages %}{% endblock %}
+
 {% block content %}
 {% if request.args.get('registration_success') %}
     <div class="hero min-h-[calc(100vh-4rem)]">
@@ -62,6 +64,20 @@
         </div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
             <form method="POST" action="{{ url_for('auth.login') }}" class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            {% if category in ['info', 'success'] %}
+                                <div class="alert alert-{{ category }} mb-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{{ message }}</span>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Username or Email</span>
@@ -115,16 +131,14 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} mx-4 mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                {% if category == 'error' %}
+                        {% if category in ['error'] %}
+                            <div class="alert alert-{{ category }} w-[90%] max-w-sm mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                {% else %}
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                {% endif %}
-                            </svg>
-                            <span>{{ message }}</span>
-                        </div>
+                                </svg>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
             {% endwith %}

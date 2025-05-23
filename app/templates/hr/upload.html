@@ -50,7 +50,7 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">Applicant Information</h2>
                 <form method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text">Name</span>
@@ -174,23 +174,24 @@
                                 <option value="no">No</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="divider">Upload Resume</div>
-
-                    <div class="form-control">
-                        <input
-                            type="file"
-                            name="cv"
-                            id="cvFile"
-                            class="file-input file-input-bordered w-full"
-                            accept=".pdf,.doc,.docx"
-                            required
-                            onchange="validateFile(this)"
-                        />
-                        <label class="label">
-                            <span class="label-text-alt">Accepted formats: PDF, DOC, DOCX (Max size: 5MB)</span>
-                        </label>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">CV Upload</span>
+                            </label>
+                            <div class="space-y-2">
+                                <input
+                                    type="file"
+                                    name="cv"
+                                    id="cvFile"
+                                    class="file-input file-input-bordered w-full"
+                                    accept=".pdf,.doc,.docx"
+                                    required
+                                    onchange="validateFile(this)"
+                                />
+                                <p class="text-sm text-gray-500">Accepted formats: PDF, DOC, DOCX (Max size: 5MB)</p>
+                            </div>
+                        </div>
                     </div>
 
                     <!--

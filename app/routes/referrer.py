@@ -17,8 +17,8 @@ def dashboard():
 def refer_candidate():
     return "Refer a Candidate"
 
-@bp.route('/status/<int:id>')
+@bp.route('/status')
 @login_required
 @role_required(*REFERRAL_ROLES)
-def referral_status(id):
-    return f"Track Status of Referred Candidate {id}"
+def referral_status():
+    return "Track Status of Referred Candidate"

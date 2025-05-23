@@ -11,14 +11,14 @@ INTERVIEWER_ROLES = ('interviewer', 'admin')
 def dashboard():
     return render_template('interviewer/dashboard.html')
 
-@bp.route('/interview/<int:id>')
+@bp.route('/interviews')
 @login_required
 @role_required(*INTERVIEWER_ROLES)
-def view_interview(id):
-    return f"Interview Details for Applicant {id}"
+def view_interviews():
+    return "View Interviews Page"
 
-@bp.route('/interview/<int:id>/submit', methods=['POST'])
+@bp.route('/interviews/submit', methods=['POST'])
 @login_required
 @role_required(*INTERVIEWER_ROLES)
-def submit_feedback(id):
-    return f"Submit Feedback for Applicant {id}"
+def submit_feedbacks():
+    return f"Submit Feedback for Applicant"

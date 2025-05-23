@@ -3,9 +3,37 @@
 {% block title %}Manage Users{% endblock %}
 
 {% block content %}
-<div class="hero min-h-[calc(100vh-4rem)]">
-    <div class="hero-content flex-col">
-        <h1 class="text-5xl font-bold">Manage Users</h1>
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Users List</h1>
+        <div class="flex items-center gap-4">
+            <form method="GET" action="{{ url_for('admin.manage_users') }}" class="flex items-center gap-2">
+                <select name="role" class="select select-bordered">
+                    <option value="" {% if not selected_role %}selected{% endif %}>All Roles</option>
+                    <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="hr" {% if selected_role == 'hr' %}selected{% endif %}>HR</option>
+                    <option value="interviewer" {% if selected_role == 'interviewer' %}selected{% endif %}>Interviewer</option>
+                    <option value="referrer" {% if selected_role == 'referrer' %}selected{% endif %}>Referrer</option>
+                </select>
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Filter
+                </button>
+            </form>
+            <div class="stats shadow">
+                <div class="stat">
+                    <div class="stat-title">Total Users</div>
+                    <div class="stat-value">{{ users|length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-col">
         <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
             <table class="table table-zebra">
                 <thead>
@@ -31,7 +59,7 @@
                                         <option value="interviewer">Interviewer</option>
                                         <option value="referrer">Referrer</option>
                                     </select>
-                                    <button type="submit" class="btn btn-sm btn-primary">Change Role</button>
+                                    <button type="submit" class="btn btn-sm btn-primary">Assign Role</button>
                                 </form>
                             {% else %}
                                 <div class="badge badge-{{ 'success' if user.role == 'admin' else 'warning' }}">

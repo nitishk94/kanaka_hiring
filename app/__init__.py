@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session, flash, redirect, url_for
 from app.extensions import db, login_manager, migrate
 from app.routes import register_routes
 from logging.handlers import RotatingFileHandler
@@ -6,12 +6,20 @@ from app.models.users import User
 import logging
 import secrets
 import os
+from datetime import timedelta
 
 login_manager.login_view = 'auth.login'
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    if session.get('_user_id'):
+        session.clear()
+        flash('Your session has timed out. Please log in again.', 'session_timeout')
+    return redirect(url_for('auth.login'))
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +33,8 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.session_protection = "strong"
+    app.permanent_session_lifetime = timedelta(minutes=10)
     migrate.init_app(app, db)
 
     if not os.path.exists('logs'):
