@@ -1,31 +1,8 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Kanaka ATS</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-base-200">
-    <div class="navbar bg-base-100 shadow-lg">
-        <div class="flex-1">
-            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
-        </div>
-        <div class="flex-none">
-            <a href="{% if user.role == 'admin' %}
-                        {{ url_for('admin.dashboard') }}
-                    {% elif user.role == 'hr' %}
-                        {{ url_for('hr.dashboard') }}
-                    {% elif user.role == 'interviewer' %}
-                        {{ url_for('interviewer.dashboard') }}
-                    {% elif user.role == 'referrer' %}
-                        {{ url_for('referrer.dashboard') }}
-                    {% endif %}" 
-            class="btn btn-ghost">Dashboard</a>
-        </div>
-    </div>
+{% extends "base.html" %}
 
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold">User Profile</h1>
@@ -63,5 +40,4 @@
             </form>
         </div>
     </div>
-</body>
-</html> 
+{% endblock %} 

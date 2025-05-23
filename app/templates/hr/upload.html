@@ -1,290 +1,269 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload CV - Kanaka ATS</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .input.validator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            background-color: white;
-        }
-        .input.validator input {
-            border: none;
-            padding: 0;
-            width: 100%;
-            outline: none;
-        }
-        .input.validator input:focus {
-            outline: none;
-        }
-        .validator-hint {
-            font-size: 0.875rem;
-            color: #666;
-            margin-top: 0.25rem;
-            margin-left: 2rem;
-        }
-        .upload-progress {
-            display: none;
-            margin-top: 1rem;
-        }
-        .upload-progress.active {
-            display: block;
-        }
-    </style>
-</head>
-<body class="min-h-screen bg-base-200">
-    <div class="navbar bg-base-100 shadow-lg">
-        <div class="flex-1">
-            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
-        </div>
-        <div class="flex-none">
-            <a href="{{ url_for('hr.dashboard') }}" class="btn btn-ghost">Dashboard</a>
-        </div>
+{% extends "base.html" %}
+
+{% block title %}Upload CV{% endblock %}
+
+{% block styles %}
+<style>
+    .input.validator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        background-color: white;
+    }
+    .input.validator input {
+        border: none;
+        padding: 0;
+        width: 100%;
+        outline: none;
+    }
+    .input.validator input:focus {
+        outline: none;
+    }
+    .validator-hint {
+        font-size: 0.875rem;
+        color: #666;
+        margin-top: 0.25rem;
+        margin-left: 2rem;
+    }
+    .upload-progress {
+        display: none;
+        margin-top: 1rem;
+    }
+    .upload-progress.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-4">Upload CV</h1>
+        <p class="text-lg text-gray-600">Upload applicant information and CV to start the hiring process.</p>
     </div>
 
-    <div class="container mx-auto px-4 py-8">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold mb-4">Upload CV</h1>
-            <p class="text-lg text-gray-600">Upload applicant information and CV to start the hiring process.</p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Applicant Information Section -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">Applicant Information</h2>
-                    <form method="POST" action="{{ url_for('hr.upload_applicants') }}" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Name</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    required
-                                    placeholder="Enter full name"
-                                    pattern="[A-Za-z\s]+"
-                                    title="Please enter a valid name (letters and spaces only)"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Email</span>
-                                </label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    required
-                                    placeholder="Enter email"
-                                    pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                                    title="Please enter a valid email address"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Phone Number</span>
-                                </label>
-                                <input
-                                    type="tel"
-                                    name="phone_number"
-                                    required
-                                    placeholder="Enter phone number"
-                                    pattern="[0-9]{10}"
-                                    title="Please enter a valid 10-digit phone number"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Age</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    name="age"
-                                    required
-                                    placeholder="Enter age"
-                                    min="18"
-                                    max="100"
-                                    title="Age must be between 18 and 100"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Experience (years)</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    name="experience"
-                                    required
-                                    placeholder="Enter years of experience"
-                                    min="0"
-                                    max="50"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Qualification</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="qualification"
-                                    required
-                                    placeholder="Enter qualification"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Location</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    name="location"
-                                    required
-                                    placeholder="Enter location"
-                                    class="input input-bordered"
-                                />
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Gender</span>
-                                </label>
-                                <select name="gender" class="select select-bordered" required>
-                                    <option value="">Select gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                </select>
-                            </div>
-
-                            <div class="form-control">
-                                <label class="label">
-                                    <span class="label-text">Kanaka Employee</span>
-                                </label>
-                                <select name="is_kanaka_employee" class="select select-bordered" required>
-                                    <option value="">Select option</option>
-                                    <option value="yes">Yes</option>
-                                    <option value="no">No</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-control mt-6">
-                            <button type="submit" class="btn btn-primary">Submit Application</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- File Upload Section -->
-            <div class="card bg-base-100 shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">Upload Resume</h2>
-                    <form id="uploadForm" method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="space-y-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Applicant Information</h2>
+                <form method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="form-control">
-                            <input
-                                type="file"
-                                name="cv"
-                                id="cvFile"
-                                class="file-input file-input-bordered w-full"
-                                accept=".pdf,.doc,.docx"
-                                required
-                                onchange="validateFile(this)"
-                            />
                             <label class="label">
-                                <span class="label-text-alt">Accepted formats: PDF, DOC, DOCX (Max size: 5MB)</span>
+                                <span class="label-text">Name</span>
                             </label>
+                            <input
+                                type="text"
+                                name="name"
+                                required
+                                placeholder="Enter full name"
+                                pattern="[A-Za-z\s]+"
+                                title="Please enter a valid name (letters and spaces only)"
+                                class="input input-bordered"
+                            />
                         </div>
 
-                        <div class="upload-progress" id="uploadProgress">
-                            <progress class="progress progress-primary w-full" value="0" max="100"></progress>
-                            <p class="text-center mt-2" id="uploadStatus">Uploading...</p>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Email</span>
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                placeholder="Enter email"
+                                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                                title="Please enter a valid email address"
+                                class="input input-bordered"
+                            />
                         </div>
 
-                        <div class="form-control mt-6">
-                            <button type="submit" class="btn btn-primary" id="submitBtn">Upload Resume</button>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Phone Number</span>
+                            </label>
+                            <input
+                                type="tel"
+                                name="phone_number"
+                                required
+                                placeholder="Enter phone number"
+                                pattern="[0-9]{10}"
+                                title="Please enter a valid 10-digit phone number"
+                                class="input input-bordered"
+                            />
                         </div>
-                    </form>
-                </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Age</span>
+                            </label>
+                            <input
+                                type="number"
+                                name="age"
+                                required
+                                placeholder="Enter age"
+                                min="18"
+                                max="100"
+                                title="Age must be between 18 and 100"
+                                class="input input-bordered"
+                            />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Experience (years)</span>
+                            </label>
+                            <input
+                                type="number"
+                                name="experience"
+                                required
+                                placeholder="Enter years of experience"
+                                min="0"
+                                max="50"
+                                class="input input-bordered"
+                            />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Qualification</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="qualification"
+                                required
+                                placeholder="Enter qualification"
+                                class="input input-bordered"
+                            />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Location</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="location"
+                                required
+                                placeholder="Enter location"
+                                class="input input-bordered"
+                            />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Gender</span>
+                            </label>
+                            <select name="gender" class="select select-bordered" required>
+                                <option value="">Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Kanaka Employee</span>
+                            </label>
+                            <select name="is_kanaka_employee" class="select select-bordered" required>
+                                <option value="">Select option</option>
+                                <option value="yes">Yes</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="divider">Upload Resume</div>
+
+                    <div class="form-control">
+                        <input
+                            type="file"
+                            name="cv"
+                            id="cvFile"
+                            class="file-input file-input-bordered w-full"
+                            accept=".pdf,.doc,.docx"
+                            required
+                            onchange="validateFile(this)"
+                        />
+                        <label class="label">
+                            <span class="label-text-alt">Accepted formats: PDF, DOC, DOCX (Max size: 5MB)</span>
+                        </label>
+                    </div>
+
+                    <!--
+                    <div class="upload-progress" id="uploadProgress">
+                        <progress class="progress progress-primary w-full" value="0" max="100"></progress>
+                        <p class="text-center mt-2" id="uploadStatus">Uploading...</p>
+                    </div>
+                    -->
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <script>
-        function validateFile(input) {
-            const file = input.files[0];
-            const maxSize = 5 * 1024 * 1024; // 5MB
-            const allowedTypes = ['.pdf', '.doc', '.docx'];
-            
-            if (file) {
-                // Check file size
-                if (file.size > maxSize) {
-                    alert('File size exceeds 5MB limit');
-                    input.value = '';
-                    return;
-                }
+{% block scripts %}
+<script>
+    function validateFile(input) {
+        const file = input.files[0];
+        const maxSize = 5 * 1024 * 1024;
+        const allowedTypes = ['.pdf', '.doc', '.docx'];
+        
+        if (file) {
+            if (file.size > maxSize) {
+                alert('File size exceeds 5MB limit');
+                input.value = '';
+                return;
+            }
 
-                // Check file type
-                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-                if (!allowedTypes.includes(fileExtension)) {
-                    alert('Invalid file type. Please upload PDF, DOC, or DOCX files only.');
-                    input.value = '';
-                    return;
-                }
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedTypes.includes(fileExtension)) {
+                alert('Invalid file type. Please upload PDF, DOC, or DOCX files only.');
+                input.value = '';
+                return;
             }
         }
+    }
 
-        // Handle form submission and show progress
-        document.getElementById('uploadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const progressBar = document.querySelector('.progress');
-            const uploadStatus = document.getElementById('uploadStatus');
-            const uploadProgress = document.getElementById('uploadProgress');
-            const submitBtn = document.getElementById('submitBtn');
 
-            uploadProgress.classList.add('active');
-            submitBtn.disabled = true;
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const progressBar = document.querySelector('.progress');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const submitBtn = document.getElementById('submitBtn');
 
-            fetch(this.action, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                progressBar.value = 100;
-                uploadStatus.textContent = 'Upload complete!';
-                uploadStatus.classList.add('text-success');
-                setTimeout(() => {
-                    uploadProgress.classList.remove('active');
-                    submitBtn.disabled = false;
-                }, 2000);
-            })
-            .catch(error => {
-                uploadStatus.textContent = 'Upload failed. Please try again.';
-                uploadStatus.classList.add('text-error');
+        uploadProgress.classList.add('active');
+        submitBtn.disabled = true;
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            progressBar.value = 100;
+            uploadStatus.textContent = 'Upload complete!';
+            uploadStatus.classList.add('text-success');
+            setTimeout(() => {
+                uploadProgress.classList.remove('active');
                 submitBtn.disabled = false;
-            });
+            }, 2000);
+        })
+        .catch(error => {
+            uploadStatus.textContent = 'Upload failed. Please try again.';
+            uploadStatus.classList.add('text-error');
+            submitBtn.disabled = false;
         });
-    </script>
-</body>
-</html>
+    });
+</script>
+{% endblock %}

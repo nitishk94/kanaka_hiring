@@ -53,3 +53,42 @@
 [2025-05-22 17:20:55,988] INFO in auth: User logged in: shrivatsa26@gmail.com, hr
 [2025-05-22 17:22:34,860] INFO in auth: User logged out: shrivatsa26@gmail.com
 [2025-05-22 17:22:47,705] INFO in auth: User logged in: john_doe@example.com, admin
+[2025-05-22 21:29:24,447] INFO in __init__: Flask application startup
+[2025-05-22 21:29:24,896] INFO in __init__: Flask application startup
+[2025-05-22 21:31:50,240] INFO in __init__: Flask application startup
+[2025-05-22 21:31:50,589] INFO in __init__: Flask application startup
+[2025-05-22 21:37:03,466] INFO in __init__: Flask application startup
+[2025-05-22 21:37:03,805] INFO in __init__: Flask application startup
+[2025-05-22 21:43:48,452] INFO in __init__: Flask application startup
+[2025-05-22 21:43:48,783] INFO in __init__: Flask application startup
+[2025-05-22 21:44:06,149] INFO in auth: User logged in: john_doe@example.com, admin
+[2025-05-23 09:24:56,563] INFO in __init__: Flask application startup
+[2025-05-23 09:24:56,906] INFO in __init__: Flask application startup
+[2025-05-23 09:27:09,087] INFO in __init__: Flask application startup
+[2025-05-23 09:27:09,420] INFO in __init__: Flask application startup
+[2025-05-23 09:27:23,791] INFO in auth: User logged in: john_doe@example.com, admin
+[2025-05-23 09:29:10,014] INFO in auth: User logged out: john_doe@example.com
+[2025-05-23 09:29:29,680] INFO in __init__: Flask application startup
+[2025-05-23 09:29:30,013] INFO in __init__: Flask application startup
+[2025-05-23 09:29:40,820] INFO in auth: User logged in: john_doe@example.com, admin
+[2025-05-23 09:30:22,652] INFO in auth: User logged out: john_doe@example.com
+[2025-05-23 09:34:00,118] INFO in __init__: Flask application startup
+[2025-05-23 09:34:00,457] INFO in __init__: Flask application startup
+[2025-05-23 09:34:10,513] INFO in auth: User logged in: john_doe@example.com, admin
+[2025-05-23 09:34:55,745] INFO in auth: User logged out: john_doe@example.com
+[2025-05-23 09:47:42,886] INFO in __init__: Flask application startup
+[2025-05-23 09:47:43,230] INFO in __init__: Flask application startup
+[2025-05-23 09:47:52,100] INFO in auth: User logged in: shrivatsa26@gmail.com, hr
+[2025-05-23 09:48:17,452] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-23 09:48:44,031] INFO in __init__: Flask application startup
+[2025-05-23 09:48:44,386] INFO in __init__: Flask application startup
+[2025-05-23 09:48:50,862] INFO in auth: User logged in: shrivatsa26@gmail.com, hr
+[2025-05-23 09:49:10,749] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-23 09:51:11,311] INFO in __init__: Flask application startup
+[2025-05-23 09:51:11,659] INFO in __init__: Flask application startup
+[2025-05-23 09:51:19,938] INFO in auth: User logged in: shrivatsa26@gmail.com, hr
+[2025-05-23 09:52:43,265] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-23 09:54:39,759] INFO in __init__: Flask application startup
+[2025-05-23 09:54:40,094] INFO in __init__: Flask application startup
+[2025-05-23 09:54:47,674] INFO in auth: User logged in: john_doe@example.com, admin
+[2025-05-23 09:55:25,730] INFO in auth: User logged out: john_doe@example.com

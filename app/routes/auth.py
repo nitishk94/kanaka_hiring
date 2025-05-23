@@ -12,6 +12,19 @@ def is_valid_email(email):
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        if current_user.role == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        elif current_user.role == 'hr':
+            return redirect(url_for('hr.dashboard'))
+        elif current_user.role == 'interviewer':
+            return redirect(url_for('interviewer.dashboard'))
+        elif current_user.role == 'referrer':
+            return redirect(url_for('referrer.dashboard'))
+        else:
+            return redirect(url_for('main.home'))
+    
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
@@ -41,6 +54,19 @@ def register():
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        if current_user.role == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        elif current_user.role == 'hr':
+            return redirect(url_for('hr.dashboard'))
+        elif current_user.role == 'interviewer':
+            return redirect(url_for('interviewer.dashboard'))
+        elif current_user.role == 'referrer':
+            return redirect(url_for('referrer.dashboard'))
+        else:
+            return redirect(url_for('main.home'))
+    
     if request.method == 'POST':
         username_or_email = request.form['username_or_email']
         password = request.form['password']

@@ -1,36 +1,8 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kanaka ATS - Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="min-h-screen bg-base-200">
-    <div class="navbar bg-base-100 shadow-lg">
-        <div class="flex-1">
-            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
-        </div>
-        <div class="flex-none">
-            {% if current_user.is_authenticated %}
-                {% if current_user.role == 'admin' %}
-                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% elif current_user.role == 'hr' %}
-                    <a href="{{ url_for('hr.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% elif current_user.role == 'interviewer' %}
-                    <a href="{{ url_for('interviewer.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% elif current_user.role == 'referrer' %}
-                    <a href="{{ url_for('referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost ml-2">Logout</a>
-            {% else %}
-                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Login</a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-ghost ml-2">Register</a>
-            {% endif %}
-        </div>
-    </div>
+{% extends "base.html" %}
 
+{% block title %}Home{% endblock %}
+
+{% block content %}
     {% if request.args.get('pending_approval') %}
     <div class="hero min-h-[calc(100vh-4rem)]">
         <div class="hero-content text-center">
@@ -67,5 +39,4 @@
         </div>
     </div>
     {% endif %}
-</body>
-</html>
+{% endblock %}

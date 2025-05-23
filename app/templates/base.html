@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} - Kanaka ATS</title>
+    <!-- DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
+        </div>
+        <div class="flex-none">
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% elif current_user.role == 'hr' %}
+                    <a href="{{ url_for('hr.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% elif current_user.role == 'interviewer' %}
+                    <a href="{{ url_for('interviewer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% elif current_user.role == 'referrer' %}
+                    <a href="{{ url_for('referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+                {% endif %}
+                <a href="{{ url_for('main.profile') }}" class="btn btn-ghost">Profile</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost">Logout</a>
+            {% else %}
+                {% if request.endpoint != 'auth.login' %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">Login</a>
+                {% endif %}
+                {% if request.endpoint != 'auth.register' %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 mt-4">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Custom JS -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
