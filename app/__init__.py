@@ -3,10 +3,10 @@ from app.extensions import db, login_manager, migrate
 from app.routes import register_routes
 from logging.handlers import RotatingFileHandler
 from app.models.users import User
+from datetime import timedelta
 import logging
 import secrets
 import os
-from datetime import timedelta
 
 login_manager.login_view = 'auth.login'
 

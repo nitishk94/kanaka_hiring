@@ -2,13 +2,9 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models.users import User
 from app.extensions import db
-import re
+from app.utils import is_valid_email
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
-
-def is_valid_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -87,7 +83,7 @@ def login():
                 return redirect(url_for('main.home', pending_approval=True))
             
             login_user(user)
-            current_app.logger.info(f"User logged in: {user.email}, {user.role}")
+            current_app.logger.info(f"User logged in: {user.email}, {user.role.capitalize()}")
             if user.role == 'hr':
                 return redirect(url_for('hr.dashboard'))
             elif user.role == 'admin':

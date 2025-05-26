@@ -32,7 +32,7 @@ def manage_users():
         user.role = role
         db.session.commit()
         
-        current_app.logger.info(f"Role assigned to user {user.username}: {role} by Admin {current_user.username}")
+        current_app.logger.info(f"Role assigned to user {user.username}: {role.capitalize()} by Admin {current_user.username}")
         flash(f'Role {role.title()} assigned successfully', 'success')
         return redirect(url_for('admin.manage_users'))
 
@@ -64,7 +64,7 @@ def edit_user(user_id):
         user.role = role
         db.session.commit()
         
-        current_app.logger.info(f"Role updated for user {user.username}: {role} by Admin {current_user.username}")
+        current_app.logger.info(f"Role updated for user {user.username}: {role.capitalize()} by Admin {current_user.username}")
         flash('User updated successfully', 'success')
         return redirect(url_for('admin.manage_users'))
     

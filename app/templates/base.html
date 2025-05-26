@@ -97,14 +97,40 @@
     <main class="container mx-auto px-4 mt-4">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Session Timeout Modal -->
+    <dialog id="sessionTimeoutModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Session Expired</h3>
+            <p class="py-4">Your session has timed out. Please sign in again to continue.</p>
+            <div class="modal-action">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Sign In</a>
+                <button class="btn" onclick="closeSessionModal()">Close</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
     {% block extra_js %}
     <script>
+        function showSessionTimeoutModal() {
+            const modal = document.getElementById('sessionTimeoutModal');
+            modal.showModal();
+        }
+
+        function closeSessionModal() {
+            const modal = document.getElementById('sessionTimeoutModal');
+            modal.close();
+        }
+
         function checkSession() {
             fetch("{{ url_for('main.check_session') }}")
                 .then(response => response.json())
                 .then(data => {
                     if (!data.active) {
-                        window.location.href = "{{ url_for('auth.login') }}";
+                        showSessionTimeoutModal();
                     }
                 })
                 .catch(error => {
@@ -112,7 +138,9 @@
                 });
         }
         
-        setInterval(checkSession, 2 * 60 * 1000);
+        {% if current_user.is_authenticated %}
+            setInterval(checkSession, 2 * 60 * 1000);
+        {% endif %}
     </script>
     {% endblock %}
 </body>

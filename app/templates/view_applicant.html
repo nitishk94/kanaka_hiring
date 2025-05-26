@@ -110,25 +110,43 @@
             </div>
         </div>
 
-        <!-- Application Status -->
-        <div class="card bg-base-100 shadow-xl lg:col-span-3">
-            <div class="card-body">
-                <h2 class="card-title mb-4">Application Status</h2>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-4">
-                        <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'warning' }}">
-                            {{ applicant.current_stage }}
+        {% if current_user.role in ['hr', 'admin'] %}
+            <!-- Application Status -->
+            <div class="card bg-base-100 shadow-xl lg:col-span-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Application Status</h2>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'warning' }}">
+                                {{ applicant.current_stage }}
+                            </div>
+                            <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
                         </div>
-                        <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-primary">Schedule Interview</button>
-                        <button class="btn btn-success">Mark as Hired</button>
-                        <button class="btn btn-error">Reject Application</button>
+                        <div class="flex gap-2">
+                            <button class="btn btn-primary">Schedule Interview</button>
+                            <button class="btn btn-success">Mark as Hired</button>
+                            <button class="btn btn-error">Reject Application</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% elif current_user.role == 'interviewer' %}
+            <!-- Feedback box -->
+            <div class="card bg-base-100 shadow-xl lg:col-span-3">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Submit Feedback</h2>
+                    <div class="flex justify-between items-center">
+                        <div class="flex flex-col w-full gap-4">
+                            <label class="label" for="feedback">
+                                <span class="label-text">Feedback</span>
+                            </label>
+                            <textarea id="feedback" class="textarea textarea-bordered h-32 w-full" placeholder="Enter your detailed feedback here..."></textarea>
+                            <a href="{{ url_for('interviewer.submit_feedback') }}" class="btn btn-primary self-end">Submit Feedback</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %} 
