@@ -7,7 +7,7 @@ class Interview(db.Model):
     applicant_id = db.Column(db.Integer, db.ForeignKey('applicants.id'))
     interviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     round_number = db.Column(db.Integer)
-    time = db.Column(db.DateTime)
+    date = db.Column(db.Date)
 
     applicant = db.relationship("Applicant", backref="interviews")
     interviewer = db.relationship("User", backref="interviews")

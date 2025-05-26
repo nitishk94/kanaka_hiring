@@ -123,8 +123,55 @@
                             <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button class="btn btn-primary">Schedule Interview</button>
-                            <button class="btn btn-success">Mark as Hired</button>
+                            {% if applicant.current_stage != 'Interview round 2 completed' %}
+                                {% if applicant.current_stage == 'Need to schedule test' %}
+                                    <div class="dropdown dropdown-end">
+                                        <label tabindex="0" class="btn btn-primary">Schedule Test</label>
+                                        <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                            <form action="{{ url_for('hr.schedule_test', id=applicant.id) }}" method="POST">
+                                                <div class="form-control w-full">
+                                                    <label class="label" for="test_date">
+                                                        <span class="label-text">Select Date</span>
+                                                    </label>
+                                                    <input type="date" name="test_date" class="input input-bordered w-full" required />
+                                                </div>
+                                                <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="dropdown dropdown-end">
+                                        <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
+                                        <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                            <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST">
+                                                <div class="form-control w-full">
+                                                    <label class="label" for="interview_date">
+                                                        <span class="label-text">Select Date</span>
+                                                    </label>
+                                                    <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                </div>
+                                                <div class="form-control w-full mt-4">
+                                                    <label class="label" for="interviewer_id">
+                                                        <span class="label-text">Select Interviewer</span>
+                                                    </label>
+                                                    <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                        <option value="">Select an interviewer</option>
+                                                        {% for interviewer in interviewers %}
+                                                            <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-info">View Comments</button>
+                                {% endif %}
+                            {% else %}
+                                <button class="btn btn-secondary">Schedule HR Round Interview</button>
+                                <button class="btn btn-info">View Comments</button>
+                                <button class="btn btn-success">Mark as Hired</button>
+                            {% endif %}
                             <button class="btn btn-error">Reject Application</button>
                         </div>
                     </div>
@@ -140,8 +187,8 @@
                             <label class="label" for="feedback">
                                 <span class="label-text">Feedback</span>
                             </label>
-                            <textarea id="feedback" class="textarea textarea-bordered h-32 w-full" placeholder="Enter your detailed feedback here..."></textarea>
-                            <a href="{{ url_for('interviewer.submit_feedback') }}" class="btn btn-primary self-end">Submit Feedback</a>
+                            <textarea name="feedback" class="textarea textarea-bordered h-32 w-full" placeholder="Enter your detailed feedback here..."></textarea>
+                            <a href="{{ url_for('interviewer.submit_feedback', id=applicant.id) }}" class="btn btn-primary self-end">Submit Feedback</a>
                         </div>
                     </div>
                 </div>

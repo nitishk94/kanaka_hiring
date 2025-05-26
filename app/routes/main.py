@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from app.extensions import db
 from app.auth.decorators import role_required
 from app.models.applicants import Applicant
+from app.models.recruitment_history import RecruitmentHistory
+from app.models.users import User
 from app.utils import allowed_file, validate_file
 from werkzeug.utils import secure_filename
 from datetime import date
@@ -130,7 +132,17 @@ def upload_applicants():
 @role_required('hr', 'admin', 'interviewer')
 def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
-    return render_template('view_applicant.html', applicant=applicant)
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    interviewers = User.query.filter_by(role='interviewer').all()
+
+    if history:
+        new_stage = history.compute_current_stage()
+        if history.current_stage != new_stage or applicant.current_stage != new_stage:
+            history.current_stage = new_stage
+            applicant.current_stage = new_stage
+            db.session.commit()
+
+    return render_template('view_applicant.html', applicant=applicant, interviewers=interviewers)
 
 @bp.route('/check_session')
 def check_session():

@@ -2,7 +2,10 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from app.auth.decorators import role_required
 from app.models.applicants import Applicant
-
+from app.models.recruitment_history import RecruitmentHistory
+from app.models.interviews import Interview
+from app.models.users import User
+from app.extensions import db
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
@@ -19,6 +22,19 @@ def dashboard():
 def applicants():
     applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
     return render_template('hr/applicants.html', applicants=applicants)
+
+@bp.route('/schedule_test/<int:id>', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def schedule_test(id):
+    date = request.form['test_date']
+
+    history = RecruitmentHistory(applicant_id = id, test_scheduled = date)
+    db.session.add(history)
+    db.session.commit()
+    flash('Test scheduled successfully', 'success')
+    current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
+    return redirect(url_for('main.view_applicant', id=id))
 
 @bp.route('/applicants/filter')
 @login_required
@@ -38,11 +54,30 @@ def download_cv(id):
 def update_status(id):
     return f"Update Status for Applicant {id}"
 
-@bp.route('/interviews/schedule', methods=['POST'])
+@bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @login_required
 @role_required(*HR_ROLES)
-def schedule_interview():
-    return "Schedule Interview"
+def schedule_interview(id):
+    date = request.form['interview_date']
+    interviewer_id = request.form['interviewer_id']
+    history = RecruitmentHistory.query.filter_by(applicant_id = id).first()
+
+    if not history:
+        return "No history found"
+    if not history.interview_round_1:
+        history.interview_round_1 = date
+        round = 1
+        interview = Interview(applicant_id=id, date=date, round_number=round, interviewer_id=interviewer_id)
+        db.session.add(interview)
+    else:
+        history.interview_round_2 = date
+        round = 2
+        interview = Interview(applicant_id=id, date=date, round_number=round, interviewer_id=interviewer_id)
+        db.session.add(interview)
+    db.session.commit()
+    flash('Interview scheduled successfully', 'success')
+    current_app.logger.info(f"Interview round {round} scheduled for applicant {id} on {date} by {current_user.username}")
+    return redirect(url_for('main.view_applicant', id=id))
 
 @bp.route('/interviews/track')
 @login_required

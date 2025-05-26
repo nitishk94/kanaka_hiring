@@ -1,3 +1,4 @@
+from datetime import date, datetime
 import zipfile
 import re
 
@@ -23,3 +24,13 @@ def validate_file(file):
 def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
+
+def ensure_date(value):
+    if value == None:
+        return None
+    if isinstance(value, date):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        return datetime.strptime(value, '%Y-%m-%d').date()

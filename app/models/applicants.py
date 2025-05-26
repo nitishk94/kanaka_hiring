@@ -15,8 +15,8 @@ class Applicant(db.Model):
     is_kanaka_employee = db.Column(db.Boolean, default = False)
     is_referred = db.Column(db.Boolean, default = False)
     applied_date = db.Column(db.Date)
-    current_stage = db.Column(db.String(100))
-    cv_file_path = db.Column(db.String(255))
+    current_stage = db.Column(db.Text)
+    cv_file_path = db.Column(db.String(500))
     comments = db.Column(db.Text)
     referred_by = db.Column(db.Integer, db.ForeignKey('users.id'))
 
