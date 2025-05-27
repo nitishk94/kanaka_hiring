@@ -12,7 +12,7 @@
             <h2 class="text-xl font-semibold mb-4">User Details</h2>
             <p><strong>Username:</strong> {{ user.username }}</p>
             <p><strong>Email:</strong> {{ user.email }}</p>
-            <p><strong>Role:</strong> {{ user.role.capitalize() }}</p>
+            <p><strong>Role:</strong> {{ user.role.capitalize() if user.role != 'hr' else 'HR' }}</p>
         </div>
 
         <div class="bg-base-100 p-6 rounded-lg shadow-md">

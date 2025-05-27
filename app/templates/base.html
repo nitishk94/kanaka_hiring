@@ -115,18 +115,37 @@
 
     {% block extra_js %}
     <script>
+        let sessionCheckInterval;
+        let isSessionActive = true;
+
         function showSessionTimeoutModal() {
             const modal = document.getElementById('sessionTimeoutModal');
             modal.showModal();
+            stopSessionChecks();
+            setTimeout(() => {
+                window.location.href = "{{ url_for('auth.login') }}";
+            }, 3000);
         }
 
         function closeSessionModal() {
             const modal = document.getElementById('sessionTimeoutModal');
             modal.close();
+            window.location.href = "{{ url_for('auth.login') }}";
+        }
+
+        function stopSessionChecks() {
+            if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+            }
+            isSessionActive = false;
         }
 
         function checkSession() {
-            fetch("{{ url_for('main.check_session') }}")
+            if (!isSessionActive) return;
+            
+            fetch("{{ url_for('main.check_session') }}", {
+                credentials: 'same-origin'
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (!data.active) {
@@ -139,7 +158,7 @@
         }
         
         {% if current_user.is_authenticated %}
-            setInterval(checkSession, 2 * 60 * 1000);
+            sessionCheckInterval = setInterval(checkSession, 60 * 1000);
         {% endif %}
     </script>
     {% endblock %}

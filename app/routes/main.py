@@ -5,7 +5,7 @@ from app.auth.decorators import role_required
 from app.models.applicants import Applicant
 from app.models.recruitment_history import RecruitmentHistory
 from app.models.users import User
-from app.utils import allowed_file, validate_file
+from app.utils import allowed_file, validate_file, generate_timeline, update_status
 from werkzeug.utils import secure_filename
 from datetime import date
 import os
@@ -138,18 +138,20 @@ def upload_applicants():
 @login_required
 @role_required('hr', 'admin', 'interviewer')
 def view_applicant(id):
+    update_status(id)
     applicant = Applicant.query.get_or_404(id)
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     interviewers = User.query.filter_by(role='interviewer').all()
 
-    if history:
-        new_stage = history.compute_current_stage()
-        if history.current_stage != new_stage or applicant.current_stage != new_stage:
-            history.current_stage = new_stage
-            applicant.current_stage = new_stage
-            db.session.commit()
-
     return render_template('view_applicant.html', applicant=applicant, interviewers=interviewers)
+
+@bp.route('/track/<int:id>', methods=['GET', 'POST'])
+@login_required
+@role_required('hr', 'admin', 'referrer')
+def track_status(id):
+    update_status(id)
+    timeline = generate_timeline(id)
+    applicant = Applicant.query.get_or_404(id)
+    return render_template('track.html', timeline=timeline, applicant=applicant)
 
 @bp.route('/check_session')
 def check_session():

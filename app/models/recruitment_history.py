@@ -1,7 +1,16 @@
 from app.extensions import db
 from sqlalchemy import event
-from datetime import date
-from app.utils import ensure_date
+from datetime import date, datetime
+
+def ensure_date(value):
+    if value == None:
+        return None
+    if isinstance(value, date):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        return datetime.strptime(value, '%Y-%m-%d').date()
 
 class RecruitmentHistory(db.Model):
     __tablename__ = 'recruitment_history'

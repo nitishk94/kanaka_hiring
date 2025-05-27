@@ -21,7 +21,7 @@ def dashboard():
 @role_required(*HR_ROLES)
 def applicants():
     applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
-    return render_template('hr/applicants.html', applicants=applicants)
+    return render_template('applicants.html', candidates=applicants)
 
 @bp.route('/schedule_test/<int:id>', methods=['POST'])
 @login_required
@@ -29,8 +29,8 @@ def applicants():
 def schedule_test(id):
     date = request.form['test_date']
 
-    history = RecruitmentHistory(applicant_id = id, test_scheduled = date)
-    db.session.add(history)
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    history.test_scheduled = date
     db.session.commit()
     flash('Test scheduled successfully', 'success')
     current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
@@ -47,12 +47,6 @@ def filter_applicants():
 @role_required(*HR_ROLES)
 def download_cv(id):
     return f"Download CV for Applicant {id}"
-
-@bp.route('/applicants/<int:id>/status', methods=['POST'])
-@login_required
-@role_required(*HR_ROLES)
-def update_status(id):
-    return f"Update Status for Applicant {id}"
 
 @bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @login_required
@@ -93,18 +87,6 @@ def reject_application(id):
     current_app.logger.info(f"Candidate {applicant.name} rejected")
     flash('Candidate rejected', 'error')
     return redirect(url_for('main.view_applicant', id=id))
-
-@bp.route('/interviews/track')
-@login_required
-@role_required(*HR_ROLES)
-def track_interviews():
-    return "Interview Tracking Page"
-
-@bp.route('/feedback/<int:id>')
-@login_required
-@role_required(*HR_ROLES)
-def view_feedback(id):
-    return f"View Feedback for Applicant {id}"
 
 @bp.route('/onboarding')
 @login_required

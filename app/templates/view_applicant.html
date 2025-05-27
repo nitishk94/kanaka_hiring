@@ -6,11 +6,19 @@
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Applicant Details</h1>
-        <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
-            {{ applicant.current_stage }}
+        <div class="flex gap-2 items-center">
+            {% if applicant.is_referred %}
+                <div class="badge badge-lg badge-info">Referral</div>
+            {% endif %}
+            {% if current_user.role in ['hr', 'admin'] %}
+                <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
+                    {{ applicant.current_stage }}
+                </div>
+            {% endif %}
         </div>
     </div>
 
+    <!-- Personal Information -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="card bg-base-100 shadow-xl lg:col-span-2">
             <div class="card-body">
@@ -52,7 +60,7 @@
                     <div>
                         <p class="text-sm text-gray-500">Experience</p>
                         <p class="font-semibold">
-                            {{ applicant.experience }}{% if not ('year' in applicant.experience|lower or 'years' in applicant.experience|lower) %} years{% endif %}
+                            {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
                         </p>
                     </div>
                     <div>
@@ -123,9 +131,12 @@
                             <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
                         </div>
                         <div class="flex gap-2">
-                            {% if applicant.current_stage == 'Rejected' %}
-                                <button class="btn btn-info">View Comments</button>
-                            {% else %}
+                            <!-- Logic to render buttons -->
+                            <form method="POST" action="{{ url_for('main.track_status', id=applicant.id) }}" class="inline">
+                                <button class="btn btn-info">Track Status</button>
+                            </form>
+
+                            {% if applicant.current_stage != 'Rejected' %}
                                 {% if applicant.current_stage != 'Interview round 2 completed' %}
                                     {% if applicant.current_stage == 'Need to schedule test' %}
                                         <div class="dropdown dropdown-end">
@@ -145,8 +156,8 @@
                                     {% else %}
                                         <div class="dropdown dropdown-end">
                                             <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
-                                            <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                                <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST">
+                                            <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                                <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
                                                     <div class="form-control w-full">
                                                         <label class="label" for="interview_date">
                                                             <span class="label-text">Select Date</span>
@@ -168,7 +179,6 @@
                                                 </form>
                                             </div>
                                         </div>
-                                        <button class="btn btn-info">View Comments</button>
                                     {% endif %}
                                 {% else %}
                                     <div class="dropdown dropdown-end">
@@ -196,7 +206,6 @@
                                             </form>
                                         </div>
                                     </div>
-                                    <button class="btn btn-info">View Comments</button>
                                     <button class="btn btn-success">Mark as Hired</button>
                                 {% endif %}
                                 <form method="POST" action="{{ url_for('hr.reject_application', id=applicant.id) }}" class="inline">

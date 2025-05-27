@@ -41,6 +41,60 @@
         </div>
     </a>
 
+    <a href="{{ url_for('main.upload_applicants') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div class="card-body">
+            <div class="flex items-center gap-4">
+                <div class="bg-amber-100 p-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="card-title">Upload Applicants</h2>
+                    <p class="text-gray-600">Add new applicants to the system</p>
+                </div>
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ url_for('hr.applicants') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div class="card-body">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-100 p-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="card-title">View Applicants</h2>
+                    <p class="text-gray-600">View and manage applicant list</p>
+                </div>
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ url_for('interviewer.view_interviews') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+        <div class="card-body">
+            <div class="flex items-center gap-4">
+                <div class="bg-orange-100 p-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="card-title">View Interviews</h2>
+                    <p class="text-gray-600">Access details of the interviewees and submit feedback</p>
+                </div>
+            </div>
+        </div>
+    </a>
+
     <a href="{{ url_for('admin.view_logs') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
         <div class="card-body">
             <div class="flex items-center gap-4">
@@ -64,8 +118,8 @@
     <a href="{{ url_for('admin.settings') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
         <div class="card-body">
             <div class="flex items-center gap-4">
-                <div class="bg-accent/10 p-4 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="bg-info/10 p-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
@@ -81,8 +135,8 @@
     <a href="{{ url_for('admin.reports') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
         <div class="card-body">
             <div class="flex items-center gap-4">
-                <div class="bg-info/10 p-4 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="bg-accent/10 p-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
