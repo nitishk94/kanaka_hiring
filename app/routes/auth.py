@@ -83,7 +83,7 @@ def login():
                 return redirect(url_for('main.home', pending_approval=True))
             
             login_user(user)
-            current_app.logger.info(f"User logged in: {user.email}, {user.role.capitalize()}")
+            current_app.logger.info(f"User logged in: {user.username}, {user.role.capitalize() if user.role != 'hr' else 'HR'}")
             if user.role == 'hr':
                 return redirect(url_for('hr.dashboard'))
             elif user.role == 'admin':
@@ -99,15 +99,15 @@ def login():
         
         flash('Invalid username/email or password', 'error')
         current_app.logger.info(f"Invalid login attempt: {username_or_email}")
-        return redirect(url_for('auth.login'))
+        return render_template('auth/login.html', form_data=request.form)
 
     return render_template('auth/login.html')
 
 @bp.route('/logout')
 @login_required
 def logout():
-    user_email = current_user.email if current_user.is_authenticated else 'Unknown'
-    current_app.logger.info(f"User logged out: {user_email}")
+    username = current_user.username if current_user.is_authenticated else 'Unknown'
+    current_app.logger.info(f"User logged out: {username}")
 
     logout_user()
     flash("You have been logged out.", "info")

@@ -75,6 +75,7 @@
                             minlength="3"
                             maxlength="50"
                             title="Enter a valid username or email address"
+                            value="{{ form_data.username_or_email if form_data else '' }}"
                         />
                     </label>
                     <p class="validator-hint hidden">

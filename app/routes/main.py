@@ -98,7 +98,7 @@ def upload_applicants():
         file.save(file_path)
 
         new_applicant = Applicant(
-            name=name.capitalize(),
+            name=name.title(),
             email=email,
             phone_number=phone_number,
             age=age,
@@ -112,17 +112,24 @@ def upload_applicants():
             cv_file_path=file_path,
             is_referred=current_user.role == 'referrer',
             referred_by=current_user.id if current_user.role == 'referrer' else None
-            )
-
+        )
+        
         db.session.add(new_applicant)
+        db.session.commit()
+        
+        history = RecruitmentHistory(
+            applicant_id=new_applicant.id
+        )
+
+        db.session.add(history)
         db.session.commit()
 
         if current_user.role in ['hr', 'admin']:
             flash('New applicant successfully created!', 'success')
-            current_app.logger.info(f"New applicant (Name = {new_applicant.name.capitalize()}) added by {current_user.username}")
+            current_app.logger.info(f"New applicant (Name = {new_applicant.name.title()}) added by {current_user.username}")
         elif current_user.role == 'referrer':
             flash('New referral successfully created!', 'success')
-            current_app.logger.info(f"New referral (Name = {new_applicant.name.capitalize()}) added by {current_user.username}")
+            current_app.logger.info(f"New referral (Name = {new_applicant.name.title()}) added by {current_user.username}")
         return redirect(url_for('main.upload_applicants'))
 
     return render_template('upload.html')

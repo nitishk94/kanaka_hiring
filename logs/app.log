@@ -29,3 +29,101 @@
 [2025-05-26 17:32:06,549] INFO in hr: Interview round 1 scheduled for applicant 1 on 2025-05-31 by vatsa
 [2025-05-26 17:32:08,099] INFO in auth: User logged out: shrivatsa26@gmail.com
 [2025-05-26 17:32:16,295] INFO in auth: User logged in: blabla@pp.com, Interviewer
+[2025-05-26 19:49:02,459] INFO in __init__: Flask application startup
+[2025-05-26 19:49:03,629] INFO in __init__: Flask application startup
+[2025-05-26 19:49:27,713] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-26 19:50:02,722] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-26 19:50:09,871] INFO in auth: User logged in: john_doe@example.com, Admin
+[2025-05-26 19:50:18,535] INFO in admin: User albert-einstein69 deleted by Admin john_doe
+[2025-05-26 19:50:21,963] INFO in auth: User logged out: john_doe@example.com
+[2025-05-27 09:27:49,766] INFO in __init__: Flask application startup
+[2025-05-27 09:27:51,082] INFO in __init__: Flask application startup
+[2025-05-27 09:28:01,782] INFO in auth: User logged in: blabla@pp.com, Interviewer
+[2025-05-27 09:29:58,227] INFO in __init__: Flask application startup
+[2025-05-27 09:29:58,571] INFO in __init__: Flask application startup
+[2025-05-27 09:30:08,116] INFO in auth: User logged in: blabla@pp.com, Interviewer
+[2025-05-27 09:31:42,500] INFO in __init__: Flask application startup
+[2025-05-27 09:31:52,833] INFO in auth: User logged in: blabla@pp.com, Interviewer
+[2025-05-27 09:32:49,185] INFO in interviewer: Feedback submitted for applicant 1 by blablabla
+[2025-05-27 09:35:06,720] INFO in __init__: Flask application startup
+[2025-05-27 09:35:07,054] INFO in __init__: Flask application startup
+[2025-05-27 09:35:15,845] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 09:35:47,364] INFO in main: New applicant (Name = Cwhhw) added by vatsa
+[2025-05-27 09:36:11,770] INFO in main: New applicant (Name = Wqknc) added by vatsa
+[2025-05-27 09:36:21,748] INFO in hr: Test scheduled for applicant 7 on 2025-05-27 by vatsa
+[2025-05-27 09:36:30,783] INFO in hr: Interview round 1 scheduled for applicant 7 on 2025-05-29 by vatsa
+[2025-05-27 09:36:33,010] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 09:38:16,213] INFO in __init__: Flask application startup
+[2025-05-27 09:38:23,755] INFO in __init__: Flask application startup
+[2025-05-27 09:38:32,486] INFO in __init__: Flask application startup
+[2025-05-27 09:38:35,130] INFO in __init__: Flask application startup
+[2025-05-27 09:38:35,457] INFO in __init__: Flask application startup
+[2025-05-27 09:38:40,847] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 09:39:09,573] INFO in main: New applicant (Name = Xas) added by vatsa
+[2025-05-27 09:39:23,109] INFO in hr: Test scheduled for applicant 9 on 2025-05-27 by vatsa
+[2025-05-27 09:39:29,447] INFO in hr: Interview round 1 scheduled for applicant 9 on 2025-05-30 by vatsa
+[2025-05-27 09:39:30,694] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 09:39:38,621] INFO in auth: User logged in: blabla@pp.com, Interviewer
+[2025-05-27 09:40:02,374] INFO in interviewer: Feedback submitted for applicant 9 by blablabla
+[2025-05-27 09:46:34,439] INFO in __init__: Flask application startup
+[2025-05-27 09:46:34,771] INFO in __init__: Flask application startup
+[2025-05-27 09:46:44,662] INFO in auth: User logged in: blabla@pp.com, Interviewer
+[2025-05-27 09:46:52,000] INFO in interviewer: Feedback submitted for applicant 9 by blablabla
+[2025-05-27 09:48:58,196] INFO in interviewer: Feedback submitted for applicant 9 by blablabla
+[2025-05-27 09:51:03,139] INFO in interviewer: Feedback submitted for applicant 9 by blablabla
+[2025-05-27 09:54:47,571] INFO in interviewer: Feedback submitted for applicant 9 by blablabla
+[2025-05-27 09:55:24,313] INFO in __init__: Flask application startup
+[2025-05-27 09:55:40,947] INFO in __init__: Flask application startup
+[2025-05-27 09:55:47,148] INFO in __init__: Flask application startup
+[2025-05-27 09:57:35,839] INFO in __init__: Flask application startup
+[2025-05-27 09:58:47,749] INFO in __init__: Flask application startup
+[2025-05-27 09:58:48,094] INFO in __init__: Flask application startup
+[2025-05-27 09:58:54,843] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 09:59:25,397] INFO in main: New applicant (Name = Asika) added by vatsa
+[2025-05-27 10:00:28,547] INFO in main: New applicant (Name = Nancy drew) added by vatsa
+[2025-05-27 10:00:38,271] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 10:09:09,513] INFO in __init__: Flask application startup
+[2025-05-27 10:19:00,561] INFO in __init__: Flask application startup
+[2025-05-27 10:19:00,897] INFO in __init__: Flask application startup
+[2025-05-27 10:19:09,423] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 10:47:24,509] INFO in __init__: Flask application startup
+[2025-05-27 10:47:24,848] INFO in __init__: Flask application startup
+[2025-05-27 10:47:42,194] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 10:48:08,170] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 10:58:00,259] INFO in __init__: Flask application startup
+[2025-05-27 10:58:00,603] INFO in __init__: Flask application startup
+[2025-05-27 10:58:09,602] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 10:58:45,693] INFO in __init__: Flask application startup
+[2025-05-27 10:58:47,165] INFO in __init__: Flask application startup
+[2025-05-27 10:58:53,122] INFO in auth: Invalid login attempt: shrivatsa26@gmail.com
+[2025-05-27 10:58:57,635] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 10:59:05,673] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 11:00:03,719] INFO in __init__: Flask application startup
+[2025-05-27 11:00:04,065] INFO in __init__: Flask application startup
+[2025-05-27 11:00:10,688] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 11:01:59,223] INFO in __init__: Flask application startup
+[2025-05-27 11:01:59,567] INFO in __init__: Flask application startup
+[2025-05-27 11:02:06,211] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 11:03:19,147] INFO in main: New applicant (Name = Cjakn) added by vatsa
+[2025-05-27 11:03:31,659] INFO in hr: Candidate Cjakn rejected
+[2025-05-27 11:03:40,930] INFO in hr: Candidate Cjakn rejected
+[2025-05-27 11:04:07,057] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 11:06:44,888] INFO in __init__: Flask application startup
+[2025-05-27 11:06:50,592] INFO in __init__: Flask application startup
+[2025-05-27 11:15:52,942] INFO in __init__: Flask application startup
+[2025-05-27 11:15:53,291] INFO in __init__: Flask application startup
+[2025-05-27 11:15:59,334] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 11:16:09,088] INFO in hr: Candidate Cjakn rejected
+[2025-05-27 11:18:03,911] INFO in main: New applicant (Name = Nancy Drew) added by vatsa
+[2025-05-27 11:18:32,995] INFO in main: New applicant (Name = Asika) added by vatsa
+[2025-05-27 11:19:01,428] INFO in main: New applicant (Name =  Wksa) added by vatsa
+[2025-05-27 11:19:10,244] INFO in hr: Candidate  Wksa rejected
+[2025-05-27 11:22:05,674] INFO in __init__: Flask application startup
+[2025-05-27 11:22:06,028] INFO in __init__: Flask application startup
+[2025-05-27 11:22:14,135] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 11:22:18,490] INFO in hr: Candidate  Wksa rejected
+[2025-05-27 11:25:55,388] INFO in __init__: Flask application startup
+[2025-05-27 11:25:55,723] INFO in __init__: Flask application startup
+[2025-05-27 11:26:05,548] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr
+[2025-05-27 11:26:19,016] INFO in auth: User logged out: shrivatsa26@gmail.com
+[2025-05-27 11:28:47,826] INFO in auth: User logged in: shrivatsa26@gmail.com, Hr

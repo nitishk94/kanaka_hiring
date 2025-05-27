@@ -62,21 +62,36 @@ def schedule_interview(id):
     interviewer_id = request.form['interviewer_id']
     history = RecruitmentHistory.query.filter_by(applicant_id = id).first()
 
-    if not history:
-        return "No history found"
     if not history.interview_round_1:
         history.interview_round_1 = date
         round = 1
         interview = Interview(applicant_id=id, date=date, round_number=round, interviewer_id=interviewer_id)
         db.session.add(interview)
-    else:
+    elif not history.interview_round_2:
         history.interview_round_2 = date
         round = 2
+        interview = Interview(applicant_id=id, date=date, round_number=round, interviewer_id=interviewer_id)
+        db.session.add(interview)
+    else:
+        history.hr_round = date
+        round = 'HR'
         interview = Interview(applicant_id=id, date=date, round_number=round, interviewer_id=interviewer_id)
         db.session.add(interview)
     db.session.commit()
     flash('Interview scheduled successfully', 'success')
     current_app.logger.info(f"Interview round {round} scheduled for applicant {id} on {date} by {current_user.username}")
+    return redirect(url_for('main.view_applicant', id=id))
+
+@bp.route('/reject_application/<int:id>', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def reject_application(id):
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    history.rejected = True
+    applicant = Applicant.query.get_or_404(id)
+    db.session.commit()
+    current_app.logger.info(f"Candidate {applicant.name} rejected")
+    flash('Candidate rejected', 'error')
     return redirect(url_for('main.view_applicant', id=id))
 
 @bp.route('/interviews/track')

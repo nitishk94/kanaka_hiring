@@ -46,7 +46,7 @@
                     <td>{{ applicant.experience }}{% if not ('year' in applicant.experience|lower or 'years' in applicant.experience|lower) %} years{% endif %}</td>
                     <td>{{ applicant.qualification }}</td>
                     <td>
-                        <div class="badge badge-{{ 'success' if applicant.current_stage == 'Hired' else 'warning' }}">
+                        <div class="badge badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
                             {{ applicant.current_stage }}
                         </div>
                     </td>

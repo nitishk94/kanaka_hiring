@@ -35,6 +35,7 @@ def view_interviewee(id):
 @role_required(*INTERVIEWER_ROLES)
 def submit_feedback(id):
     feedback = request.form.get('feedback')
+    print(feedback)
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
 
     if history.interview_round_1_comments is None:

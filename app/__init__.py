@@ -1,4 +1,4 @@
-from flask import Flask, session, flash, redirect, url_for
+from flask import Flask, session, flash, redirect, url_for, got_request_exception
 from app.extensions import db, login_manager, migrate
 from app.routes import register_routes
 from logging.handlers import RotatingFileHandler
@@ -56,6 +56,11 @@ def create_app():
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
     app.logger.info('Flask application startup')
+
+    def log_exception(sender, exception, **extra):
+        sender.logger.error('Unhandled Exception', exc_info=exception)
+
+    got_request_exception.connect(log_exception, app)
 
     register_routes(app)
 

@@ -16,7 +16,8 @@ class RecruitmentHistory(db.Model):
     interview_round_2_comments = db.Column(db.Text, default=None)
     hr_round = db.Column(db.Date)
     hr_round_comments = db.Column(db.Text, default=None)
-    current_stage = db.Column(db.Text)
+    rejected = db.Column(db.Boolean, default=False)
+    current_stage = db.Column(db.Text, default='Need to schedule test')
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
     applicant = db.relationship("Applicant", back_populates="history_entries")
@@ -28,7 +29,9 @@ class RecruitmentHistory(db.Model):
         round1_date = ensure_date(self.interview_round_1)
         test_date = ensure_date(self.test_scheduled)
 
-        if hr_date:
+        if self.rejected:
+            return "Rejected"
+        elif hr_date:
             if hr_date >= today:
                 return f"HR round scheduled on {hr_date.strftime('%Y-%m-%d')}"
             else:
