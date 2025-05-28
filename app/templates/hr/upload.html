@@ -1,0 +1,497 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CV{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-4">Upload CV</h1>
+        <p class="text-lg text-gray-600">Upload applicant information and CV to start the hiring process.</p>
+        <p class="text-sm text-error mt-2">Fields marked with <span class="text-error">*</span> are required</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="space-y-6">
+        <!-- Personal Information Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Personal Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-control">
+                        <label class="label" for="name">
+                            <span class="label-text">Name <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="name"
+                            type="text"
+                            name="name"
+                            required
+                            placeholder="Enter full name"
+                            pattern="[A-Za-z\s]+"
+                            title="Please enter a valid name (letters and spaces only)"
+                            class="input input-bordered"
+                            value="{{ form_data.name if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="dob">
+                            <span class="label-text">Date of Birth <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="dob"
+                            type="date"
+                            name="dob"
+                            required
+                            class="input input-bordered"
+                            value="{{ form_data.dob if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="email">
+                            <span class="label-text">Email <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            required
+                            placeholder="Enter email"
+                            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                            title="Please enter a valid email address"
+                            class="input input-bordered"
+                            value="{{ form_data.email if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="phone_number">
+                            <span class="label-text">Phone Number <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="phone_number"
+                            type="tel"
+                            name="phone_number"
+                            required
+                            placeholder="Enter phone number"
+                            pattern="[0-9]{10}"
+                            title="Please enter a valid 10-digit phone number"
+                            class="input input-bordered"
+                            value="{{ form_data.phone_number if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="gender">
+                            <span class="label-text">Gender <span class="text-error">*</span></span>
+                        </label>
+                        <select id="gender" name="gender" class="select select-bordered" required>
+                            <option value="">Select gender</option>
+                            <option value="male" {% if form_data and form_data.gender == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if form_data and form_data.gender == 'female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="marital_status">
+                            <span class="label-text">Marital Status <span class="text-error">*</span></span>
+                        </label>
+                        <select id="marital_status" name="marital_status" class="select select-bordered" required>
+                            <option value="">Select status</option>
+                            <option value="Single" {% if form_data and form_data.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                            <option value="Married" {% if form_data and form_data.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="location">
+                            <span class="label-text">Location <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="location"
+                            type="text"
+                            name="location"
+                            required
+                            placeholder="Enter location"
+                            class="input input-bordered"
+                            value="{{ form_data.location if form_data else '' }}"
+                        />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Information Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Professional Information</h2>
+                
+                <div class="flex items-center gap-8 mb-6">
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="fresher-toggle" name="is_fresher" class="checkbox checkbox-primary" value="yes" {% if form_data and form_data.is_fresher == 'yes' %}checked{% endif %} />
+                            <span class="label-text">Fresher</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="referral-toggle" name="is_referred" class="checkbox checkbox-primary" value="yes" {% if form_data and form_data.is_referred == 'yes' %}checked{% endif %} />
+                            <span class="label-text">Referral</span>
+                        </label>
+                    </div>
+
+                    <div id="referrer-section" class="form-control" style="display: none;">
+                        <label class="label" for="referred_by">
+                            <span class="label-text">Referrer's Name</span>
+                        </label>
+                        <input
+                            id="referred_by"
+                            type="text"
+                            name="referred_by"
+                            placeholder="Enter referrer's name"
+                            class="input input-bordered"
+                            value="{{ form_data.referred_by if form_data else '' }}"
+                        />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-control">
+                        <label class="label" for="qualification">
+                            <span class="label-text">Qualification <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="qualification"
+                            type="text"
+                            name="qualification"
+                            required
+                            placeholder="Enter qualification"
+                            class="input input-bordered"
+                            value="{{ form_data.qualification if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="referenced_from">
+                            <span class="label-text">Referenced From <span class="text-error">*</span></span>
+                        </label>
+                        <select id="referenced_from" name="referenced_from" class="select select-bordered" required>
+                            <option value="">Select source</option>
+                            <option value="Naukri" {% if form_data and form_data.referenced_from == 'Naukri' %}selected{% endif %}>Naukri</option>
+                            <option value="LinkedIn" {% if form_data and form_data.referenced_from == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
+                            <option value="Third-party" {% if form_data and form_data.referenced_from == 'Third-party' %}selected{% endif %}>Third-party</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="linkedin">
+                            <span class="label-text">LinkedIn Profile</span>
+                        </label>
+                        <input
+                            id="linkedin"
+                            type="url"
+                            name="linkedin"
+                            placeholder="Enter LinkedIn profile URL"
+                            class="input input-bordered"
+                            value="{{ form_data.linkedin if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label" for="github">
+                            <span class="label-text">GitHub Link</span>
+                        </label>
+                        <input
+                            id="github"
+                            type="url"
+                            name="github"
+                            placeholder="Enter GitHub profile URL"
+                            class="input input-bordered"
+                            value="{{ form_data.github if form_data else '' }}"
+                        />
+                    </div>
+
+                    <div id="current-company-section" style="display: none;" class="col-span-2">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-control">
+                                <label class="label" for="experience">
+                                    <span class="label-text">Experience (years) <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="experience"
+                                    type="number"
+                                    name="experience"
+                                    required
+                                    placeholder="Enter years of experience"
+                                    min="0"
+                                    max="50"
+                                    class="input input-bordered"
+                                    value="{{ form_data.experience if form_data else '' }}"
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="is_kanaka_employee">
+                                    <span class="label-text">Kanaka Employee <span class="text-error">*</span></span>
+                                </label>
+                                <select id="is_kanaka_employee" name="is_kanaka_employee" class="select select-bordered" required>
+                                    <option value="">Select option</option>
+                                    <option value="yes" {% if form_data and form_data.is_kanaka_employee == 'yes' %}selected{% endif %}>Yes</option>
+                                    <option value="no" {% if form_data and form_data.is_kanaka_employee == 'no' %}selected{% endif %}>No</option>
+                                </select>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="current_company">
+                                    <span class="label-text">Current Company <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="current_company"
+                                    type="text"
+                                    name="current_company"
+                                    placeholder="Enter current company"
+                                    class="input input-bordered"
+                                    value="{{ form_data.current_company if form_data else '' }}"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="designation">
+                                    <span class="label-text">Designation <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="designation"
+                                    type="text"
+                                    name="designation"
+                                    required
+                                    placeholder="Enter designation"
+                                    class="input input-bordered"
+                                    value="{{ form_data.designation if form_data else '' }}"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="job_position">
+                                    <span class="label-text">Job Position at Current Company <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="job_position"
+                                    type="text"
+                                    name="job_position"
+                                    required
+                                    placeholder="Enter job position"
+                                    class="input input-bordered"
+                                    value="{{ form_data.job_position if form_data else '' }}"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="current_ctc">
+                                    <span class="label-text">Current CTC <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="current_ctc"
+                                    type="number"
+                                    step="0.01"
+                                    name="current_ctc"
+                                    placeholder="Enter current CTC"
+                                    class="input input-bordered"
+                                    value="{{ form_data.current_ctc if form_data else '' }}"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="expected_ctc">
+                                    <span class="label-text">Expected CTC</span>
+                                </label>
+                                <input
+                                    id="expected_ctc"
+                                    type="number"
+                                    step="0.01"
+                                    name="expected_ctc"
+                                    placeholder="Enter expected CTC"
+                                    class="input input-bordered"
+                                    value="{{ form_data.expected_ctc if form_data else '' }}"
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="notice_period">
+                                    <span class="label-text">Notice Period (days) <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="notice_period"
+                                    type="number"
+                                    name="notice_period"
+                                    placeholder="Enter notice period in days"
+                                    class="input input-bordered"
+                                    value="{{ form_data.notice_period if form_data else '' }}"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="tenure">
+                                    <span class="label-text">Tenure at Current Company (months) <span class="text-error">*</span></span>
+                                </label>
+                                <input
+                                    id="tenure"
+                                    type="number"
+                                    name="tenure"
+                                    placeholder="Enter tenure in months"
+                                    class="input input-bordered"
+                                    value="{{ form_data.tenure if form_data else '' }}"
+                                    required
+                                />
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label" for="current_offers">
+                                    <span class="label-text">Current Offers (count)</span>
+                                </label>
+                                <input
+                                    id="current_offers"
+                                    type="number"
+                                    name="current_offers"
+                                    placeholder="Enter number of current offers"
+                                    class="input input-bordered"
+                                    value="{{ form_data.current_offers if form_data else '' }}"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="form-control mt-6">
+                            <label class="label" for="reason_for_change">
+                                <span class="label-text">Reason for Change</span>
+                            </label>
+                            <textarea
+                                id="reason_for_change"
+                                name="reason_for_change"
+                                class="textarea textarea-bordered h-24"
+                                placeholder="Enter reason for change"
+                            >{{ form_data.reason_for_change if form_data else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CV Upload Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">CV Upload & Comments</h2>
+                <div class="form-control">
+                    <label class="label" for="cvFile">
+                        <span class="label-text">CV Upload <span class="text-error">*</span></span>
+                    </label>
+                    <div class="space-y-2">
+                        <input
+                            type="file"
+                            name="cv"
+                            id="cvFile"
+                            class="file-input file-input-bordered w-full"
+                            accept=".pdf,.docx"
+                            required
+                        />
+                        <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
+                        <p id="fileError" class="text-error text-sm"></p>
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <label class="label" for="comments">
+                            <span class="label-text">Comments/Summary</span>
+                        </label>
+                        <textarea
+                            id="comments"
+                            name="comments"
+                            class="textarea textarea-bordered h-24"
+                            placeholder="Enter additional comments or summary"
+                        >{{ form_data.comments if form_data else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-control mt-6">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('cvFile');
+        const errorElement = document.getElementById('fileError');
+
+        // Fresher toggle functionality
+        document.getElementById('fresher-toggle').addEventListener('change', function() {
+            const section = document.getElementById('current-company-section');
+            const requiredFields = section.querySelectorAll('[required]');
+            const inputs = section.querySelectorAll('input, select, textarea');
+            if (!this.checked) {
+                section.style.display = 'block';
+                requiredFields.forEach(field => field.setAttribute('required', 'required'));
+                inputs.forEach(input => input.disabled = false);
+            } else {
+                section.style.display = 'none';
+                requiredFields.forEach(field => field.removeAttribute('required'));
+                inputs.forEach(input => input.disabled = true);
+            }
+        });
+
+        // Referral toggle functionality
+        document.getElementById('referral-toggle').addEventListener('change', function() {
+            const section = document.getElementById('referrer-section');
+            const referrerInput = document.getElementById('referred_by');
+            if (this.checked) {
+                section.style.display = 'block';
+                referrerInput.required = true;
+            } else {
+                section.style.display = 'none';
+                referrerInput.required = false;
+                referrerInput.value = '';
+            }
+        });
+
+        // Trigger the change events on page load to set initial state
+        const fresherToggle = document.getElementById('fresher-toggle');
+        const referralToggle = document.getElementById('referral-toggle');
+        if (fresherToggle) {
+            fresherToggle.dispatchEvent(new Event('change'));
+        }
+        if (referralToggle) {
+            referralToggle.dispatchEvent(new Event('change'));
+        }
+
+        if (!fileInput) {
+            return;
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSizeMB = file.size / (1024 * 1024);
+                console.log('File size in MB:', fileSizeMB);
+                
+                if (fileSizeMB > 5) {
+                    errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
+                    errorElement.style.color = 'red';
+                    this.value = '';
+                } else {
+                    errorElement.textContent = '';
+                }
+            } else {
+                console.log('No file selected');
+            }
+        });
+    });
+</script>
+{% endblock %}

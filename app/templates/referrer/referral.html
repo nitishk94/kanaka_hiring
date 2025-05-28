@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Refer a Candidate{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-4">Refer a Candidate</h1>
+        <p class="text-lg text-gray-600">Upload the CV of the candidate you want to refer.</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Referral Information</h2>
+                <form method="POST" action="{{ url_for('referrer.referral') }}" enctype="multipart/form-data" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-control">
+                            <label class="label" for="name">
+                                <span class="label-text">Name</span>
+                            </label>
+                            <input
+                                id="name"
+                                type="text"
+                                name="name"
+                                required
+                                placeholder="Enter full name"
+                                pattern="[A-Za-z\s]+"
+                                title="Please enter a valid name (letters and spaces only)"
+                                class="input input-bordered"
+                                value="{{ form_data.name if form_data else '' }}"
+                            />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label" for="cvFile">
+                                <span class="label-text">CV Upload</span>
+                            </label>
+                            <div class="space-y-2">
+                                <input
+                                    type="file"
+                                    name="cv"
+                                    id="cvFile"
+                                    class="file-input file-input-bordered w-full"
+                                    accept=".pdf,.docx"
+                                    required
+                                />
+                                <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
+                                <p id="fileError" class="text-error text-sm"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('cvFile');
+        const errorElement = document.getElementById('fileError');
+
+        if (!fileInput) {
+            return;
+        }
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileSizeMB = file.size / (1024 * 1024);
+                console.log('File size in MB:', fileSizeMB);
+                
+                if (fileSizeMB > 5) {
+                    errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
+                    errorElement.style.color = 'red';
+                    this.value = '';
+                    submitBtn.disabled = true;
+                } else {
+                    errorElement.textContent = '';
+                    submitBtn.disabled = false;
+                }
+            } else {
+                console.log('No file selected');
+            }
+        });
+    });
+</script>
+{% endblock %}

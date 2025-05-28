@@ -1,4 +1,5 @@
 from app.extensions import db
+from sqlalchemy import Time
 
 class Interview(db.Model):
     __tablename__ = 'interviews'
@@ -8,6 +9,7 @@ class Interview(db.Model):
     interviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     round_number = db.Column(db.Integer)
     date = db.Column(db.Date)
+    time = db.Column(Time)
 
     applicant = db.relationship("Applicant", backref="interviews")
     interviewer = db.relationship("User", backref="interviews")

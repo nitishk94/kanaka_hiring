@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Interviews List{% endblock %}
+{% block title %}Referrals List{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Interviews List</h1>
+        <h1 class="text-3xl font-bold">Referrals List</h1>
         <div class="flex items-center gap-4">
             <div class="stats shadow">
                 <div class="stat">
-                    <div class="stat-title">Total Interviews</div>
-                    <div class="stat-value">{{ interviews|length }}</div>
+                    <div class="stat-title">Total Referrals</div>
+                    <div class="stat-value">{{ referrals|length }}</div>
                 </div>
             </div>
         </div>
@@ -21,32 +21,26 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Experience</th>
-                    <th>Qualification</th>
+                    <th>Referred By</th>
+                    <th>Referral Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for applicant in applicants %}
+                {% for referral in referrals %}
                 <tr>
-                    <td>{{ applicant.name }}</td>
-                    <td>
-                        {% if applicant.is_fresher %}
-                                Fresher
-                            {% else %}
-                                {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
-                            {% endif %}
-                    </td>
-                    <td>{{ applicant.qualification }}</td>
+                    <td>{{ referral.name }}</td>
+                    <td>{{ referral.referred_by }}</td>
+                    <td>{{ referral.referral_date }}</td>
                     <td>
                         <div class="flex gap-2">
-                            <a href="{{ url_for('main.view_applicant', id=applicant.id) }}" 
+                            <a href="{{ url_for('main.view_referral', id=referral.id) }}" 
                                class="btn btn-sm btn-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
-                                View Details
+                                Track Status
                             </a>
                         </div>
                     </td>
@@ -56,11 +50,11 @@
         </table>
     </div>
 
-    {% if not interviews %}
+    {% if not referrals %}
     <div class="text-center py-8">
         <div class="text-6xl mb-4">📝</div>
-        <h3 class="text-xl font-semibold mb-2">No Interviews Yet</h3>
-        <p class="text-gray-600 mb-4">Please contact HR to schedule some interviews.</p>
+        <h3 class="text-xl font-semibold mb-2">No Referrals Yet</h3>
+        <p class="text-gray-600 mb-4">Please wait for referrals to appear here.</p>
     </div>
     {% endif %}
 </div>

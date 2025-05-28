@@ -1,94 +1,33 @@
-[2025-05-27 11:55:13,655] INFO in __init__: Flask application startup
-[2025-05-27 11:55:13,993] INFO in __init__: Flask application startup
-[2025-05-27 11:55:42,526] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 11:55:56,831] INFO in hr: Test scheduled for applicant 14 on 2025-05-27 by vatsa
-[2025-05-27 11:58:48,378] INFO in auth: User logged out: vatsa
-[2025-05-27 11:58:56,785] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-27 11:59:18,038] INFO in auth: Invalid login attempt: shrivatsa26@gmail.com
-[2025-05-27 11:59:22,135] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 11:59:31,433] INFO in hr: Test scheduled for applicant 14 on 2025-05-27 by vatsa
-[2025-05-27 12:10:32,528] INFO in auth: User logged out: blablabla
-[2025-05-27 12:10:49,755] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 12:13:48,309] INFO in auth: User logged out: vatsa
-[2025-05-27 12:13:55,069] INFO in auth: User logged in: john_doe, Admin
-[2025-05-27 12:22:53,168] INFO in __init__: Flask application startup
-[2025-05-27 12:22:53,510] INFO in __init__: Flask application startup
-[2025-05-27 12:23:08,274] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 12:23:17,499] INFO in hr: Test scheduled for applicant 13 on 2025-05-27 by vatsa
-[2025-05-27 12:28:23,302] INFO in __init__: Flask application startup
-[2025-05-27 12:28:23,637] INFO in __init__: Flask application startup
-[2025-05-27 12:28:30,921] INFO in auth: User logged in: john_doe, Admin
-[2025-05-27 12:48:44,478] INFO in auth: Invalid login attempt: john_doe
-[2025-05-27 12:48:50,963] INFO in auth: User logged in: john_doe, Admin
-[2025-05-27 12:50:49,869] INFO in auth: User logged out: john_doe
-[2025-05-27 12:52:34,438] INFO in __init__: Flask application startup
-[2025-05-27 12:52:34,772] INFO in __init__: Flask application startup
-[2025-05-27 13:44:28,399] INFO in __init__: Flask application startup
-[2025-05-27 13:44:28,762] INFO in __init__: Flask application startup
-[2025-05-27 13:44:37,132] INFO in auth: User logged in: john_doe, Admin
-[2025-05-27 13:58:18,349] INFO in auth: User logged out: john_doe
-[2025-05-27 15:07:59,641] INFO in __init__: Flask application startup
-[2025-05-27 15:07:59,978] INFO in __init__: Flask application startup
-[2025-05-27 15:08:11,783] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 15:11:23,365] INFO in __init__: Flask application startup
-[2025-05-27 15:11:23,700] INFO in __init__: Flask application startup
-[2025-05-27 15:11:32,522] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 15:15:21,239] INFO in __init__: Flask application startup
-[2025-05-27 15:15:21,574] INFO in __init__: Flask application startup
-[2025-05-27 15:15:33,336] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 15:23:29,298] INFO in __init__: Flask application startup
-[2025-05-27 15:23:29,636] INFO in __init__: Flask application startup
-[2025-05-27 15:23:38,608] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 15:28:59,317] INFO in __init__: Flask application startup
-[2025-05-27 15:28:59,656] INFO in __init__: Flask application startup
-[2025-05-27 15:29:07,878] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:13:18,262] INFO in __init__: Flask application startup
-[2025-05-27 16:13:18,600] INFO in __init__: Flask application startup
-[2025-05-27 16:13:26,473] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:13:54,579] INFO in __init__: Flask application startup
-[2025-05-27 16:14:04,777] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:14:28,704] INFO in auth: User logged out: vatsa
-[2025-05-27 16:14:47,900] INFO in auth: Invalid login attempt: hehehaha
-[2025-05-27 16:14:53,990] INFO in auth: Invalid login attempt: hehehaha
-[2025-05-27 16:15:01,046] INFO in auth: Invalid login attempt: hehehaha
-[2025-05-27 16:15:46,949] INFO in __init__: Flask application startup
-[2025-05-27 16:15:47,282] INFO in __init__: Flask application startup
-[2025-05-27 16:15:54,488] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:17:34,361] INFO in __init__: Flask application startup
-[2025-05-27 16:17:34,692] INFO in __init__: Flask application startup
-[2025-05-27 16:17:42,063] INFO in auth: Invalid login attempt: shrivatsa26@gmail.com
-[2025-05-27 16:17:45,449] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:17:51,755] INFO in auth: User logged out: vatsa
-[2025-05-27 16:18:02,367] INFO in auth: Invalid login attempt: hehehaha
-[2025-05-27 16:18:46,429] INFO in auth: New user registration: Username = hehehe, Email = hehehe@wer.com
-[2025-05-27 16:18:57,187] INFO in auth: Login attempt for unapproved user: hehehe
-[2025-05-27 16:19:09,711] INFO in auth: User logged in: john_doe, Admin
-[2025-05-27 16:19:16,186] INFO in admin: Role assigned to user hehehe: Referrer by Admin john_doe
-[2025-05-27 16:19:19,943] INFO in admin: User hehehaha deleted by Admin john_doe
-[2025-05-27 16:19:36,331] INFO in auth: User logged out: john_doe
-[2025-05-27 16:19:49,948] INFO in auth: User logged in: hehehe, Referrer
-[2025-05-27 16:20:55,945] INFO in __init__: Flask application startup
-[2025-05-27 16:20:56,277] INFO in __init__: Flask application startup
-[2025-05-27 16:21:00,619] INFO in auth: User logged in: hehehe, Referrer
-[2025-05-27 16:22:20,327] INFO in __init__: Flask application startup
-[2025-05-27 16:22:20,672] INFO in __init__: Flask application startup
-[2025-05-27 16:22:28,613] INFO in auth: User logged in: hehehe, Referrer
-[2025-05-27 16:23:08,515] INFO in main: New referral (Name = Berty) added by hehehe
-[2025-05-27 16:23:22,533] INFO in auth: User logged out: hehehe
-[2025-05-27 16:27:53,928] INFO in __init__: Flask application startup
-[2025-05-27 16:27:54,264] INFO in __init__: Flask application startup
-[2025-05-27 16:28:01,773] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:30:19,123] INFO in hr: Test scheduled for applicant 16 on 2025-05-30 by vatsa
-[2025-05-27 16:32:56,564] INFO in hr: Interview round 1 scheduled for applicant 13 on 2025-05-30 by vatsa
-[2025-05-27 16:33:00,467] INFO in auth: User logged out: vatsa
-[2025-05-27 16:33:08,558] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-27 16:35:10,880] INFO in auth: User logged out: blablabla
-[2025-05-27 16:35:17,946] INFO in auth: Invalid login attempt: hehehe
-[2025-05-27 16:35:24,216] INFO in auth: User logged in: hehehe, Referrer
-[2025-05-27 16:35:55,509] INFO in __init__: Flask application startup
-[2025-05-27 16:35:55,863] INFO in __init__: Flask application startup
-[2025-05-27 16:37:06,200] INFO in auth: User logged in: vatsa, HR
-[2025-05-27 16:51:14,292] INFO in hr: Candidate Asika rejected
-[2025-05-27 16:53:09,337] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-27 16:54:34,517] INFO in auth: User logged out: vatsa
-[2025-05-27 17:18:46,601] INFO in auth: User logged in: vatsa, HR
+[2025-05-28 15:44:45,427] ERROR in hr: IntegrityError creating applicant: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "applicants_email_key"
+DETAIL:  Key (email)=(nancy.drew@xyz.com) already exists.
+
+[SQL: INSERT INTO applicants (name, dob, email, phone_number, gender, marital_status, location, is_fresher, qualification, experience, referenced_from, linkedin_profile, github_profile, is_kanaka_employee, current_company, designation, current_job_position, current_ctc, expected_ctc, notice_period, tenure_at_current_company, current_offers, reason_for_change, applied_date, current_stage, cv_file_path, comments, uploaded_by, is_referred, referred_by) VALUES (%(name)s, %(dob)s, %(email)s, %(phone_number)s, %(gender)s, %(marital_status)s, %(location)s, %(is_fresher)s, %(qualification)s, %(experience)s, %(referenced_from)s, %(linkedin_profile)s, %(github_profile)s, %(is_kanaka_employee)s, %(current_company)s, %(designation)s, %(current_job_position)s, %(current_ctc)s, %(expected_ctc)s, %(notice_period)s, %(tenure_at_current_company)s, %(current_offers)s, %(reason_for_change)s, %(applied_date)s, %(current_stage)s, %(cv_file_path)s, %(comments)s, %(uploaded_by)s, %(is_referred)s, %(referred_by)s) RETURNING applicants.id]
+[parameters: {'name': 'Nancy Drew', 'dob': '2003-12-20', 'email': 'nancy.drew@xyz.com', 'phone_number': '1234567890', 'gender': 'female', 'marital_status': 'Single', 'location': 'Pune', 'is_fresher': True, 'qualification': 'B.Tech', 'experience': None, 'referenced_from': 'LinkedIn', 'linkedin_profile': 'Not Provided', 'github_profile': 'Not Provided', 'is_kanaka_employee': False, 'current_company': None, 'designation': None, 'current_job_position': None, 'current_ctc': None, 'expected_ctc': None, 'notice_period': None, 'tenure_at_current_company': None, 'current_offers': None, 'reason_for_change': 'Not Provided', 'applied_date': datetime.date(2025, 5, 28), 'current_stage': 'Need to schedule test', 'cv_file_path': '/Users/shrivatsanaik/Desktop/Internship/Project/app/uploads/applicants/dummy_cv.docx', 'comments': 'No comments', 'uploaded_by': 2, 'is_referred': False, 'referred_by': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+[2025-05-28 15:44:59,379] ERROR in hr: IntegrityError creating applicant: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "applicants_phone_number_key"
+DETAIL:  Key (phone_number)=(1234567890) already exists.
+
+[SQL: INSERT INTO applicants (name, dob, email, phone_number, gender, marital_status, location, is_fresher, qualification, experience, referenced_from, linkedin_profile, github_profile, is_kanaka_employee, current_company, designation, current_job_position, current_ctc, expected_ctc, notice_period, tenure_at_current_company, current_offers, reason_for_change, applied_date, current_stage, cv_file_path, comments, uploaded_by, is_referred, referred_by) VALUES (%(name)s, %(dob)s, %(email)s, %(phone_number)s, %(gender)s, %(marital_status)s, %(location)s, %(is_fresher)s, %(qualification)s, %(experience)s, %(referenced_from)s, %(linkedin_profile)s, %(github_profile)s, %(is_kanaka_employee)s, %(current_company)s, %(designation)s, %(current_job_position)s, %(current_ctc)s, %(expected_ctc)s, %(notice_period)s, %(tenure_at_current_company)s, %(current_offers)s, %(reason_for_change)s, %(applied_date)s, %(current_stage)s, %(cv_file_path)s, %(comments)s, %(uploaded_by)s, %(is_referred)s, %(referred_by)s) RETURNING applicants.id]
+[parameters: {'name': 'Nancy Drew', 'dob': '2003-12-20', 'email': 'nancy.drew@xiyz.com', 'phone_number': '1234567890', 'gender': 'female', 'marital_status': 'Single', 'location': 'Pune', 'is_fresher': True, 'qualification': 'B.Tech', 'experience': None, 'referenced_from': 'LinkedIn', 'linkedin_profile': 'Not Provided', 'github_profile': 'Not Provided', 'is_kanaka_employee': False, 'current_company': None, 'designation': None, 'current_job_position': None, 'current_ctc': None, 'expected_ctc': None, 'notice_period': None, 'tenure_at_current_company': None, 'current_offers': None, 'reason_for_change': 'Not Provided', 'applied_date': datetime.date(2025, 5, 28), 'current_stage': 'Need to schedule test', 'cv_file_path': '/Users/shrivatsanaik/Desktop/Internship/Project/app/uploads/applicants/dummy_cv.docx', 'comments': 'No comments', 'uploaded_by': 2, 'is_referred': False, 'referred_by': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+[2025-05-28 15:51:43,215] INFO in __init__: Flask application startup
+[2025-05-28 15:51:56,501] INFO in __init__: Flask application startup
+[2025-05-28 15:53:03,029] INFO in __init__: Flask application startup
+[2025-05-28 15:53:10,238] INFO in __init__: Flask application startup
+[2025-05-28 15:55:37,592] INFO in __init__: Flask application startup
+[2025-05-28 15:55:37,929] INFO in __init__: Flask application startup
+[2025-05-28 15:55:48,738] INFO in auth: User logged in: vatsa, HR
+[2025-05-28 15:59:19,267] INFO in __init__: Flask application startup
+[2025-05-28 15:59:19,605] INFO in __init__: Flask application startup
+[2025-05-28 15:59:26,892] INFO in auth: User logged in: vatsa, HR
+[2025-05-28 16:00:22,602] INFO in __init__: Flask application startup
+[2025-05-28 16:00:22,934] INFO in __init__: Flask application startup
+[2025-05-28 16:00:29,662] INFO in auth: User logged in: vatsa, HR
+[2025-05-28 16:01:02,890] INFO in auth: User logged out: vatsa
+[2025-05-28 16:03:17,399] INFO in __init__: Flask application startup
+[2025-05-28 16:03:17,731] INFO in __init__: Flask application startup
+[2025-05-28 16:03:26,395] INFO in auth: User logged in: vatsa, HR
+[2025-05-28 16:17:01,590] INFO in __init__: Flask application startup
+[2025-05-28 16:17:01,927] INFO in __init__: Flask application startup
+[2025-05-28 16:17:07,681] INFO in auth: User logged in: vatsa, HR
+[2025-05-28 16:18:10,014] INFO in auth: User logged out: vatsa

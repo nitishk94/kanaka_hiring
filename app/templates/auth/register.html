@@ -13,6 +13,34 @@
             <form method="POST" class="card-body">
                 <div class="form-control">
                     <label class="label">
+                        <span class="label-text">Name</span>
+                    </label>
+                    <label class="input validator">
+                        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </g>
+                        </svg>
+                        <input
+                            type="text"
+                            name="name"
+                            required
+                            placeholder="Enter name"
+                            pattern="[A-Za-z]"
+                            minlength="2"
+                            maxlength="50"
+                            title="Please enter a valid name"
+                            value="{{ form_data.name if form_data else '' }}"
+                        />
+                    </label>
+                    <p class="validator-hint hidden">
+                        Please enter a valid name
+                    </p>
+                </div>
+                
+                <div class="form-control">
+                    <label class="label">
                         <span class="label-text">Username</span>
                     </label>
                     <label class="input validator">

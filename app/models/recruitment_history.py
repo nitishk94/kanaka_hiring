@@ -1,5 +1,5 @@
 from app.extensions import db
-from sqlalchemy import event
+from sqlalchemy import event, Time
 from datetime import date, datetime
 
 def ensure_date(value):
@@ -19,11 +19,14 @@ class RecruitmentHistory(db.Model):
     applicant_id = db.Column(db.Integer, db.ForeignKey('applicants.id'), nullable=False)
     test_scheduled = db.Column(db.Date)
     test_result = db.Column(db.Boolean)
-    interview_round_1 = db.Column(db.Date)
+    interview_round_1_date = db.Column(db.Date)
+    interview_round_1_time = db.Column(Time)
     interview_round_1_comments = db.Column(db.Text, default=None)
-    interview_round_2 = db.Column(db.Date)
+    interview_round_2_date = db.Column(db.Date)
+    interview_round_2_time = db.Column(Time)
     interview_round_2_comments = db.Column(db.Text, default=None)
-    hr_round = db.Column(db.Date)
+    hr_round_date = db.Column(db.Date)
+    hr_round_time = db.Column(Time)
     hr_round_comments = db.Column(db.Text, default=None)
     rejected = db.Column(db.Boolean, default=False)
     current_stage = db.Column(db.Text, default='Need to schedule test')
@@ -33,9 +36,9 @@ class RecruitmentHistory(db.Model):
 
     def compute_current_stage(self):
         today = date.today()
-        hr_date = ensure_date(self.hr_round)
-        round2_date = ensure_date(self.interview_round_2)
-        round1_date = ensure_date(self.interview_round_1)
+        hr_date = ensure_date(self.hr_round_date)
+        round2_date = ensure_date(self.interview_round_2_date)
+        round1_date = ensure_date(self.interview_round_1_date)
         test_date = ensure_date(self.test_scheduled)
 
         if self.rejected:
