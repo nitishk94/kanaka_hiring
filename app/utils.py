@@ -39,7 +39,7 @@ def generate_timeline(id):
     
     timeline = [
         {'title': 'Application Received', 'date': applicant.applied_date},
-        {'title': 'Test Scheduled', 'date': history.test_scheduled, 'result': history.test_result} if history.test_scheduled else None,
+        {'title': 'Test Scheduled', 'date': history.test_scheduled, 'result': history.test_result if history.test_result is not None else None} if history.test_scheduled else None,
         {'title': 'First Interview', 'date': history.interview_round_1_date, 'comments': history.interview_round_1_comments} if history.interview_round_1_date else None,
         {'title': 'Second Interview', 'date': history.interview_round_2_date, 'comments': history.interview_round_2_comments} if history.interview_round_2_date else None,
         {'title': 'HR Interview', 'date': history.hr_round_date, 'comments': history.hr_round_comments} if history.hr_round_date else None,

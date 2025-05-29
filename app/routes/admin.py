@@ -74,12 +74,16 @@ def change_password(user_id):
         return redirect(url_for('admin.edit_user', user_id=user_id))
     
     user.set_password(new_password)
-    user.password_changed = True
+    if user.role != 'admin':
+        user.password_changed = True
     db.session.commit()
     
     current_app.logger.info(f"Password updated for user {user.username} by Admin {current_user.username}")
     flash('User password updated successfully', 'success')
-    return redirect(url_for('admin.edit_user', user_id=user_id))
+    if request.referrer.endswith(url_for('main.profile')):
+        return redirect(url_for('main.profile', user=current_user))
+    else:
+        return redirect(url_for('admin.edit_user', user_id=user_id))
 
 @bp.route('/logs')
 @login_required

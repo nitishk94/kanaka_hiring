@@ -61,14 +61,14 @@
                                     {% if step.date %}
                                         <p class="text-sm text-gray-500">{{ step.date.strftime('%B %d, %Y') }}</p>
                                     {% endif %}
-                                    {% if step.result %}
+                                    {% if step.result is not none %}
                                         <p class="text-sm">
                                             Result:
                                             <span class="font-semibold 
-                                                {% if step.result == 'Passed' %}text-success
-                                                {% elif step.result == 'Failed' %}text-error
+                                                {% if step.result == True %}text-success
+                                                {% elif step.result == False %}text-error
                                                 {% endif %}">
-                                                {{ step.result }}
+                                                {{ 'Passed' if step.result else 'Failed'}}
                                             </span>
                                         </p>
                                     {% endif %}

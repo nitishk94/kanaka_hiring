@@ -197,7 +197,7 @@
                 <h2 class="card-title mb-4">Application Status</h2>
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[375px] text-s badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
+                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[375px] text-sm badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
                             {{ applicant.current_stage }}
                         </div>
                         <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>

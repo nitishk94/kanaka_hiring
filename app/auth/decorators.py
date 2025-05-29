@@ -1,3 +1,4 @@
+from flask import current_app
 from flask_login import current_user
 from functools import wraps
 from flask import redirect, url_for, flash, make_response
@@ -8,10 +9,12 @@ def role_required(*roles):
         def wrapper(*args, **kwargs):
             if not current_user.is_authenticated:
                 flash("Login required", "warning")
+                current_app.logger.info(f"Access denied: User not authenticated")
                 return redirect(url_for('<login page>'))
 
             if current_user.role not in roles:
                 flash("Access denied: insufficient permissions", "danger")
+                current_app.logger.info(f"Access denied: insufficient permission for {current_user.username}")
                 return redirect(url_for('<home page>'))
 
             return view_func(*args, **kwargs)

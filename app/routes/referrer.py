@@ -73,5 +73,5 @@ def refer_candidates():
 @login_required
 @role_required('referrer', 'admin')
 def referrals():
-    referrals = Referral.query.filter_by(referrer_id=current_user.id).order_by(Referral.applied_date.desc()).all()
+    referrals = Referral.query.filter_by(referrer_id=current_user.id).order_by(Referral.referral_date.desc()).all()
     return render_template('referrer/candidates.html', referrals=referrals)
