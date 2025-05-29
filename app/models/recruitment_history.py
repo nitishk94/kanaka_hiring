@@ -1,6 +1,7 @@
 from app.extensions import db
 from sqlalchemy import event, Time
-from datetime import date, datetime
+from datetime import date, datetime, time
+from app.models.interviews import Interview
 
 def ensure_date(value):
     if value == None:
@@ -11,6 +12,20 @@ def ensure_date(value):
         return value.date()
     if isinstance(value, str):
         return datetime.strptime(value, '%Y-%m-%d').date()
+
+def ensure_time(value):
+    if value == None:
+        return None
+    if isinstance(value, time):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.strptime(value, '%H:%M').time()
+        except ValueError:
+            return datetime.strptime(value, '%H:%M:%S').time()
+    if isinstance(value, datetime):
+        return value.time()
+    return value
 
 class RecruitmentHistory(db.Model):
     __tablename__ = 'recruitment_history'
@@ -41,21 +56,35 @@ class RecruitmentHistory(db.Model):
         round1_date = ensure_date(self.interview_round_1_date)
         test_date = ensure_date(self.test_scheduled)
 
+        hr_time = ensure_time(self.hr_round_time)
+        round2_time = ensure_time(self.interview_round_2_time)
+        round1_time = ensure_time(self.interview_round_1_time)
+
+        latest_hr = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=3).order_by(Interview.id.desc()).first()
+        latest_round2 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=2).order_by(Interview.id.desc()).first()
+        latest_round1 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=1).order_by(Interview.id.desc()).first()
+
         if self.rejected:
             return "Rejected"
         elif hr_date:
             if hr_date >= today:
-                return f"HR round scheduled on {hr_date.strftime('%Y-%m-%d')}"
+                time_str = hr_time.strftime('%H:%M')
+                interviewer_name = latest_hr.interviewer.username if latest_hr else 'TBD'
+                return f"HR round scheduled on {hr_date.strftime('%Y-%m-%d')} at {time_str} with {interviewer_name}"
             else:
                 return "HR round completed"
         elif round2_date:
             if round2_date >= today:
-                return f"Interview round 2 scheduled on {round2_date.strftime('%Y-%m-%d')}"
+                time_str = round2_time.strftime('%H:%M')
+                interviewer_name = latest_round2.interviewer.username if latest_round2 else 'TBD'
+                return f"Interview round 2 scheduled on {round2_date.strftime('%Y-%m-%d')} at {time_str} with {interviewer_name}"
             else:
                 return "Interview round 2 completed"
         elif round1_date:
             if round1_date >= today:
-                return f"Interview round 1 scheduled on {round1_date.strftime('%Y-%m-%d')}"
+                time_str = round1_time.strftime('%H:%M')
+                interviewer_name = latest_round1.interviewer.username if latest_round1 else 'TBD'
+                return f"Interview round 1 scheduled on {round1_date.strftime('%Y-%m-%d')} at {time_str} with {interviewer_name}"
             else:
                 return "Interview round 1 completed"
         elif test_date:

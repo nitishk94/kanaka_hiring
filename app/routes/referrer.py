@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, current_app, request, session, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, no_cache
 from app.models.referrals import Referral
 from app.models.users import User
 from app.utils import validate_file
@@ -12,6 +12,7 @@ import os
 bp = Blueprint('referrer', __name__, url_prefix='/referrer')
 
 @bp.route('/dashboard')
+@no_cache
 @login_required
 @role_required('referrer')
 def dashboard():

@@ -1,4 +1,5 @@
 from app.extensions import db
+from sqlalchemy import BigInteger
 
 class Applicant(db.Model):
     __tablename__ = 'applicants'
@@ -7,7 +8,7 @@ class Applicant(db.Model):
     name = db.Column(db.String(100), nullable = False)
     dob = db.Column(db.Date)
     email = db.Column(db.String(100), unique = True)
-    phone_number = db.Column(db.Integer, unique = True)
+    phone_number = db.Column(BigInteger, unique = True)
     gender = db.Column(db.String(10))
     marital_status = db.Column(db.String(50))
     location = db.Column(db.String(100))

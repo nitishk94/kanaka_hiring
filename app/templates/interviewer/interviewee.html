@@ -42,7 +42,11 @@
                     <div>
                         <p class="text-sm text-gray-500">Experience</p>
                         <p class="font-semibold">
-                            {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
+                            {% if applicant.is_fresher %}
+                                Fresher
+                            {% else %}
+                                {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
+                            {% endif %}
                         </p>
                     </div>
                     <div>
@@ -108,12 +112,12 @@
                             <div class="form-control">
                                 <label class="label cursor-pointer justify-start gap-4">
                                     <input type="checkbox" name="interview_completed" required class="checkbox checkbox-primary" />
-                                    <span class="label-text">I confirm that the interview has been completed</span>
+                                    <span class="label-text">I confirm that the interview has been completed <span class="text-error">*</span></span>
                                 </label>
                             </div>
 
                             <label class="label" for="feedback">
-                                <span class="label-text">Feedback</span>
+                                <span class="label-text">Feedback <span class="text-error">*</span></span>
                             </label>
                             <textarea id="feedback" name="feedback" class="textarea textarea-bordered h-32 w-full" placeholder="Enter your detailed feedback here..."></textarea>
                             <button type="submit" class="btn btn-primary w-full mt-4">Submit Feedback</button>

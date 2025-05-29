@@ -197,7 +197,7 @@
                 <h2 class="card-title mb-4">Application Status</h2>
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
+                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[375px] text-s badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
                             {{ applicant.current_stage }}
                         </div>
                         <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
@@ -211,7 +211,7 @@
                         {% if applicant.current_stage != 'Rejected' %}
                             {% if applicant.current_stage != 'Interview round 2 completed' %}
                                 {% if applicant.current_stage == 'Need to schedule test' %}
-                                    <div class="dropdown dropdown-end">
+                                    <div class="dropdown dropdown-top">
                                         <label tabindex="0" class="btn btn-primary">Schedule Test</label>
                                         <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
                                             <form action="{{ url_for('hr.schedule_test', id=applicant.id) }}" method="POST">
@@ -226,7 +226,7 @@
                                         </div>
                                     </div>
                                 {% else %}
-                                    <div class="dropdown dropdown-end">
+                                    <div class="dropdown dropdown-top">
                                         <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
                                         <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
                                             <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
@@ -259,7 +259,7 @@
                                     </div>
                                 {% endif %}
                             {% else %}
-                                <div class="dropdown dropdown-end">
+                                <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-secondary">Schedule HR Round Interview</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
                                         <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST">

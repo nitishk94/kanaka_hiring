@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, no_cache
 from app.models.interviews import Interview
 from app.models.applicants import Applicant
 from app.models.recruitment_history import RecruitmentHistory
@@ -10,6 +10,7 @@ bp = Blueprint('interviewer', __name__, url_prefix='/interviewer')
 INTERVIEWER_ROLES = ('interviewer', 'admin')
 
 @bp.route('/dashboard')
+@no_cache
 @login_required
 @role_required('interviewer')
 def dashboard():
@@ -28,7 +29,7 @@ def view_interviews():
 @role_required(*INTERVIEWER_ROLES)
 def view_interviewee(id):
     interviewee = Applicant.query.get_or_404(id)
-    return render_template('main.view_applicant', interviewee=interviewee)
+    return render_template('interviewer/interviewee.html', applicant=interviewee)
 
 @bp.route('/submit_feedback/<int:id>', methods=['GET', 'POST'])
 @login_required

@@ -1,12 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, no_cache
 from app.models.users import User
 from app.extensions import db
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @bp.route('/dashboard')
+@no_cache
 @login_required
 @role_required('admin')
 def dashboard():

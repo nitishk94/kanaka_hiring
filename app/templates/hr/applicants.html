@@ -54,8 +54,8 @@
                         <td>{{ applicant.notice_period if applicant.notice_period else ''}}</td>
                         <td>{{ applicant.comments }}</td>
                         <td>
-                            <div class="badge badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
-                                {{ applicant.current_stage }}
+                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[200px] text-xs badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
+                                {{ applicant.current_stage.split(' on')[0] }}
                             </div>
                         </td>
                         <td>

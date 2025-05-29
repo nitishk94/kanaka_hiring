@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.auth.decorators import role_required
+from app.auth.decorators import role_required, no_cache
 from app.models.applicants import Applicant
 from app.models.recruitment_history import RecruitmentHistory
 from app.models.users import User
@@ -11,6 +11,7 @@ from app.utils import generate_timeline, update_status
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
+@no_cache
 def home():
     return render_template('home.html')
 

@@ -12,32 +12,35 @@
             <h2 class="text-xl font-semibold mb-4">User Details</h2>
             <p><strong>Username:</strong> {{ user.username }}</p>
             <p><strong>Email:</strong> {{ user.email }}</p>
-            <p><strong>Role:</strong> {{ user.role.capitalize() if user.role != 'hr' else 'HR' }}</p>
+            <p><strong>Designation:</strong> {{ user.designation }}</p>
+            <p><strong>LinkedIn Profile:</strong> {{ user.linkedin_profile }}</p>
         </div>
 
-        <div class="bg-base-100 p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Change Password</h2>
-            <form action="{{ url_for('main.profile') }}" method="POST">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Current Password</span>
-                    </label>
-                    <input type="password" name="current_password" class="input input-bordered" required />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">New Password</span>
-                    </label>
-                    <input type="password" name="new_password" class="input input-bordered" required />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Confirm New Password</span>
-                    </label>
-                    <input type="password" name="confirm_password" class="input input-bordered" required />
-                </div>
-                <button type="submit" class="btn btn-primary mt-4">Change Password</button>
-            </form>
+        {% if user.role == 'admin' %}
+            <div class="bg-base-100 p-6 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold mb-4">Change Password</h2>
+                <form action="{{ url_for('main.profile') }}" method="POST">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Current Password</span>
+                        </label>
+                        <input type="password" name="current_password" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">New Password</span>
+                        </label>
+                        <input type="password" name="new_password" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text">Confirm New Password</span>
+                        </label>
+                        <input type="password" name="confirm_password" class="input input-bordered" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4">Change Password</button>
+                </form>
+            </div>
         </div>
-    </div>
+    {% endif %}
 {% endblock %} 

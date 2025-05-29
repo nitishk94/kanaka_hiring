@@ -1,7 +1,7 @@
+from sqlalchemy.exc import IntegrityError
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_required, current_user
-from app.auth.decorators import role_required
-from sqlalchemy.exc import IntegrityError
+from app.auth.decorators import role_required, no_cache
 from app.models.users import User
 from app.models.applicants import Applicant
 from app.models.recruitment_history import RecruitmentHistory
@@ -17,6 +17,7 @@ bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
 
 @bp.route('/dashboard')
+@no_cache
 @login_required
 @role_required(*HR_ROLES)
 def dashboard():
@@ -190,25 +191,30 @@ def schedule_interview(id):
     interviewer_id = request.form['interviewer_id']
     history = RecruitmentHistory.query.filter_by(applicant_id = id).first()
 
-    if not history.interview_round_1:
-        history.interview_round_1 = date
-        history.interview_round_1_time = time
+    if not history.interview_round_1_date:
         round = 1
         interview = Interview(applicant_id=id, date=date, time=time, round_number=round, interviewer_id=interviewer_id)
         db.session.add(interview)
-    elif not history.interview_round_2:
-        history.interview_round_2 = date
-        history.interview_round_2_time = time
+        db.session.commit()
+        history.interview_round_1_date = date
+        history.interview_round_1_time = time
+        
+    elif not history.interview_round_2_date:
         round = 2
         interview = Interview(applicant_id=id, date=date, time=time, round_number=round, interviewer_id=interviewer_id)
         db.session.add(interview)
+        db.session.commit()
+        history.interview_round_2_date = date
+        history.interview_round_2_time = time
+        
     else:
-        history.hr_round = date
-        history.hr_round_time = time
-        round = 'HR'
+        round = 3
         interview = Interview(applicant_id=id, date=date, time=time, round_number=round, interviewer_id=interviewer_id)
         db.session.add(interview)
-    
+        db.session.commit()
+        history.hr_round_date = date
+        history.hr_round_time = time
+        
     db.session.commit()
     flash('Interview scheduled successfully', 'success')
     current_app.logger.info(f"Interview round {round} scheduled for applicant {id} on {date} by {current_user.username}")

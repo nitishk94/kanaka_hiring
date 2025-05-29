@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from app.models.users import User
 from app.extensions import db
 from app.utils import is_valid_email
+from app.auth.decorators import no_cache
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -49,6 +50,7 @@ def register():
     return render_template('auth/register.html')
 
 @bp.route('/login', methods=['GET', 'POST'])
+@no_cache
 def login():
     if current_user.is_authenticated:
         flash('You are already logged in.', 'info')
@@ -100,7 +102,7 @@ def login():
         flash('Invalid username/email or password', 'error')
         current_app.logger.info(f"Invalid login attempt: {username_or_email}")
         return render_template('auth/login.html', form_data=request.form)
-
+    
     return render_template('auth/login.html')
 
 @bp.route('/logout')

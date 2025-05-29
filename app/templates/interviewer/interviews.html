@@ -32,15 +32,15 @@
                     <td>{{ applicant.name }}</td>
                     <td>
                         {% if applicant.is_fresher %}
-                                Fresher
-                            {% else %}
-                                {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
-                            {% endif %}
+                            Fresher
+                        {% else %}
+                            {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
+                        {% endif %}
                     </td>
                     <td>{{ applicant.qualification }}</td>
                     <td>
                         <div class="flex gap-2">
-                            <a href="{{ url_for('main.view_applicant', id=applicant.id) }}" 
+                            <a href="{{ url_for('interviewer.view_interviewee', id=applicant.id) }}" 
                                class="btn btn-sm btn-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>

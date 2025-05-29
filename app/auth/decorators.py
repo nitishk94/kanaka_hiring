@@ -1,6 +1,6 @@
 from flask_login import current_user
 from functools import wraps
-from flask import redirect, url_for, flash
+from flask import redirect, url_for, flash, make_response
 
 def role_required(*roles):
     def decorator(view_func):
@@ -17,3 +17,13 @@ def role_required(*roles):
             return view_func(*args, **kwargs)
         return wrapper
     return decorator
+
+def no_cache(view):
+    @wraps(view)
+    def no_cache_wrapper(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    return no_cache_wrapper
