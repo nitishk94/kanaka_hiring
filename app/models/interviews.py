@@ -10,6 +10,7 @@ class Interview(db.Model):
     round_number = db.Column(db.Integer)
     date = db.Column(db.Date)
     time = db.Column(Time)
+    completed = db.Column(db.Boolean, default=False)
 
     applicant = db.relationship("Applicant", backref="interviews")
     interviewer = db.relationship("User", backref="interviews")

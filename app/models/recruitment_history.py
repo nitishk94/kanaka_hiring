@@ -49,6 +49,13 @@ class RecruitmentHistory(db.Model):
 
     applicant = db.relationship("Applicant", back_populates="history_entries")
 
+    def get_interviewer_name(self, interview):
+        return interview.interviewer.username if interview else 'TBD'
+
+    def format_scheduled_interview(self, date, time, interview_type, interviewer):
+        time_str = time.strftime('%H:%M')
+        return f"{interview_type} scheduled on {date.strftime('%Y-%m-%d')} at {time_str} with {interviewer}"
+
     def compute_current_stage(self):
         today = date.today()
         hr_date = ensure_date(self.hr_round_date)
@@ -65,37 +72,33 @@ class RecruitmentHistory(db.Model):
         latest_round1 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=1).order_by(Interview.id.desc()).first()
 
         if self.rejected:
-            return "Rejected"
-        elif hr_date:
-            if hr_date >= today:
-                time_str = hr_time.strftime('%H:%M')
-                interviewer_name = latest_hr.interviewer.username if latest_hr else 'TBD'
-                return f"HR round scheduled on {hr_date.strftime('%Y-%m-%d')} at {time_str} with {interviewer_name}"
-            else:
-                return "HR round completed"
-        elif round2_date:
-            if round2_date >= today:
-                time_str = round2_time.strftime('%H:%M')
-                interviewer_name = latest_round2.interviewer.username if latest_round2 else 'TBD'
-                return f"Interview round 2 scheduled on {round2_date.strftime('%Y-%m-%d')} at {time_str} with {interviewer_name}"
-            else:
-                return "Interview round 2 completed"
-        elif round1_date:
-            if round1_date >= today:
-                time_str = round1_time.strftime('%H:%M')
-                interviewer_name = latest_round1.interviewer.username if latest_round1 else 'TBD'
-                return f"Interview round 1 scheduled on {round1_date.strftime('%Y-%m-%d')} at {time_str} with {interviewer_name}"
-            else:
-                return "Interview round 1 completed"
-        elif test_date:
+            return "Rejected - Test Failed" if not self.test_result else "Rejected"
+            
+        interview_rounds = [
+            (hr_date, hr_time, latest_hr, "HR round"),
+            (round2_date, round2_time, latest_round2, "Interview round 2"),
+            (round1_date, round1_time, latest_round1, "Interview round 1")
+        ]
+        
+        for interview_date, interview_time, interview, round_name in interview_rounds:
+            if interview_date:
+                if interview_date >= today and not interview.completed:
+                    interviewer_name = self.get_interviewer_name(interview)
+                    return self.format_scheduled_interview(interview_date, interview_time, round_name, interviewer_name)
+                else:
+                    return f"{round_name} completed"
+
+        if test_date:
             if self.test_result is not None:
-                return "Test passed" if self.test_result else "Test failed"
-            elif test_date >= today:
+                if not self.test_result:
+                    self.rejected = True
+                    return "Test Failed"
+                return "Test Passed"
+            elif test_date >= today or self.test_result is not None:
                 return f"Test scheduled on {test_date.strftime('%Y-%m-%d')}"
-            else:
-                return "Test completed"
-        else:
-            return "Need to schedule test"
+            return "Test completed"
+            
+        return "Need to schedule test"
         
 @event.listens_for(RecruitmentHistory, 'after_update')
 def after_history_update(mapper, connection, target):

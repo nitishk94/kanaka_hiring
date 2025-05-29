@@ -25,7 +25,7 @@
     </div>
 
     <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
-        <table class="table table-zebra">
+        <table class="table table-zebra table-compact">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -33,7 +33,7 @@
                     <th>Phone</th>
                     <th>Experience</th>
                     <th>Notice Period</th>
-                    <th>Comments/Summary</th>
+                    <th class="w-32">Comments/Summary</th>
                     <th>Current Stage</th>
                     <th>Actions</th>
                 </tr>
@@ -54,7 +54,7 @@
                         <td>{{ applicant.notice_period if applicant.notice_period else ''}} {{'days' if applicant.notice_period else ''}}</td>
                         <td>{{ applicant.comments }}</td>
                         <td>
-                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[200px] text-xs badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
+                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[200px] text-xs badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                                 {{ applicant.current_stage.split(' on')[0] }}
                             </div>
                         </td>

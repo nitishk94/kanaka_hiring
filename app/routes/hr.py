@@ -24,10 +24,13 @@ def dashboard():
     return render_template('hr/dashboard.html')
 
 @bp.route('/applicants')
+@no_cache
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
     applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
+    for applicant in applicants:
+        update_status(applicant.id)
     return render_template('hr/applicants.html', applicants=applicants)
 
 @bp.route('/upload_applicants', methods=['GET', 'POST'])
