@@ -36,3 +36,24 @@
 [2025-05-29 10:37:36,498] INFO in __init__: Flask application startup
 [2025-05-29 10:37:42,985] INFO in __init__: Flask application startup
 [2025-05-29 10:37:53,170] INFO in auth: User logged in: vatsa, HR
+[2025-05-29 10:54:31,760] INFO in __init__: Flask application startup
+[2025-05-29 10:54:35,955] INFO in __init__: Flask application startup
+[2025-05-29 11:08:30,654] INFO in __init__: Flask application startup
+[2025-05-29 11:08:30,993] INFO in __init__: Flask application startup
+[2025-05-29 11:08:40,292] INFO in auth: User logged in: john_doe, Admin
+[2025-05-29 11:11:59,769] INFO in admin: Role updated for user Hunky-Dory: Interviewer by Admin john_doe
+[2025-05-29 11:17:43,365] INFO in __init__: Flask application startup
+[2025-05-29 11:17:43,706] INFO in __init__: Flask application startup
+[2025-05-29 11:17:51,895] INFO in auth: User logged in: john_doe, Admin
+[2025-05-29 11:18:01,447] INFO in admin: Role updated for user blablabla: Interviewer by Admin john_doe
+[2025-05-29 11:18:28,839] INFO in __init__: Flask application startup
+[2025-05-29 11:18:32,333] INFO in __init__: Flask application startup
+[2025-05-29 11:35:55,549] INFO in __init__: Flask application startup
+[2025-05-29 11:35:55,904] INFO in __init__: Flask application startup
+[2025-05-29 11:36:49,415] INFO in auth: User logged in: john_doe, Admin
+[2025-05-29 11:46:16,828] INFO in __init__: Flask application startup
+[2025-05-29 11:47:09,662] INFO in __init__: Flask application startup
+[2025-05-29 11:47:10,011] INFO in __init__: Flask application startup
+[2025-05-29 11:47:21,932] INFO in auth: User logged in: john_doe, Admin
+[2025-05-29 11:47:45,377] INFO in admin: Password updated for user Hunky-Dory by Admin john_doe
+[2025-05-29 11:47:56,695] INFO in auth: User logged out: john_doe

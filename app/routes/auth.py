@@ -79,6 +79,9 @@ def login():
         else:
             user = User.query.filter_by(username=username_or_email).first()
 
+        if user and user.password_changed:
+            return redirect(url_for('main.home', password_changed=True))
+        
         if user and user.check_password(password):
             if not user.role:
                 current_app.logger.info(f"Login attempt for unapproved user: {username_or_email}")

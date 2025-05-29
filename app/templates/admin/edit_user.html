@@ -3,41 +3,105 @@
 {% block title %}Edit User{% endblock %}
 
 {% block content %}
-<div class="hero min-h-[calc(100vh-4rem)]">
-    <div class="hero-content flex-col">
-        <div class="text-center">
-            <h1 class="text-5xl font-bold">Edit User</h1>
-            <p class="py-6">Update user details for {{ user.username }}</p>
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold mb-4">Edit User</h1>
+        <p class="text-lg text-gray-600">Update user details for {{ user.username }}</p>
+    </div>
+
+    <!-- Role Update Card -->
+    <div class="space-y-6 max-w-3xl mx-auto">
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Role Information</h2>
+                <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id) }}">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Username</span>
+                            </label>
+                            <input type="text" value="{{ user.username }}" class="input input-bordered" disabled />
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Email</span>
+                            </label>
+                            <input type="email" value="{{ user.email }}" class="input input-bordered" disabled />
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Role <span class="text-error">*</span></span>
+                            </label>
+                            <select name="role" class="select select-bordered" required>
+                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                <option value="hr" {% if user.role == 'hr' %}selected{% endif %}>HR</option>
+                                <option value="interviewer" {% if user.role == 'interviewer' %}selected{% endif %}>Interviewer</option>
+                                <option value="referrer" {% if user.role == 'referrer' %}selected{% endif %}>Referrer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary">Update Role</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            <form method="POST" class="card-body">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Username</span>
-                    </label>
-                    <input type="text" value="{{ user.username }}" class="input input-bordered" disabled />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Email</span>
-                    </label>
-                    <input type="email" value="{{ user.email }}" class="input input-bordered" disabled />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Role</span>
-                    </label>
-                    <select name="role" class="select select-bordered">
-                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                        <option value="hr" {% if user.role == 'hr' %}selected{% endif %}>HR</option>
-                        <option value="interviewer" {% if user.role == 'interviewer' %}selected{% endif %}>Interviewer</option>
-                        <option value="referrer" {% if user.role == 'referrer' %}selected{% endif %}>Referrer</option>
-                    </select>
-                </div>
-                <div class="form-control mt-6">
-                    <button type="submit" class="btn btn-primary">Update User</button>
-                </div>
-            </form>
+
+        <!-- Password Update Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Change Password</h2>
+                <form method="POST" action="{{ url_for('admin.change_password', user_id=user.id) }}">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">New Password <span class="text-error">*</span></span>
+                            </label>
+                            <div class="input validator">
+                                <input 
+                                    type="password" 
+                                    name="new_password"
+                                    required
+                                    placeholder="Password"
+                                    minlength="8"
+                                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                                    title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
+                                    class="w-full border-none p-0 focus:outline-none"
+                                />
+                            </div>
+                            <p class="validator-hint hidden mt-2">
+                                Must be more than 8 characters, including
+                                <br />At least one number
+                                <br />At least one lowercase letter
+                                <br />At least one uppercase letter
+                            </p>
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Confirm Password <span class="text-error">*</span></span>
+                            </label>
+                            <div class="input validator">
+                                <input
+                                    type="password"
+                                    name="confirm_password"
+                                    required
+                                    placeholder="Confirm password"
+                                    minlength="8"
+                                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                                    title="Must match the password above"
+                                    class="w-full border-none p-0 focus:outline-none"
+                                />
+                            </div>
+                            <p class="validator-hint hidden mt-2">
+                                Must match the password above
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
