@@ -6,7 +6,7 @@ from app.models.applicants import Applicant
 from app.models.users import User
 from app.models.recruitment_history import RecruitmentHistory
 from app.extensions import db
-from sqlalchemy.orm import aliased, joinedload
+from sqlalchemy.orm import joinedload
 
 bp = Blueprint('interviewer', __name__, url_prefix='/interviewer')
 INTERVIEWER_ROLES = ('interviewer', 'admin')

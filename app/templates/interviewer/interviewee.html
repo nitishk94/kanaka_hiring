@@ -79,7 +79,6 @@
                             </svg>
                             <div>
                                 <p class="font-semibold">Resume File</p>
-                                <p class="text-sm text-gray-500">Uploaded on {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
                             </div>
                         </div>
                         <a href="{{ url_for('hr.download_cv', id=applicant.id) }}" class="btn btn-primary">

@@ -8,7 +8,7 @@ from app.models.applicants import Applicant
 from app.models.recruitment_history import RecruitmentHistory
 from app.models.interviews import Interview
 from app.models.referrals import Referral
-from app.utils import validate_file, update_status
+from app.utils import validate_file, update_status, can_upload_applicant
 from app.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import date
@@ -29,17 +29,12 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
-    if current_user.role == 'hr':
-        applicants = Applicant.query.filter_by(uploaded_by=current_user.id).order_by(Applicant.applied_date.desc()).all()
-        for applicant in applicants:
-            update_status(applicant.id)
-        return render_template('hr/applicants.html', applicants=applicants)
-    else:
-        applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
-        hrs = User.query.filter_by(role='hr').all()
-        for applicant in applicants:
-            update_status(applicant.id)
-        return render_template('hr/applicants.html', applicants=applicants, users=hrs)
+    applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
+    hrs = User.query.filter_by(role='hr').all()
+    for applicant in applicants:
+        update_status(applicant.id)
+    return render_template('hr/applicants.html', applicants=applicants, users=hrs)
+        
 
 @bp.route('/upload_applicants', methods=['GET', 'POST'])
 @login_required
@@ -60,6 +55,16 @@ def upload_applicants():
         # Get all form data
         name = request.form.get('name')
         email = request.form.get('email')
+
+        if not can_upload_applicant(email):
+            flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+            return redirect(url_for('hr.upload_applicants'))
+        
+        applicant = Applicant.query.filter_by(email=email).first()
+        if applicant:
+            applicant.last_applied = date.today()
+            applicant.status = 'Applied'
+
         phone_number = request.form.get('phone_number')
         dob = request.form.get('dob')
         gender = request.form.get('gender')
@@ -122,7 +127,7 @@ def upload_applicants():
             current_offers=int(current_offers) if current_offers else None,
             reason_for_change=reason_for_change if reason_for_change else 'Not Provided',
             comments=comments if comments else 'No comments',
-            applied_date=date.today(),
+            last_applied=date.today(),
             current_stage='Need to schedule test',
             cv_file_path=file_path,
             uploaded_by=current_user.id,
@@ -159,6 +164,7 @@ def upload_applicants():
     return render_template('hr/upload.html')
 
 @bp.route('/view_applicant/<int:id>')
+@no_cache
 @login_required
 @role_required(*HR_ROLES)
 def view_applicant(id):
@@ -198,11 +204,20 @@ def reschedule_test(id):
         
     return redirect(url_for('hr.view_applicant', id=id))
 
-@bp.route('/applicants/filter')
+@bp.route('/filter_applicants')
 @login_required
 @role_required(*HR_ROLES)
 def filter_applicants():
-    return "Filter Applicants"
+    hr_users = User.query.filter_by(role='hr').all()
+    
+    hr_id = request.args.get('hr_id', '')
+    
+    if hr_id:
+        applicants = Applicant.query.filter_by(uploaded_by=hr_id).order_by(Applicant.last_applied.desc()).all()
+    else:
+        applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
+    
+    return render_template('hr/applicants.html', applicants=applicants, users=hr_users)
 
 @bp.route('/applicants/<int:id>/download_cv')
 @login_required
@@ -249,12 +264,14 @@ def schedule_interview(id):
     return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/reject_application/<int:id>', methods=['POST'])
+@no_cache
 @login_required
 @role_required(*HR_ROLES)
 def reject_application(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     history.rejected = True
     applicant = Applicant.query.get_or_404(id)
+    applicant.status = 'Rejected'
     db.session.commit()
     current_app.logger.info(f"Candidate {applicant.name} rejected")
     flash('Candidate rejected', 'error')
@@ -310,15 +327,12 @@ def reschedule_interview(id):
     time = request.form['interview_time']
     interviewer_id = request.form['interviewer_id']
     
-    # Find the interview to reschedule
     interview = Interview.query.get_or_404(id)
     
-    # Update the interview details
     interview.date = date
     interview.time = time
     interview.interviewer_id = interviewer_id
     
-    # Update the corresponding history entry
     history = RecruitmentHistory.query.filter_by(applicant_id=interview.applicant_id).first()
     if interview.round_number == 1:
         history.interview_round_1_date = date
@@ -326,7 +340,7 @@ def reschedule_interview(id):
     elif interview.round_number == 2:
         history.interview_round_2_date = date
         history.interview_round_2_time = time
-    else:  # HR round
+    else:
         history.hr_round_date = date
         history.hr_round_time = time
     
@@ -334,7 +348,6 @@ def reschedule_interview(id):
     flash('Interview rescheduled successfully', 'success')
     current_app.logger.info(f"Interview round {interview.round_number} rescheduled for applicant {interview.applicant_id} to {date} by {current_user.username}")
     
-    # Determine which page to redirect back to based on the referrer
     referrer = request.referrer
     if referrer and 'view_interviews' in referrer:
         return redirect(url_for('hr.view_interviews'))

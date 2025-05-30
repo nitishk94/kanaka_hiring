@@ -32,6 +32,7 @@ class RecruitmentHistory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     applicant_id = db.Column(db.Integer, db.ForeignKey('applicants.id'), nullable=False)
+    applied_date = db.Column(db.Date)
     test_scheduled = db.Column(db.Date)
     test_result = db.Column(db.Boolean)
     interview_round_1_date = db.Column(db.Date)

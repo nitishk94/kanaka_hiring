@@ -164,7 +164,7 @@
                             </svg>
                             <div>
                                 <p class="font-semibold">Resume File</p>
-                                <p class="text-sm text-gray-500">Uploaded on {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
+                                <p class="text-sm text-gray-500">Uploaded on {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
                             </div>
                         </div>
                         <a href="{{ url_for('hr.download_cv', id=applicant.id) }}" class="btn btn-primary">
@@ -196,9 +196,9 @@
                         <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                             {{ applicant.current_stage }}
                         </div>
-                        <p class="text-gray-600">Last updated: {{ applicant.applied_date.strftime('%B %d, %Y') }}</p>
+                        <p class="text-gray-600">Last updated: {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
                         <!-- Logic to render buttons -->
                         <form method="POST" action="{{ url_for('main.track_status', id=applicant.id) }}" class="inline">
                             <button class="btn btn-info">Track Status</button>
@@ -409,11 +409,26 @@
                                 </div>
                             {% endif %}
                             <form method="POST" action="{{ url_for('hr.reject_application', id=applicant.id) }}" class="inline">
-                                <button type="submit" class="btn btn-error">Reject Application</button>
+                                <label for="reject-modal" class="btn btn-error">Reject Application</label>
                             </form>
                         {% endif %}
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Application Confirmation Modal -->
+    <input type="checkbox" id="reject-modal" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Confirm Rejection</h3>
+            <p class="py-4">Are you sure you want to reject this application? This action cannot be undone.</p>
+            <div class="modal-action">
+                <form method="POST" action="{{ url_for('hr.reject_application', id=applicant.id) }}">
+                    <button type="submit" class="btn btn-error">Yes, Reject</button>
+                </form>
+                <label for="reject-modal" class="btn">Cancel</label>
             </div>
         </div>
     </div>

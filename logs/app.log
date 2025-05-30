@@ -8,3 +8,58 @@
 [2025-05-30 12:59:48,757] INFO in __init__: Flask application startup
 [2025-05-30 12:59:56,453] INFO in auth: User logged in: vatsa, HR
 [2025-05-30 13:00:03,002] INFO in auth: User logged out: vatsa
+[2025-05-30 14:04:38,880] INFO in __init__: Flask application startup
+[2025-05-30 14:05:00,456] INFO in __init__: Flask application startup
+[2025-05-30 14:11:36,185] INFO in __init__: Flask application startup
+[2025-05-30 14:11:46,389] INFO in __init__: Flask application startup
+[2025-05-30 14:26:28,187] INFO in __init__: Flask application startup
+[2025-05-30 14:26:28,596] INFO in __init__: Flask application startup
+[2025-05-30 14:26:39,374] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 14:28:13,292] INFO in __init__: Flask application startup
+[2025-05-30 14:28:13,626] INFO in __init__: Flask application startup
+[2025-05-30 14:28:19,892] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 14:30:23,577] INFO in hr: Test scheduled for applicant 10 on 2025-05-31 by vatsa
+[2025-05-30 14:30:32,189] INFO in hr: Test rescheduled for applicant 10 to 2025-06-02 by vatsa
+[2025-05-30 14:34:58,627] INFO in __init__: Flask application startup
+[2025-05-30 14:34:58,983] INFO in __init__: Flask application startup
+[2025-05-30 14:35:11,597] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 14:44:51,483] WARNING in hr: File is corrupted: Shrivatsa Naik-compressed.pdf
+[2025-05-30 14:45:39,896] WARNING in hr: File is corrupted: VIT Chennai - VTOP.pdf
+[2025-05-30 14:46:02,268] WARNING in hr: File is corrupted: PAT Payment.pdf
+[2025-05-30 14:46:11,785] WARNING in hr: File is corrupted: Guide to Malaysia.pdf
+[2025-05-30 14:46:21,087] WARNING in hr: File is corrupted: TRW ASSIGNMENT.pdf
+[2025-05-30 14:46:40,975] WARNING in hr: File is corrupted: Migration Certificate.pdf
+[2025-05-30 14:47:12,517] WARNING in hr: File is corrupted: Guide to Malaysia.pdf
+[2025-05-30 14:51:37,800] INFO in hr: Test scheduled for applicant 9 on 2025-06-02 by vatsa
+[2025-05-30 14:52:28,225] INFO in hr: Candidate Sneha Reddy rejected
+[2025-05-30 15:07:58,250] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 15:12:03,501] INFO in hr: Candidate Rahul Mehta rejected
+[2025-05-30 15:23:33,958] INFO in auth: Invalid login attempt: john_doe
+[2025-05-30 15:23:39,540] INFO in auth: User logged in: john_doe, Admin
+[2025-05-30 15:30:50,166] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 15:35:59,544] INFO in auth: User logged out: john_doe
+[2025-05-30 16:10:41,356] INFO in __init__: Flask application startup
+[2025-05-30 16:10:41,696] INFO in __init__: Flask application startup
+[2025-05-30 16:10:50,720] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 16:11:22,363] INFO in __init__: Flask application startup
+[2025-05-30 16:11:22,720] INFO in __init__: Flask application startup
+[2025-05-30 16:11:29,629] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 16:25:44,714] INFO in __init__: Flask application startup
+[2025-05-30 16:25:45,062] INFO in __init__: Flask application startup
+[2025-05-30 16:25:55,001] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 16:26:30,911] INFO in auth: User logged out: vatsa
+[2025-05-30 16:28:50,037] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 16:46:01,591] INFO in __init__: Flask application startup
+[2025-05-30 16:46:01,933] INFO in __init__: Flask application startup
+[2025-05-30 16:46:09,857] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 16:47:53,604] INFO in __init__: Flask application startup
+[2025-05-30 16:47:53,938] INFO in __init__: Flask application startup
+[2025-05-30 16:48:00,377] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 16:48:15,426] INFO in auth: User logged out: vatsa
+[2025-05-30 16:49:12,637] INFO in __init__: Flask application startup
+[2025-05-30 16:49:15,163] INFO in __init__: Flask application startup
+[2025-05-30 16:56:27,405] INFO in __init__: Flask application startup
+[2025-05-30 16:56:27,743] INFO in __init__: Flask application startup
+[2025-05-30 16:59:50,698] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 17:00:42,796] INFO in hr: New applicant (Name: Test) added by vatsa
+[2025-05-30 17:01:03,492] INFO in hr: Candidate Test rejected
