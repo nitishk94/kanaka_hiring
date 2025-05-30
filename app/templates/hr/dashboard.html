@@ -63,6 +63,23 @@
             </div>
         </a>
 
+        <a href="{{ url_for('interviewer.view_interviews') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="bg-orange-100 p-4 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="card-title">View Interviews</h2>
+                        <p class="text-gray-600">Access and view all interviews</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+
         <a href="{{ url_for('hr.view_referrals') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
                 <div class="flex items-center gap-4">

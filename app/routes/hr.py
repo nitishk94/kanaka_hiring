@@ -1,4 +1,5 @@
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_required, current_user
 from app.auth.decorators import role_required, no_cache
@@ -28,10 +29,17 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
-    applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
-    for applicant in applicants:
-        update_status(applicant.id)
-    return render_template('hr/applicants.html', applicants=applicants)
+    if current_user.role == 'hr':
+        applicants = Applicant.query.filter_by(uploaded_by=current_user.id).order_by(Applicant.applied_date.desc()).all()
+        for applicant in applicants:
+            update_status(applicant.id)
+        return render_template('hr/applicants.html', applicants=applicants)
+    else:
+        applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
+        hrs = User.query.filter_by(role='hr').all()
+        for applicant in applicants:
+            update_status(applicant.id)
+        return render_template('hr/applicants.html', applicants=applicants, users=hrs)
 
 @bp.route('/upload_applicants', methods=['GET', 'POST'])
 @login_required
@@ -173,6 +181,23 @@ def schedule_test(id):
     current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
     return redirect(url_for('hr.view_applicant', id=id))
 
+@bp.route('/reschedule_test/<int:id>', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def reschedule_test(id):
+    date = request.form['test_date']
+    
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    if history and history.test_result is None:
+        history.test_scheduled = date
+        db.session.commit()
+        flash('Test rescheduled successfully', 'success')
+        current_app.logger.info(f"Test rescheduled for applicant {id} to {date} by {current_user.username}")
+    else:
+        flash('Cannot reschedule test - test result already exists', 'error')
+        
+    return redirect(url_for('hr.view_applicant', id=id))
+
 @bp.route('/applicants/filter')
 @login_required
 @role_required(*HR_ROLES)
@@ -247,3 +272,70 @@ def view_referrals():
 @role_required(*HR_ROLES)
 def onboarding():
     return "Onboarding and Offer Letter Page"
+
+@bp.route('/filter_interviews')
+@login_required
+@role_required(*HR_ROLES)
+def filter_interviews():
+    hr_users = User.query.filter_by(role='hr').all()
+    
+    hr_id = request.args.get('hr_id', '')
+    
+    if hr_id:
+        interviews = Interview.query\
+            .filter_by(completed=False, scheduler_id=hr_id)\
+            .options(
+                joinedload(Interview.applicant),
+                joinedload(Interview.interviewer),
+                joinedload(Interview.scheduler)
+            )\
+            .all()
+    else:
+        interviews = Interview.query\
+            .filter_by(completed=False)\
+            .options(
+                joinedload(Interview.applicant),
+                joinedload(Interview.interviewer),
+                joinedload(Interview.scheduler)
+            )\
+            .all()
+    
+    return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users)
+
+@bp.route('/reschedule_interview/<int:id>', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def reschedule_interview(id):
+    date = request.form['interview_date']
+    time = request.form['interview_time']
+    interviewer_id = request.form['interviewer_id']
+    
+    # Find the interview to reschedule
+    interview = Interview.query.get_or_404(id)
+    
+    # Update the interview details
+    interview.date = date
+    interview.time = time
+    interview.interviewer_id = interviewer_id
+    
+    # Update the corresponding history entry
+    history = RecruitmentHistory.query.filter_by(applicant_id=interview.applicant_id).first()
+    if interview.round_number == 1:
+        history.interview_round_1_date = date
+        history.interview_round_1_time = time
+    elif interview.round_number == 2:
+        history.interview_round_2_date = date
+        history.interview_round_2_time = time
+    else:  # HR round
+        history.hr_round_date = date
+        history.hr_round_time = time
+    
+    db.session.commit()
+    flash('Interview rescheduled successfully', 'success')
+    current_app.logger.info(f"Interview round {interview.round_number} rescheduled for applicant {interview.applicant_id} to {date} by {current_user.username}")
+    
+    # Determine which page to redirect back to based on the referrer
+    referrer = request.referrer
+    if referrer and 'view_interviews' in referrer:
+        return redirect(url_for('hr.view_interviews'))
+    return redirect(url_for('hr.view_applicant', id=interview.applicant_id))

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Interviews List{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Interviews List</h1>
+        <div class="flex items-center gap-4">
+            <form method="GET" action="{{ url_for('hr.filter_interviews') }}" class="flex items-center gap-2">
+                <div class="form-control w-full">
+                    <label class="label" for="hr_id">
+                        <span class="label-text">Filter by HR</span>
+                    </label>
+                    <select name="hr_id" id="hr_id" class="select select-bordered w-full" onchange="this.form.submit()">
+                        <option value="">All HR</option>
+                        {% for hr in users %}
+                            <option value="{{ hr.id }}" {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
+                                {{ hr.name if hr.name else hr.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+            <div class="stats shadow">
+                <div class="stat">
+                    <div class="stat-title">Total Interviews</div>
+                    <div class="stat-value">{{ interviews|length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
+        <table class="table table-zebra">
+            <thead>
+                <tr>
+                    <th>Name of the Candidate</th>
+                    <th>Interviewer Name</th>
+                    <th>Interview Date</th>
+                    <th>Round</th>
+                    <th>Scheduled By</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for interview in interviews %}
+                <tr>
+                    <td>{{ interview.applicant.name }}</td>
+                    <td>{{ interview.interviewer.name }}</td>
+                    <td>{{ interview.date.strftime('%Y-%m-%d') }}</td>
+                    <td>Round {{ interview.round_number }}</td>
+                    <td>{{ interview.scheduler.name }}</td>
+                    <td>
+                        <!-- The button that opens modal -->
+                        <label for="reschedule-modal-{{ interview.id }}" class="btn btn-info btn-sm">Reschedule</label>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not interviews %}
+    <div class="text-center py-8">
+        <div class="text-6xl mb-4">📝</div>
+        <h3 class="text-xl font-semibold mb-2">No Interviews Yet</h3>
+        <p class="text-gray-600 mb-4">Please schedule some interviews to see them here.</p>
+    </div>
+    {% endif %}
+
+    <!-- Modal dialogs for each interview -->
+    {% for interview in interviews %}
+    <input type="checkbox" id="reschedule-modal-{{ interview.id }}" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box w-11/12 max-w-2xl">
+            <h3 class="font-bold text-lg mb-4">Reschedule Interview for {{ interview.applicant.name }}</h3>
+            <form action="{{ url_for('hr.reschedule_interview', id=interview.id) }}" method="POST">
+                <div class="form-control w-full">
+                    <label class="label" for="interview_date">
+                        <span class="label-text">Select Date</span>
+                    </label>
+                    <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                </div>
+                <div class="form-control w-full">
+                    <label class="label" for="interview_time">
+                        <span class="label-text">Select Time</span>
+                    </label>
+                    <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                </div>
+                <div class="form-control w-full mt-4">
+                    <label class="label" for="interviewer_id">
+                        <span class="label-text">Select Interviewer</span>
+                    </label>
+                    <select name="interviewer_id" class="select select-bordered w-full" required>
+                        <option value="">Select an interviewer</option>
+                        {% for interviewer in interviewers %}
+                            <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-action">
+                    <button type="submit" class="btn btn-primary">Reschedule</button>
+                    <label for="reschedule-modal-{{ interview.id }}" class="btn">Cancel</label>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

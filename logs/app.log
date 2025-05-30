@@ -1,38 +1,10 @@
-[2025-05-29 16:40:12,144] INFO in auth: Invalid login attempt: shrivatsa26@gmail.com
-[2025-05-29 16:40:15,670] INFO in auth: User logged in: vatsa, HR
-[2025-05-29 16:40:47,800] INFO in __init__: Flask application startup
-[2025-05-29 16:40:48,160] INFO in __init__: Flask application startup
-[2025-05-29 16:40:54,504] INFO in auth: User logged in: vatsa, HR
-[2025-05-29 16:41:19,840] INFO in __init__: Flask application startup
-[2025-05-29 16:41:20,192] INFO in __init__: Flask application startup
-[2025-05-29 16:41:26,656] INFO in auth: User logged in: vatsa, HR
-[2025-05-29 16:43:19,399] INFO in __init__: Flask application startup
-[2025-05-29 16:43:19,738] INFO in __init__: Flask application startup
-[2025-05-29 16:43:27,243] INFO in auth: User logged in: vatsa, HR
-[2025-05-29 16:44:05,245] INFO in __init__: Flask application startup
-[2025-05-29 16:44:05,577] INFO in __init__: Flask application startup
-[2025-05-29 16:44:12,859] INFO in auth: User logged in: vatsa, HR
-[2025-05-29 16:44:41,505] INFO in auth: User logged out: vatsa
-[2025-05-29 16:50:59,555] INFO in __init__: Flask application startup
-[2025-05-29 16:50:59,902] INFO in __init__: Flask application startup
-[2025-05-29 16:51:12,900] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-29 16:54:34,464] INFO in __init__: Flask application startup
-[2025-05-29 16:54:34,799] INFO in __init__: Flask application startup
-[2025-05-29 16:54:42,164] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-29 16:54:45,444] INFO in auth: User logged out: blablabla
-[2025-05-29 16:55:35,308] INFO in __init__: Flask application startup
-[2025-05-29 16:55:35,638] INFO in __init__: Flask application startup
-[2025-05-29 16:55:42,334] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-29 16:58:46,741] INFO in __init__: Flask application startup
-[2025-05-29 16:58:47,069] INFO in __init__: Flask application startup
-[2025-05-29 16:58:55,596] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-29 16:59:01,893] INFO in auth: User logged out: blablabla
-[2025-05-29 16:59:37,964] INFO in auth: User logged in: vatsa, HR
-[2025-05-29 17:00:48,944] INFO in auth: User logged out: vatsa
-[2025-05-29 17:00:56,830] INFO in auth: Invalid login attempt: blablabla
-[2025-05-29 17:01:00,997] INFO in auth: User logged in: blablabla, Interviewer
-[2025-05-29 17:01:07,612] INFO in interviewer: Feedback submitted for applicant 6 by blablabla
-[2025-05-29 17:01:24,933] INFO in interviewer: Feedback submitted for applicant 5 by blablabla
-[2025-05-29 17:02:20,302] INFO in auth: User logged out: blablabla
-[2025-05-29 17:04:09,671] INFO in auth: Invalid login attempt: john_doe
-[2025-05-29 17:04:16,154] INFO in auth: User logged in: john_doe, Admin
+[2025-05-30 12:57:12,252] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 12:58:46,167] INFO in __init__: Flask application startup
+[2025-05-30 12:58:46,513] INFO in __init__: Flask application startup
+[2025-05-30 12:58:54,820] INFO in auth: Invalid login attempt: shrivatsa26@gmail.com
+[2025-05-30 12:58:58,497] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 12:59:08,390] INFO in auth: User logged out: vatsa
+[2025-05-30 12:59:48,407] INFO in __init__: Flask application startup
+[2025-05-30 12:59:48,757] INFO in __init__: Flask application startup
+[2025-05-30 12:59:56,453] INFO in auth: User logged in: vatsa, HR
+[2025-05-30 13:00:03,002] INFO in auth: User logged out: vatsa

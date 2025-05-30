@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from app.auth.decorators import role_required, no_cache
 from app.models.users import User
+from app.models.applicants import Applicant
 from app.extensions import db
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -85,6 +86,32 @@ def change_password(user_id):
     else:
         return redirect(url_for('admin.edit_user', user_id=user_id))
 
+@bp.route('/filter_applicants')
+@login_required
+@role_required('admin')
+def filter_applicants():
+    hr_users = User.query.filter_by(role='hr').all()
+    
+    hr_id = request.args.get('hr_id', '')
+    
+    if hr_id:
+        applicants = Applicant.query.filter_by(uploaded_by=hr_id).order_by(Applicant.applied_date.desc()).all()
+    else:
+        applicants = Applicant.query.order_by(Applicant.applied_date.desc()).all()
+    
+    return render_template('hr/applicants.html', applicants=applicants, users=hr_users)
+
+@bp.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    current_app.logger.info(f"User {user.username} deleted by Admin {current_user.username}")
+    flash('User deleted successfully', 'success')
+    return redirect(url_for('admin.manage_users'))
+
 @bp.route('/logs')
 @login_required
 @role_required('admin')
@@ -102,14 +129,3 @@ def settings():
 @role_required('admin')
 def reports():
     return "Hiring Reports Page"
-
-@bp.route('/delete_user/<int:user_id>', methods=['POST'])
-@login_required
-@role_required('admin')
-def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    current_app.logger.info(f"User {user.username} deleted by Admin {current_user.username}")
-    flash('User deleted successfully', 'success')
-    return redirect(url_for('admin.manage_users'))

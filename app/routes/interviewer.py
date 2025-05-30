@@ -3,8 +3,10 @@ from flask_login import login_required, current_user
 from app.auth.decorators import role_required, no_cache
 from app.models.interviews import Interview
 from app.models.applicants import Applicant
+from app.models.users import User
 from app.models.recruitment_history import RecruitmentHistory
 from app.extensions import db
+from sqlalchemy.orm import aliased, joinedload
 
 bp = Blueprint('interviewer', __name__, url_prefix='/interviewer')
 INTERVIEWER_ROLES = ('interviewer', 'admin')
@@ -19,13 +21,25 @@ def dashboard():
 @bp.route('/interviews')
 @no_cache
 @login_required
-@role_required(*INTERVIEWER_ROLES)
+@role_required(*INTERVIEWER_ROLES, 'hr')
 def view_interviews():
-    interviews = Interview.query.filter_by(interviewer_id=current_user.id).filter_by(completed=False).all()
-    applicant_ids = [interview.applicant_id for interview in interviews]
-    applicants = Applicant.query.filter(Applicant.id.in_(applicant_ids)).all()
-    print(applicants)
-    return render_template('interviewer/interviews.html', interviews=interviews, applicants=applicants)
+    if current_user.role == 'interviewer':
+        interviews = Interview.query.filter_by(interviewer_id=current_user.id).filter_by(completed=False).all()
+        applicant_ids = [interview.applicant_id for interview in interviews]
+        applicants = Applicant.query.filter(Applicant.id.in_(applicant_ids)).all()
+        return render_template('interviewer/interviews.html', interviews=interviews, applicants=applicants)
+    else:
+        hr_users = User.query.filter_by(role='hr').all()
+        interviews = Interview.query\
+            .filter_by(completed=False)\
+            .options(
+                joinedload(Interview.applicant),
+                joinedload(Interview.interviewer),
+                joinedload(Interview.scheduler)
+            )\
+            .all()
+
+        return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users)
 
 @bp.route('/view_interviewee/<int:id>')
 @login_required

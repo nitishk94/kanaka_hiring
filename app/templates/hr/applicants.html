@@ -7,6 +7,7 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Applicants List</h1>
         <div class="flex items-center gap-4">
+            {% if current_user.role == 'hr' %}
             <a href="{{ url_for('hr.upload_applicants') }}" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -15,6 +16,24 @@
                 </svg>
                 Upload Applicants
             </a>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
+            <form method="GET" action="{{ url_for('admin.filter_applicants') }}" class="flex items-center gap-2">
+                <div class="form-control w-full">
+                    <label class="label" for="hr_id">
+                        <span class="label-text">Filter by HR</span>
+                    </label>
+                    <select name="hr_id" id="hr_id" class="select select-bordered w-full" onchange="this.form.submit()">
+                        <option value="">All HR</option>
+                        {% for hr in users %}
+                            <option value="{{ hr.id }}" {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
+                                {{ hr.name if hr.name else hr.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+            {% endif %}
             <div class="stats shadow">
                 <div class="stat">
                     <div class="stat-title">Total Applicants</div>
