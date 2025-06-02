@@ -23,7 +23,7 @@ def unauthorized():
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres@localhost:5432/kanaka_hiring'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:watts25@192.168.1.205:5432/kanaka_hiring'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = secrets.token_hex(32)
     
