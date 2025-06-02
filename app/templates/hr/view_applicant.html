@@ -87,6 +87,36 @@
                         </div>
                     {% endif %}
 
+                    <!-- Source Information -->
+                    <div>
+                        <p class="text-sm text-gray-500">Referenced From</p>
+                        <p class="font-semibold">{{ applicant.referenced_from }}</p>
+                    </div>
+                    {% if applicant.is_referred %}
+                        <div>
+                            <p class="text-sm text-gray-500">Referred By</p>
+                            <p class="font-semibold">{{ applicant.referred_by }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Social Profiles -->
+                    <div>
+                        <p class="text-sm text-gray-500">LinkedIn Profile</p>
+                        {% if applicant.linkedin_profile != 'Not Provided' %}
+                            <a href="{{ applicant.linkedin_profile }}" target="_blank" class="link link-primary">View Profile</a>
+                        {% else %}
+                            <p class="font-semibold">Not provided</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">GitHub Profile</p>
+                        {% if applicant.github_profile != 'Not Provided' %}
+                            <a href="{{ applicant.github_profile }}" target="_blank" class="link link-primary">View Profile</a>
+                        {% else %}
+                            <p class="font-semibold">Not provided</p>
+                        {% endif %}
+                    </div>
+
                     <!-- Internship Information -->
                     {% if applicant.current_internship %}
                         <div>
@@ -104,11 +134,12 @@
                         {% if applicant.paid_internship %}
                             <div>
                                 <p class="text-sm text-gray-500">Stipend</p>
-                                <p class="font-semibold">₹{{ applicant.stipend if applicant.stipend else 'Not provided' }}</p>
+                                <p class="font-semibold">{{ applicant.stipend if applicant.stipend else 'Not provided' }}</p>
                             </div>
                         {% endif %}
                     {% endif %}
 
+                    <!-- Professional Information -->
                     {% if not applicant.is_fresher %}
                         <div>
                             <p class="text-sm text-gray-500">Kanaka Employee</p>
@@ -128,11 +159,11 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Current CTC</p>
-                            <p class="font-semibold">₹{{ applicant.current_ctc if applicant.current_ctc else 'Not provided' }}</p>
+                            <p class="font-semibold">{{ applicant.current_ctc if applicant.current_ctc else 'Not provided' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Expected CTC</p>
-                            <p class="font-semibold">₹{{ applicant.expected_ctc if applicant.expected_ctc else 'Not provided' }}</p>
+                            <p class="font-semibold">{{ applicant.expected_ctc if applicant.expected_ctc else 'Not provided' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Notice Period</p>
@@ -154,38 +185,16 @@
                         {% endif %}
                         <div class="col-span-3">
                             <p class="text-sm text-gray-500">Reason for Change</p>
-                            <p class="font-semibold whitespace-pre-line">{{ applicant.reason_for_change }}</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.reason_for_change if applicant.reason_for_change else 'Not provided' }}</p>
                         </div>
                     {% endif %}
-                    <div>
-                        <p class="text-sm text-gray-500">LinkedIn Profile</p>
-                        {% if applicant.linkedin_profile != 'Not Provided' %}
-                            <a href="{{ applicant.linkedin_profile }}" target="_blank" class="link link-primary">View Profile</a>
-                        {% else %}
-                            <p class="font-semibold">Not provided</p>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">GitHub Profile</p>
-                        {% if applicant.github_profile != 'Not Provided' %}
-                            <a href="{{ applicant.github_profile }}" target="_blank" class="link link-primary">View Profile</a>
-                        {% else %}
-                            <p class="font-semibold">Not provided</p>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Comments</p>
-                        <p class="font-semibold whitespace-pre-line">{{ applicant.comments if applicant.comments else 'No comments' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Referenced From</p>
-                        <p class="font-semibold">{{ applicant.referenced_from }}</p>
-                    </div>
-                    {% if applicant.is_referred %}
-                    <div>
-                        <p class="text-sm text-gray-500">Referred By</p>
-                        <p class="font-semibold">{{ applicant.referred_by }}</p>
-                    </div>
+
+                    <!-- Comments Section -->
+                    {% if applicant.comments %}
+                        <div class="col-span-3">
+                            <p class="text-sm text-gray-500">Additional Comments</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.comments }}</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>

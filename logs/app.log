@@ -94,3 +94,7 @@
 [2025-06-02 15:28:11,855] INFO in __init__: Flask application startup
 [2025-06-02 15:28:12,193] INFO in __init__: Flask application startup
 [2025-06-02 15:28:42,209] INFO in auth: User logged in: vatsa, HR
+[2025-06-02 16:55:08,801] INFO in __init__: Flask application startup
+[2025-06-02 16:55:09,170] INFO in __init__: Flask application startup
+[2025-06-02 16:55:21,539] INFO in auth: Invalid login attempt: vatsa
+[2025-06-02 16:55:24,483] INFO in auth: User logged in: vatsa, HR
