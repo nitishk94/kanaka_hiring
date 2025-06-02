@@ -47,8 +47,16 @@
                         <p class="font-semibold">{{ applicant.marital_status.capitalize() }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500">Location</p>
-                        <p class="font-semibold">{{ applicant.location }}</p>
+                        <p class="text-sm text-gray-500">Native Place</p>
+                        <p class="font-semibold">{{ applicant.native_place }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Current Location</p>
+                        <p class="font-semibold">{{ applicant.current_location }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Work Location</p>
+                        <p class="font-semibold">{{ applicant.work_location }}</p>
                     </div>
                 </div>
             </div>
@@ -63,6 +71,10 @@
                         <p class="text-sm text-gray-500">Qualification</p>
                         <p class="font-semibold">{{ applicant.qualification }}</p>
                     </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Graduation Year</p>
+                        <p class="font-semibold">{{ applicant.graduation_year if applicant.graduation_year else 'Not provided' }}</p>
+                    </div>
                     {% if applicant.is_fresher %}
                         <div>
                             <p class="text-sm text-gray-500">Experience</p>
@@ -71,8 +83,33 @@
                     {% else %}
                         <div>
                             <p class="text-sm text-gray-500">Experience</p>
-                            <p class="font-semibold">{{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}</p>
+                            <p class="font-semibold">{{ applicant.experience }}</p>
                         </div>
+                    {% endif %}
+
+                    <!-- Internship Information -->
+                    {% if applicant.current_internship %}
+                        <div>
+                            <p class="text-sm text-gray-500">Current Internship</p>
+                            <p class="font-semibold">Yes</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Internship Duration</p>
+                            <p class="font-semibold">{{ applicant.internship_duration if applicant.internship_duration else 'Not provided' }} months</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Paid Internship</p>
+                            <p class="font-semibold">{{ 'Yes' if applicant.paid_internship else 'No' }}</p>
+                        </div>
+                        {% if applicant.paid_internship %}
+                            <div>
+                                <p class="text-sm text-gray-500">Stipend</p>
+                                <p class="font-semibold">₹{{ applicant.stipend if applicant.stipend else 'Not provided' }}</p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if not applicant.is_fresher %}
                         <div>
                             <p class="text-sm text-gray-500">Kanaka Employee</p>
                             <p class="font-semibold">{{ 'Yes' if applicant.is_kanaka_employee else 'No' }}</p>
@@ -91,27 +128,33 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Current CTC</p>
-                            <p class="font-semibold">{{ applicant.current_ctc }}</p>
+                            <p class="font-semibold">₹{{ applicant.current_ctc if applicant.current_ctc else 'Not provided' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Expected CTC</p>
-                            <p class="font-semibold">{{ applicant.expected_ctc if applicant.expected_ctc else 'Not provided' }}</p>
+                            <p class="font-semibold">₹{{ applicant.expected_ctc if applicant.expected_ctc else 'Not provided' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Notice Period</p>
-                            <p class="font-semibold">{{ applicant.notice_period|string + ' days' }}</p>
+                            <p class="font-semibold">{{ applicant.notice_period|string + ' days' if applicant.notice_period else 'Not provided' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Tenure at Current Company</p>
-                            <p class="font-semibold">{{ applicant.tenure_at_current_company|string + ' months' }}</p>
+                            <p class="font-semibold">{{ applicant.tenure_at_current_company if applicant.tenure_at_current_company else 'Not provided' }}</p>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Current Offers</p>
-                            <p class="font-semibold">{{ applicant.current_offers if applicant.current_offers else 'None' }}</p>
-                        </div>
-                        <div>
+                        {% if applicant.current_offers_yes_no %}
+                            <div class="col-span-3">
+                                <p class="text-sm text-gray-500">Current Offers</p>
+                                <p class="font-semibold">Yes</p>
+                                {% if applicant.current_offers_description %}
+                                    <p class="text-sm text-gray-500 mt-2">Details:</p>
+                                    <p class="font-semibold whitespace-pre-line">{{ applicant.current_offers_description }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <div class="col-span-3">
                             <p class="text-sm text-gray-500">Reason for Change</p>
-                            <p class="font-semibold">{{ applicant.reason_for_change }}</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.reason_for_change }}</p>
                         </div>
                     {% endif %}
                     <div>
