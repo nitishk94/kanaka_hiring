@@ -69,28 +69,51 @@ def upload_applicants():
         dob = request.form.get('dob')
         gender = request.form.get('gender')
         marital_status = request.form.get('marital_status')
-        location = request.form.get('location')
+        native_place = request.form.get('native_place')
+        current_location = request.form.get('current_location')
+        work_location = request.form.get('work_location')
         
         # Professional Information
-        is_fresher = request.form.get('is_fresher') == 'yes'
-        is_referred = request.form.get('is_referred') == 'yes'
-        referred_by = request.form.get('referred_by')
+        is_fresher = bool(request.form.get('is_fresher'))
+        is_referred = bool(request.form.get('is_referred'))
+        referred_by = request.form.get('referred_by') if is_referred else None
         qualification = request.form.get('qualification')
+        graduation_year = request.form.get('graduation_year')
+        if graduation_year:
+            graduation_year = int(graduation_year)
+            
+        # Internship Information
+        current_internship = bool(request.form.get('current_internship'))
+        internship_duration = request.form.get('internship_duration')
+        if internship_duration:
+            internship_duration = int(internship_duration)
+        paid_internship = bool(request.form.get('paid_internship'))
+        stipend = request.form.get('stipend')
+        if stipend:
+            stipend = int(stipend)
+            
         referenced_from = request.form.get('referenced_from')
-        linkedin_profile = request.form.get('linkedin')
-        github_profile = request.form.get('github')
+        linkedin_profile = request.form.get('linkedin_profile')
+        github_profile = request.form.get('github_profile')
         
         # Current Employment Information (if not fresher)
         experience = request.form.get('experience')
-        is_kanaka_employee = request.form.get('is_kanaka_employee') == 'yes'
+        is_kanaka_employee = bool(request.form.get('is_kanaka_employee'))
         current_company = request.form.get('current_company')
         designation = request.form.get('designation')
-        current_job_position = request.form.get('job_position')
+        current_job_position = request.form.get('current_job_position')
         current_ctc = request.form.get('current_ctc')
+        if current_ctc:
+            current_ctc = int(current_ctc)
         expected_ctc = request.form.get('expected_ctc')
+        if expected_ctc:
+            expected_ctc = int(expected_ctc)
         notice_period = request.form.get('notice_period')
-        tenure_at_current_company = request.form.get('tenure')
-        current_offers = request.form.get('current_offers', 0)
+        if notice_period:
+            notice_period = int(notice_period)
+        tenure_at_current_company = request.form.get('tenure_at_current_company')
+        current_offers_yes_no = bool(request.form.get('current_offers_yes_no'))
+        current_offers_description = request.form.get('current_offers_description')
         reason_for_change = request.form.get('reason_for_change')
         comments = request.form.get('comments')
 
@@ -109,9 +132,16 @@ def upload_applicants():
             dob=dob,
             gender=gender,
             marital_status=marital_status,
-            location=location.title(),
+            native_place=native_place.title() if native_place else None,
+            current_location=current_location.title() if current_location else None,
+            work_location=work_location.title() if work_location else None,
+            graduation_year=graduation_year,
             is_fresher=is_fresher,
             qualification=qualification,
+            current_internship=current_internship,
+            internship_duration=internship_duration,
+            paid_internship=paid_internship,
+            stipend=stipend,
             experience=experience,
             referenced_from=referenced_from,
             linkedin_profile=linkedin_profile if linkedin_profile else 'Not Provided',
@@ -121,10 +151,11 @@ def upload_applicants():
             designation=designation,
             current_job_position=current_job_position.title() if current_job_position else None,
             current_ctc=current_ctc,
-            expected_ctc=int(expected_ctc) if expected_ctc else None,
+            expected_ctc=expected_ctc,
             notice_period=notice_period,
             tenure_at_current_company=tenure_at_current_company,
-            current_offers=int(current_offers) if current_offers else None,
+            current_offers_yes_no=current_offers_yes_no,
+            current_offers_description=current_offers_description if current_offers_description else None,
             reason_for_change=reason_for_change if reason_for_change else 'Not Provided',
             comments=comments if comments else 'No comments',
             last_applied=date.today(),
