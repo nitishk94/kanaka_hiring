@@ -1,5 +1,5 @@
 from myapp import db
-from myapp.models import User, Interview
+from myapp.models import User
 from datetime import date
 import io
 
@@ -64,7 +64,7 @@ def test_schedule_test(logged_in_client):
     test_date = '2025-06-06'
     response = client.post('hr/schedule_test/1', data={'test_date': test_date}, follow_redirects=True)
     assert response.status_code == 200
-    assert b'Applicant Details' in response.data
+    assert b'Test scheduled' in response.data
 
 def test_reschedule_test(logged_in_client):
     client = logged_in_client(role='hr')
@@ -72,7 +72,7 @@ def test_reschedule_test(logged_in_client):
     test_date = '2025-06-06'
     response = client.post('hr/reschedule_test/1', data={'test_date': test_date}, follow_redirects=True)
     assert response.status_code == 200
-    assert b'Applicant Details' in response.data
+    assert b'Test scheduled' in response.data
 
 def test_schedule_interview(logged_in_client, app):
     client = logged_in_client(role='hr')
@@ -87,7 +87,7 @@ def test_schedule_interview(logged_in_client, app):
     interviewer_id = 20
     response = client.post('hr/schedule_interview/1', data={'interview_date': interview_date, 'interview_time': interview_time, 'interviewer_id': interviewer_id}, follow_redirects=True)
     assert response.status_code == 200
-    assert b'Applicant Details' in response.data
+    assert b'Interview scheduled' in response.data
 
 def test_reschedule_interview(logged_in_client, app):
     client = logged_in_client(role='hr')
@@ -104,7 +104,15 @@ def test_reschedule_interview(logged_in_client, app):
     interviewer_id = 20
     response = client.post('hr/reschedule_interview/1', data={'interview_date': interview_date, 'interview_time': interview_time, 'interviewer_id': interviewer_id}, follow_redirects=True)
     assert response.status_code == 200
-    assert b'Applicant Details' in response.data
+    print(response.data.decode())
+    assert b'Interview round 1 scheduled' in response.data
+
+def test_reject_applicant(logged_in_client):
+    client = logged_in_client(role='hr')
+    create_test_applicant(client)
+    response = client.post('hr/reject_application/1', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Rejected' in response.data
 
 def test_admin_access_to_hr_functions(logged_in_client, app):
     client = logged_in_client(role='admin')
@@ -127,11 +135,12 @@ def test_admin_access_to_hr_functions(logged_in_client, app):
     response = client.post('hr/schedule_test/1', data={'test_date': test_date}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
-
+    # Reschedule test
+    test_date = '2025-06-08'
     response = client.post('hr/reschedule_test/1', data={'test_date': test_date}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
-
+    # Schedule interview
     with app.app_context():
         user = User(id = 20, username='testinterviewer', email="test@testing.com", password_hash='testcase', role='interviewer')
         db.session.add(user)
@@ -140,7 +149,11 @@ def test_admin_access_to_hr_functions(logged_in_client, app):
     response = client.post('hr/schedule_interview/1', data={'interview_date': '2025-06-01', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
-
+    # Reschedule interview
     response = client.post('hr/reschedule_interview/1', data={'interview_date': '2025-06-10', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
+    # Reject application
+    response = client.post('hr/reject_application/1', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Rejected' in response.data
