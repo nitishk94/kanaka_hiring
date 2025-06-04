@@ -40,6 +40,30 @@ def create_fresher_test_applicant(client):
     }
     return client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
 
+def create_corrupt_cv_test_applicant(client):
+    form = {
+        'name': 'testcase',
+        'dob': date.today(),
+        'email': 'test125@example.com',
+        'phone': '9001234565',
+        'gender': 'male',
+        'marital_status': 'single',
+        'native_place': 'Test City',
+        'current_location': 'Test Location',
+        'work_location': 'Test City',
+        'is_fresher': 'on',
+        'current_internship': 'on',
+        'paid_internship': 'on',
+        'graduation_year': '2012',
+        'qualification': 'B.Tech',
+        'referenced_from': 'Naukri',
+        'internship_duration': '6',
+        'stipend': '90000',
+        'cv': (io.BytesIO(b"1.4\n...This is a test CV..."), 'test_cv.pdf'),
+        'comments': 'Test comment'
+    }
+    return client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
+
 def create_experienced_test_applicant(client):
     form = {
         'name': 'experienced_user',
@@ -109,6 +133,7 @@ def test_hr_upload_validation(logged_in_client, app):
 
     response = create_experienced_test_applicant(client)
     assert response.status_code == 200
+    print(response.data.decode())
     assert b'New applicant successfully created!' in response.data
 
     with app.app_context():
@@ -119,6 +144,50 @@ def test_hr_upload_validation(logged_in_client, app):
     response = create_referred_test_applicant(client, referrer_id)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
+
+def test_hr_upload_invalid_cv(logged_in_client):
+    client = logged_in_client(role='hr')
+    response = create_corrupt_cv_test_applicant(client)
+    assert response.status_code == 200
+    assert b'New applicant successfully created!' in response.data
+
+def test_hr_upload_duplicate_applicant(logged_in_client):
+    client = logged_in_client(role='hr')
+    # First submission
+    response = create_fresher_test_applicant(client)
+    assert response.status_code == 200
+    assert b'New applicant successfully created!' in response.data
+
+    # Second submission with the same email (duplicate)
+    response2 = create_fresher_test_applicant(client)
+    assert response2.status_code == 200
+    assert b'Upload' in response2.data
+
+    # Third submission with a different name but same email (still duplicate)
+    form = {
+        'name': 'testcase2',
+        'dob': date.today(),
+        'email': 'test123@example.com',  # same email as before
+        'phone': '9001234567',
+        'gender': 'male',
+        'marital_status': 'single',
+        'native_place': 'Test City',
+        'current_location': 'Test Location',
+        'work_location': 'Test City',
+        'is_fresher': 'on',
+        'current_internship': 'on',
+        'paid_internship': 'on',
+        'graduation_year': '2012',
+        'qualification': 'B.Tech',
+        'referenced_from': 'Naukri',
+        'internship_duration': '6',
+        'stipend': '90000',
+        'cv': (io.BytesIO(b"%PDF-1.4\n...This is a test CV..."), 'test_cv.pdf'),
+        'comments': 'Test comment'
+    }
+    response3 = client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
+    assert response3.status_code == 200
+    assert b'Upload' in response3.data
 
 def test_applicants(logged_in_client):
     client = logged_in_client(role='hr')
