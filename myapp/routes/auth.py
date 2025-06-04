@@ -23,9 +23,10 @@ def register():
             return redirect(url_for('main.home'))
     
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
+        name = request.form.get('name')
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
 
         if not is_valid_email(email):
             flash('Please enter a valid email address', 'error')
@@ -39,7 +40,7 @@ def register():
             flash('Username already exists', 'error')
             return render_template('auth/register.html', form_data=request.form)
 
-        user = User(username=username, email=email)
+        user = User(name=name, username=username, email=email)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
@@ -66,8 +67,8 @@ def login():
             return redirect(url_for('main.home'))
     
     if request.method == 'POST':
-        username_or_email = request.form['username_or_email']
-        password = request.form['password']
+        username_or_email = request.form.get('username_or_email')
+        password = request.form.get('password')
 
         if '@' in username_or_email and not is_valid_email(username_or_email):
             flash('Please enter a valid email address', 'error')

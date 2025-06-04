@@ -30,7 +30,7 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
-    applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
+    applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
     hrs = User.query.filter_by(role='hr').all()
     for applicant in applicants:
         update_status(applicant.id)
@@ -45,7 +45,11 @@ def upload_applicants():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
-        
+
+    referrer_names = [
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+    ]
+
     if request.method == 'POST':
         file = request.files.get('cv')
         
@@ -85,7 +89,7 @@ def upload_applicants():
         # Professional Information
         is_fresher = bool(request.form.get('is_fresher'))
         is_referred = bool(request.form.get('is_referred'))
-        referred_by = request.form.get('referred_by') if is_referred else None
+        referred_by = int(request.form.get('referred_by')) if is_referred else None
         qualification = request.form.get('qualification')
         graduation_year = request.form.get('graduation_year')
         if graduation_year:
@@ -172,7 +176,7 @@ def upload_applicants():
             cv_file_path=file_path,
             uploaded_by=current_user.id,
             is_referred=is_referred,
-            referred_by=referred_by if is_referred else None
+            referred_by=referred_by
         )
         
         try:
@@ -180,7 +184,8 @@ def upload_applicants():
             db.session.commit()
             
             history = RecruitmentHistory(
-                applicant_id=new_applicant.id
+                applicant_id=new_applicant.id,
+                applied_date=date.today()
             )
 
             db.session.add(history)
@@ -199,9 +204,9 @@ def upload_applicants():
             else:
                 flash('Database error. Please try again.', 'error')
             current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
-            return render_template('hr/upload.html', form_data=request.form)
+            return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
-    return render_template('hr/upload.html')
+    return render_template('hr/upload.html', referrer_names=referrer_names)
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
@@ -285,9 +290,9 @@ def download_cv(id):
 @login_required
 @role_required(*HR_ROLES)
 def schedule_interview(id):
-    date = request.form['interview_date']
-    time = request.form['interview_time']
-    interviewer_id = request.form['interviewer_id']
+    date = request.form.get('interview_date')
+    time = request.form.get('interview_time')
+    interviewer_id = request.form.get('interviewer_id')
 
     if isinstance(date, str):
         try:
@@ -399,9 +404,9 @@ def filter_interviews():
 @login_required
 @role_required(*HR_ROLES)
 def reschedule_interview(id):
-    date = request.form['interview_date']
-    time = request.form['interview_time']
-    interviewer_id = request.form['interviewer_id']
+    date = request.form.get('interview_date')
+    time = request.form.get('interview_time')
+    interviewer_id = request.form.get('interviewer_id')
 
     if isinstance(date, str):
         try:

@@ -36,7 +36,7 @@ def refer_candidates():
             return render_template('referrer/refferal.html', form_data=request.form)
 
         # Get all form data
-        name = request.form['name']
+        name = request.form.get('name')
 
         # Handle file upload
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'referrals')
