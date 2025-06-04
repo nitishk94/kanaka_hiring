@@ -29,7 +29,7 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
-    applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
+    applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
     hrs = User.query.filter_by(role='hr').all()
     for applicant in applicants:
         update_status(applicant.id)
@@ -44,7 +44,9 @@ def upload_applicants():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
-        
+
+    referrer_names = [user.name for user in User.query.filter_by(role='referrer').all()]
+
     if request.method == 'POST':
         file = request.files.get('cv')
         
@@ -198,9 +200,9 @@ def upload_applicants():
             else:
                 flash('Database error. Please try again.', 'error')
             current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
-            return render_template('hr/upload.html', form_data=request.form)
+            return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
-    return render_template('hr/upload.html')
+    return render_template('hr/upload.html', referrer_names=referrer_names)
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache

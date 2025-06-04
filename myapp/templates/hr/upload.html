@@ -157,7 +157,7 @@
                 <h2 class="card-title mb-4">Professional Information</h2>
                 
                 <!-- All Checkboxes Section -->
-                <div class="flex items-center gap-8 mb-6 p-4 bg-base-200 rounded-lg w-full overflow-x-auto whitespace-nowrap">
+                <div class="flex items-center gap-8 mb-6 p-4 rounded-lg w-full overflow-visible whitespace-nowrap" style="background: none;">
                     <div class="form-control">
                         <label class="label cursor-pointer justify-start gap-4">
                             <input type="checkbox" id="fresher-toggle" name="is_fresher" class="checkbox checkbox-primary" {% if form_data and form_data.is_fresher %}checked{% endif %} />
@@ -193,18 +193,28 @@
                         </label>
                     </div>
 
-                    <div id="referrer-section" class="form-control min-w-[300px]" style="display: none;">
+                    <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
                         <label class="label" for="referred_by">
-                            <span class="label-text">Referrer's Name</span>
+                            <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
                         </label>
-                        <input
-                            id="referred_by"
-                            type="text"
-                            name="referred_by"
-                            placeholder="Enter referrer's name"
-                            class="input input-bordered w-full"
-                            value="{{ form_data.referred_by if form_data else '' }}"
-                        />
+                        <div id="vue-referrer-select">
+                            <multiselect
+                                v-model="selectedReferrer"
+                                :options="referrerNames"
+                                :searchable="true"
+                                :close-on-select="true"
+                                :append-to-body="true"
+                                :show-labels="false"
+                                placeholder="Enter referrer's name"
+                                label="name"
+                                track-by="name"
+                                :allow-empty="true"
+                                :custom-label="customLabel"
+                                @input="onInput"
+                                class="input-bordered w-full"
+                            ></multiselect>
+                            <input type="hidden" name="referred_by" :value="selectedReferrer" id="referred_by" />
+                        </div>
                     </div>
                 </div>
                 
@@ -517,6 +527,9 @@
 
 {% block extra_js %}
 {{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6/dist/vue-multiselect.min.css">
+<script src="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('cvFile');
@@ -679,6 +692,78 @@
                 }
             });
         }
+
+        // Vue Multiselect for Referrer
+        if (document.getElementById('vue-referrer-select')) {
+            new Vue({
+                el: '#vue-referrer-select',
+                components: {
+                    Multiselect: window.VueMultiselect.default
+                },
+                data: function() {
+                    return {
+                        referrerNames: JSON.parse('{{ referrer_names|tojson|safe }}'),
+                        selectedReferrer: "{{ form_data.referred_by if form_data else '' }}"
+                    };
+                },
+                methods: {
+                    customLabel(option) {
+                        return option;
+                    },
+                    onInput(val) {
+                        // Sync to hidden input for form submission
+                        this.$el.querySelector('input[name="referred_by"]').value = val || '';
+                    }
+                },
+                mounted() {
+                    // Ensure initial value is synced
+                    this.onInput(this.selectedReferrer);
+                }
+            });
+        }
     });
 </script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Referrer searchbox styles */
+.search-box {
+    overflow: visible;
+    position: relative;
+    width: 100%;
+}
+
+.search-input {
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    box-shadow: none;
+    background: #fff;
+    z-index: 2;
+}
+
+.options-list {
+    overflow: visible;
+    border-radius: 0.5rem;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    min-width: 100%;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0.25rem 0;
+    margin-top: -2px;
+    display: none;
+}
+.options-list.show {
+    display: block;
+}
+</style>
 {% endblock %}

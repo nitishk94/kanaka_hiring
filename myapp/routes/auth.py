@@ -23,6 +23,7 @@ def register():
             return redirect(url_for('main.home'))
     
     if request.method == 'POST':
+        name = request.form['name']
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
@@ -39,7 +40,7 @@ def register():
             flash('Username already exists', 'error')
             return render_template('auth/register.html', form_data=request.form)
 
-        user = User(username=username, email=email)
+        user = User(name=name, username=username, email=email)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
