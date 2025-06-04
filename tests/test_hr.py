@@ -77,13 +77,46 @@ def create_experienced_test_applicant(client):
     }
     return client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
 
-def test_hr_upload_validation(logged_in_client):
+def create_referred_test_applicant(client, referrer_id):
+    form = {
+        'name': 'referred_user',
+        'dob': '1995-05-05',
+        'email': 'referreduser@example.com',
+        'phone': '9001234569',
+        'gender': 'female',
+        'marital_status': 'single',
+        'native_place': 'Chennai',
+        'current_location': 'Hyderabad',
+        'work_location': 'Hyderabad',
+        'is_fresher': 'on',
+        'current_internship': '',
+        'paid_internship': '',
+        'graduation_year': '2017',
+        'qualification': 'B.Sc',
+        'referred_by': str(referrer_id),
+        'internship_duration': '',
+        'stipend': '',
+        'cv': (io.BytesIO(b"%PDF-1.4\n...Referred CV..."), 'referred_cv.pdf'),
+        'comments': 'Referred candidate',
+    }
+    return client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
+
+def test_hr_upload_validation(logged_in_client, app):
     client = logged_in_client(role='hr')
     response = create_fresher_test_applicant(client)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
 
     response = create_experienced_test_applicant(client)
+    assert response.status_code == 200
+    assert b'New applicant successfully created!' in response.data
+
+    with app.app_context():
+        ref_user = User(id=100, username='referrer1', email='ref1@example.com', password_hash='test', role='referrer', name='Referrer One')
+        db.session.add(ref_user)
+        db.session.commit()
+        referrer_id = ref_user.id
+    response = create_referred_test_applicant(client, referrer_id)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
 

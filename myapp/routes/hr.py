@@ -45,7 +45,9 @@ def upload_applicants():
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
 
-    referrer_names = [user.name for user in User.query.filter_by(role='referrer').all()]
+    referrer_names = [
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+    ]
 
     if request.method == 'POST':
         file = request.files.get('cv')
@@ -86,7 +88,7 @@ def upload_applicants():
         # Professional Information
         is_fresher = bool(request.form.get('is_fresher'))
         is_referred = bool(request.form.get('is_referred'))
-        referred_by = request.form.get('referred_by') if is_referred else None
+        referred_by = int(request.form.get('referred_by')) if is_referred else None
         qualification = request.form.get('qualification')
         graduation_year = request.form.get('graduation_year')
         if graduation_year:
@@ -173,7 +175,7 @@ def upload_applicants():
             cv_file_path=file_path,
             uploaded_by=current_user.id,
             is_referred=is_referred,
-            referred_by=referred_by if is_referred else None
+            referred_by=referred_by
         )
         
         try:
@@ -181,7 +183,8 @@ def upload_applicants():
             db.session.commit()
             
             history = RecruitmentHistory(
-                applicant_id=new_applicant.id
+                applicant_id=new_applicant.id,
+                applied_date=date.today()
             )
 
             db.session.add(history)
@@ -286,9 +289,9 @@ def download_cv(id):
 @login_required
 @role_required(*HR_ROLES)
 def schedule_interview(id):
-    date = request.form['interview_date']
-    time = request.form['interview_time']
-    interviewer_id = request.form['interviewer_id']
+    date = request.form.get('interview_date')
+    time = request.form.get('interview_time')
+    interviewer_id = request.form.get('interviewer_id')
 
     if isinstance(date, str):
         try:
@@ -400,9 +403,9 @@ def filter_interviews():
 @login_required
 @role_required(*HR_ROLES)
 def reschedule_interview(id):
-    date = request.form['interview_date']
-    time = request.form['interview_time']
-    interviewer_id = request.form['interviewer_id']
+    date = request.form.get('interview_date')
+    time = request.form.get('interview_time')
+    interviewer_id = request.form.get('interviewer_id')
 
     if isinstance(date, str):
         try:

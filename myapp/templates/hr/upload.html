@@ -203,17 +203,18 @@
                                 :options="referrerNames"
                                 :searchable="true"
                                 :close-on-select="true"
-                                :append-to-body="true"
+                                :clear-on-select="false"
+                                :preserve-search="true"
                                 :show-labels="false"
                                 placeholder="Enter referrer's name"
-                                label="name"
-                                track-by="name"
                                 :allow-empty="true"
                                 :custom-label="customLabel"
+                                label="name"
+                                track-by="id"
                                 @input="onInput"
                                 class="input-bordered w-full"
                             ></multiselect>
-                            <input type="hidden" name="referred_by" :value="selectedReferrer" id="referred_by" />
+                            <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
                         </div>
                     </div>
                 </div>
@@ -701,22 +702,27 @@
                     Multiselect: window.VueMultiselect.default
                 },
                 data: function() {
+                    const referrers = JSON.parse('{{ referrer_names|tojson|safe }}');
+                    const initial = "{{ form_data.referred_by if form_data else '' }}";
                     return {
-                        referrerNames: JSON.parse('{{ referrer_names|tojson|safe }}'),
-                        selectedReferrer: "{{ form_data.referred_by if form_data else '' }}"
+                        referrerNames: referrers,
+                        selectedReferrer: referrers.find(r => r.id == initial) || null
                     };
                 },
                 methods: {
                     customLabel(option) {
-                        return option;
+                        return option && option.name ? option.name : '';
                     },
                     onInput(val) {
-                        // Sync to hidden input for form submission
-                        this.$el.querySelector('input[name="referred_by"]').value = val || '';
+                        this.$el.querySelector('input[name="referred_by"]').value = val && val.id ? val.id : '';
+                    }
+                },
+                watch: {
+                    selectedReferrer(val) {
+                        this.onInput(val);
                     }
                 },
                 mounted() {
-                    // Ensure initial value is synced
                     this.onInput(this.selectedReferrer);
                 }
             });
