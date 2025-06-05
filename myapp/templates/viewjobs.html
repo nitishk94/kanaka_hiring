@@ -26,11 +26,11 @@
             <tbody>
                 {% for job in jobs %}
                     <tr>
-                        <td>{{ job.id }}</td>
-                        <td>{{ job.position_name }}</td>
+                        <td>{{ job.job_id }}</td>
+                        <td>{{ job.job_position }}</td>
                         <td>
                             <div class="flex gap-2">
-                                <a href="{{ url_for('jobs.view_joblisting', id=job.id) }}" 
+                                <a href="{{ url_for('main.view_joblisting', id=job.job_id) }}" 
                                    class="btn btn-sm btn-info">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
