@@ -52,3 +52,15 @@
 [2025-06-04 17:14:26,886] INFO in auth: User logged in: testuser, Admin
 [2025-06-04 17:14:26,904] INFO in hr: New applicant (Name: Testcase) added by testuser
 [2025-06-04 17:14:26,919] INFO in hr: Candidate Testcase rejected
+[2025-06-05 10:27:24,205] INFO in __init__: Flask application startup
+[2025-06-05 10:33:42,898] INFO in __init__: Flask application startup
+[2025-06-05 10:35:38,727] INFO in __init__: Flask application startup
+[2025-06-05 10:35:39,301] INFO in auth: User logged in: testuser, Interviewer
+[2025-06-05 10:35:39,871] INFO in auth: User logged in: testuser, Interviewer
+[2025-06-05 10:35:40,451] INFO in auth: User logged in: testuser, Interviewer
+[2025-06-05 10:35:41,045] INFO in auth: User logged in: testuser, Interviewer
+[2025-06-05 10:35:41,060] INFO in interviewer: Feedback submitted for applicant 20 by testuser
+[2025-06-05 10:35:41,623] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:35:42,200] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:35:42,772] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:35:42,785] INFO in interviewer: Feedback submitted for applicant 20 by testuser
