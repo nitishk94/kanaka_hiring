@@ -36,6 +36,7 @@ def check_session():
 @bp.route('/view_joblisting')
 @no_cache
 @login_required
+@role_required('hr', 'admin')
 def view_joblisting():
     job_listings = JobRequirement.query.all()
-    return render_template('hr/view_applicant.html', job_listings=job_listings)
+    return render_template('viewjobs.html', jobs=job_listings)
