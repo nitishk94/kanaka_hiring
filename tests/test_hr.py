@@ -408,3 +408,16 @@ def test_admin_can_reject_applicant(logged_in_client):
     response = client.post('hr/reject_application/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Rejected' in response.data
+
+def test_admin_can_view_status_tracker(logged_in_client):
+    client = logged_in_client(role='admin')
+    create_fresher_test_applicant(client)
+    create_experienced_test_applicant(client)
+
+    response = client.get('/track/1', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Recruitment Progress' in response.data
+
+    response = client.get('/track/2', follow_redirects=True)
+    assert response.status_code == 200
+    assert b'Recruitment Progress' in response.data

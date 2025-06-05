@@ -1,66 +1,23 @@
-[2025-06-04 17:14:16,369] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:16,388] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:16,402] INFO in hr: Test rescheduled for applicant 1 to 2025-06-06 by testuser
-[2025-06-04 17:14:17,052] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:17,068] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:17,088] INFO in hr: Interview round 1 scheduled for applicant 1 on 2025-06-10 by testuser
-[2025-06-04 17:14:17,664] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:17,681] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:17,699] INFO in hr: Interview round 1 scheduled for applicant 1 on 2025-06-01 by testuser
-[2025-06-04 17:14:17,724] INFO in hr: Interview round 1 rescheduled for applicant 1 to 2025-06-10 by testuser
-[2025-06-04 17:14:18,290] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:18,306] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:18,322] INFO in hr: Candidate Testcase rejected
-[2025-06-04 17:14:18,897] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:18,914] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:18,930] INFO in hr: New applicant (Name: Experienced_User) added by testuser
-[2025-06-04 17:14:19,505] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:19,521] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:19,535] INFO in hr: Test scheduled for applicant 1 on 2025-06-11 by testuser
-[2025-06-04 17:14:20,125] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:20,141] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:20,156] INFO in hr: Test scheduled for applicant 1 on 2025-06-01 by testuser
-[2025-06-04 17:14:20,743] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:20,760] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:20,774] INFO in hr: Test scheduled for applicant 1 on 2025-06-01 by testuser
-[2025-06-04 17:14:21,362] INFO in auth: User logged in: testuser, HR
-[2025-06-04 17:14:21,378] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:21,396] INFO in hr: Interview round 1 scheduled for applicant 1 on 2025-06-10 by testuser
-[2025-06-04 17:14:21,984] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:22,002] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:22,568] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:22,584] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:23,195] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:23,212] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:23,797] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:23,814] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:23,829] INFO in hr: New applicant (Name: Experienced_User) added by testuser
-[2025-06-04 17:14:24,385] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:24,402] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:24,417] INFO in hr: New applicant (Name: Experienced_User) added by testuser
-[2025-06-04 17:14:25,050] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:25,067] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:25,083] INFO in hr: New applicant (Name: Experienced_User) added by testuser
-[2025-06-04 17:14:25,661] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:25,678] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:25,693] INFO in hr: Test scheduled for applicant 1 on 2025-06-06 by testuser
-[2025-06-04 17:14:25,715] INFO in hr: Test rescheduled for applicant 1 to 2025-06-08 by testuser
-[2025-06-04 17:14:26,273] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:26,290] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:26,306] INFO in hr: Interview round 1 scheduled for applicant 1 on 2025-06-01 by testuser
-[2025-06-04 17:14:26,330] INFO in hr: Interview round 1 rescheduled for applicant 1 to 2025-06-10 by testuser
-[2025-06-04 17:14:26,886] INFO in auth: User logged in: testuser, Admin
-[2025-06-04 17:14:26,904] INFO in hr: New applicant (Name: Testcase) added by testuser
-[2025-06-04 17:14:26,919] INFO in hr: Candidate Testcase rejected
-[2025-06-05 10:27:24,205] INFO in __init__: Flask application startup
-[2025-06-05 10:33:42,898] INFO in __init__: Flask application startup
-[2025-06-05 10:35:38,727] INFO in __init__: Flask application startup
-[2025-06-05 10:35:39,301] INFO in auth: User logged in: testuser, Interviewer
-[2025-06-05 10:35:39,871] INFO in auth: User logged in: testuser, Interviewer
-[2025-06-05 10:35:40,451] INFO in auth: User logged in: testuser, Interviewer
-[2025-06-05 10:35:41,045] INFO in auth: User logged in: testuser, Interviewer
-[2025-06-05 10:35:41,060] INFO in interviewer: Feedback submitted for applicant 20 by testuser
-[2025-06-05 10:35:41,623] INFO in auth: User logged in: testuser, Admin
-[2025-06-05 10:35:42,200] INFO in auth: User logged in: testuser, Admin
-[2025-06-05 10:35:42,772] INFO in auth: User logged in: testuser, Admin
-[2025-06-05 10:35:42,785] INFO in interviewer: Feedback submitted for applicant 20 by testuser
+[2025-06-05 10:53:53,391] INFO in hr: New applicant (Name: Experienced_User) added by testuser
+[2025-06-05 10:53:53,958] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:53:53,976] INFO in hr: New applicant (Name: Testcase) added by testuser
+[2025-06-05 10:53:53,993] INFO in hr: New applicant (Name: Experienced_User) added by testuser
+[2025-06-05 10:53:54,570] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:53:54,588] INFO in hr: New applicant (Name: Testcase) added by testuser
+[2025-06-05 10:53:54,602] INFO in hr: Test scheduled for applicant 1 on 2025-06-06 by testuser
+[2025-06-05 10:53:54,625] INFO in hr: Test rescheduled for applicant 1 to 2025-06-08 by testuser
+[2025-06-05 10:53:55,185] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:53:55,201] INFO in hr: New applicant (Name: Testcase) added by testuser
+[2025-06-05 10:53:55,218] INFO in hr: Interview round 1 scheduled for applicant 1 on 2025-06-01 by testuser
+[2025-06-05 10:53:55,242] INFO in hr: Interview round 1 rescheduled for applicant 1 to 2025-06-10 by testuser
+[2025-06-05 10:53:55,801] INFO in auth: User logged in: testuser, Admin
+[2025-06-05 10:53:55,818] INFO in hr: New applicant (Name: Testcase) added by testuser
+[2025-06-05 10:53:55,834] INFO in hr: Candidate Testcase rejected
+[2025-06-05 11:03:29,171] INFO in __init__: Flask application startup
+[2025-06-05 11:03:29,477] INFO in auth: New user registration: Username = newuser, Email = newuser@example.com
+[2025-06-05 11:03:30,051] INFO in auth: User logged in: testlogin, HR
+[2025-06-05 11:03:30,623] INFO in auth: Login attempt for unapproved user: test@example.com
+[2025-06-05 11:04:06,341] INFO in __init__: Flask application startup
+[2025-06-05 11:04:06,644] INFO in auth: New user registration: Username = newuser, Email = newuser@example.com
+[2025-06-05 11:04:07,248] INFO in auth: User logged in: testlogin, HR
+[2025-06-05 11:04:07,821] INFO in auth: Login attempt for unapproved user: test@example.com
