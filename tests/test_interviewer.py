@@ -3,14 +3,14 @@ from myapp.models import Interview, Applicant, RecruitmentHistory
 from datetime import date
 
 def test_interviewer_dashboard_access(logged_in_client):
-    client = logged_in_client(role='interviewer')
-    response = client.get('/interviewer/dashboard')
+    interviewer = logged_in_client(role='interviewer')
+    response = interviewer.get('/interviewer/dashboard')
     assert response.status_code == 200
     assert b'Interviewer Dashboard' in response.data
 
 def test_view_interviews(logged_in_client):
-    client = logged_in_client(role='interviewer')
-    response = client.get('/interviewer/interviews')
+    interviewer = logged_in_client(role='interviewer')
+    response = interviewer.get('/interviewer/interviews')
     assert response.status_code == 200
     assert b'Interviews' in response.data
 

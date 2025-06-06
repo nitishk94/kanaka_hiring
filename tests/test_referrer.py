@@ -4,23 +4,23 @@ from datetime import date
 import io
 
 def test_referrer_dashboard_access(logged_in_client):
-    client = logged_in_client(role='referrer')
-    response = client.get('/referrer/dashboard')
+    referrer = logged_in_client(role='referrer')
+    response = referrer.get('/referrer/dashboard')
     assert response.status_code == 200
     assert b'Referrer Dashboard' in response.data
 
 def test_referrer_upload(logged_in_client):
-    client = logged_in_client(role='referrer')
+    referrer = logged_in_client(role='referrer')
     data = {
         'name': 'Test Referral',
         'cv': (io.BytesIO(b"%PDF-1.4\n...This is a test CV..."), 'referral.pdf')
     }
-    response = client.post('/referrer/referral', data=data, content_type='multipart/form-data', follow_redirects=True)
+    response = referrer.post('/referrer/referral', data=data, content_type='multipart/form-data', follow_redirects=True)
     assert response.status_code == 200
     assert b'New referral successfully created!' in response.data
 
 def test_referrer_check_status(logged_in_client, app):
-    client = logged_in_client(role='referrer')
+    referrer = logged_in_client(role='referrer')
     with app.app_context():
         db.session.add(
             Applicant(
@@ -49,6 +49,6 @@ def test_referrer_check_status(logged_in_client, app):
         )
         db.session.commit()
     
-    response = client.get('/track/100')
+    response = referrer.get('/track/100')
     assert response.status_code == 200
     assert b'Passed' in response.data

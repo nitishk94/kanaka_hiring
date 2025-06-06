@@ -5,14 +5,14 @@ import io
 import pytest
 
 def test_hr_dashboard_access(logged_in_client):
-    client = logged_in_client(role='hr')
-    response = client.get('hr/dashboard', follow_redirects=True)
+    hr = logged_in_client(role='hr')
+    response = hr.get('hr/dashboard', follow_redirects=True)
     assert response.status_code == 200
     assert b'HR Dashboard' in response.data
 
 def test_hr_upload(logged_in_client):
-    client = logged_in_client(role='hr')
-    response = client.get('hr/upload_applicants', follow_redirects=True)
+    hr = logged_in_client(role='hr')
+    response = hr.get('hr/upload_applicants', follow_redirects=True)
     assert response.status_code == 200
     assert b'Upload' in response.data
 
@@ -126,12 +126,12 @@ def create_referred_test_applicant(client, referrer_id):
     return client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
 
 def test_hr_upload_validation(logged_in_client, app):
-    client = logged_in_client(role='hr')
-    response = create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    response = create_fresher_test_applicant(hr)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
 
-    response = create_experienced_test_applicant(client)
+    response = create_experienced_test_applicant(hr)
     assert response.status_code == 200
     print(response.data.decode())
     assert b'New applicant successfully created!' in response.data
@@ -141,25 +141,25 @@ def test_hr_upload_validation(logged_in_client, app):
         db.session.add(ref_user)
         db.session.commit()
         referrer_id = ref_user.id
-    response = create_referred_test_applicant(client, referrer_id)
+    response = create_referred_test_applicant(hr, referrer_id)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
 
 def test_hr_upload_invalid_cv(logged_in_client):
-    client = logged_in_client(role='hr')
-    response = create_corrupt_cv_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    response = create_corrupt_cv_test_applicant(hr)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
 
 def test_hr_upload_duplicate_applicant(logged_in_client):
-    client = logged_in_client(role='hr')
+    hr = logged_in_client(role='hr')
     # First submission
-    response = create_fresher_test_applicant(client)
+    response = create_fresher_test_applicant(hr)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
 
     # Second submission with the same email (duplicate)
-    response2 = create_fresher_test_applicant(client)
+    response2 = create_fresher_test_applicant(hr)
     assert response2.status_code == 200
     assert b'Upload' in response2.data
 
@@ -185,131 +185,131 @@ def test_hr_upload_duplicate_applicant(logged_in_client):
         'cv': (io.BytesIO(b"%PDF-1.4\n...This is a test CV..."), 'test_cv.pdf'),
         'comments': 'Test comment'
     }
-    response3 = client.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
+    response3 = hr.post('hr/upload_applicants', data=form, content_type='multipart/form-data', follow_redirects=True)
     assert response3.status_code == 200
     assert b'Upload' in response3.data
 
 def test_applicants(logged_in_client):
-    client = logged_in_client(role='hr')
-    response = client.get('hr/applicants', follow_redirects=True)
+    hr = logged_in_client(role='hr')
+    response = hr.get('hr/applicants', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicants List' in response.data
 
 def test_applicant_details(logged_in_client):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
-    create_experienced_test_applicant(client)
-    response = client.get('hr/view_applicant/1', follow_redirects=True)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
+    create_experienced_test_applicant(hr)
+    response = hr.get('hr/view_applicant/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
-    response = client.get('hr/view_applicant/2', follow_redirects=True)
+    response = hr.get('hr/view_applicant/2', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
 
 def test_schedule_test(logged_in_client):
-    client = logged_in_client(role='hr')
-    create_experienced_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_experienced_test_applicant(hr)
     test_date = '2025-06-06'
-    response = client.post('hr/schedule_test/1', data={'test_date': test_date}, follow_redirects=True)
+    response = hr.post('hr/schedule_test/1', data={'test_date': test_date}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Test scheduled' in response.data
 
 def test_reschedule_test(logged_in_client):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
     test_date = '2025-06-06'
-    response = client.post('hr/reschedule_test/1', data={'test_date': test_date}, follow_redirects=True)
+    response = hr.post('hr/reschedule_test/1', data={'test_date': test_date}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Test scheduled' in response.data
 
 def test_schedule_interview(logged_in_client, app):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
     with app.app_context():
         user = User(id = 20, username='testinterviewer', email="test@testing.com", password_hash='testcase', role='interviewer')
         db.session.add(user)
         db.session.commit()
 
-    response = client.post('hr/schedule_interview/1', data={'interview_date': '2025-06-10', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
+    response = hr.post('hr/schedule_interview/1', data={'interview_date': '2025-06-10', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Interview scheduled' in response.data
 
 def test_reschedule_interview(logged_in_client, app):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
     with app.app_context():
         user = User(id = 20, username='testinterviewer', email="test@testing.com", password_hash='testcase', role='interviewer')
         db.session.add(user)
         db.session.commit()
     
-    client.post('hr/schedule_interview/1', data={'interview_date': '2025-06-01', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
+    hr.post('hr/schedule_interview/1', data={'interview_date': '2025-06-01', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
     
-    response = client.post('hr/reschedule_interview/1', data={'interview_date': '2025-06-10', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
+    response = hr.post('hr/reschedule_interview/1', data={'interview_date': '2025-06-10', 'interview_time': '10:00', 'interviewer_id': 20}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Interview round 1 scheduled' in response.data
 
 def test_reject_applicant(logged_in_client):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
-    response = client.post('hr/reject_application/1', follow_redirects=True)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
+    response = hr.post('hr/reject_application/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Rejected' in response.data
 
 def test_status_tracker(logged_in_client):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
-    create_experienced_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
+    create_experienced_test_applicant(hr)
 
-    response = client.get('/track/1', follow_redirects=True)
+    response = hr.get('/track/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Recruitment Progress' in response.data
 
-    response = client.get('/track/2', follow_redirects=True)
+    response = hr.get('/track/2', follow_redirects=True)
     assert response.status_code == 200
     assert b'Recruitment Progress' in response.data
 
 def test_test_stage_appears_in_tracker(logged_in_client):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
 
-    client.post('hr/schedule_test/1', data={'test_date': '2025-06-11'}, follow_redirects=True)
-    response = client.get('/track/1', follow_redirects=True)
+    hr.post('hr/schedule_test/1', data={'test_date': '2025-06-11'}, follow_redirects=True)
+    response = hr.get('/track/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Test' in response.data
 
 def test_test_passed_in_tracker(logged_in_client, app):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
 
-    client.post('hr/schedule_test/1', data={'test_date': '2025-06-01'}, follow_redirects=True)
+    hr.post('hr/schedule_test/1', data={'test_date': '2025-06-01'}, follow_redirects=True)
     with app.app_context():
         history = RecruitmentHistory.query.filter_by(applicant_id=1).first()
         history.test_result = True
         db.session.commit()
 
-    response = client.get('/track/1', follow_redirects=True)
+    response = hr.get('/track/1', follow_redirects=True)
     assert response.status_code == 200
     print(response.data.decode())
     assert b'Passed' in response.data
 
 def test_test_failed_in_tracker(logged_in_client, app):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
 
-    client.post('hr/schedule_test/1', data={'test_date': '2025-06-01'}, follow_redirects=True)
+    hr.post('hr/schedule_test/1', data={'test_date': '2025-06-01'}, follow_redirects=True)
     with app.app_context():
         history = RecruitmentHistory.query.filter_by(applicant_id=1).first()
         history.test_result = False
         db.session.commit()
 
-    response = client.get('/track/1', follow_redirects=True)
+    response = hr.get('/track/1', follow_redirects=True)
     assert response.status_code == 200
     print(response.data.decode())
     assert b'Failed' in response.data
 
 def test_interview_stage_appears_in_tracker(logged_in_client, app):
-    client = logged_in_client(role='hr')
-    create_fresher_test_applicant(client)
+    hr = logged_in_client(role='hr')
+    create_fresher_test_applicant(hr)
 
     with app.app_context():
         history = RecruitmentHistory.query.filter_by(applicant_id=1).first()
@@ -317,13 +317,13 @@ def test_interview_stage_appears_in_tracker(logged_in_client, app):
         db.session.add(User(id=20, username='testinterviewer', email="test@testing.com", password_hash='testcase', role='interviewer'))
         db.session.commit()
 
-    client.post('hr/schedule_interview/1', data={
+    hr.post('hr/schedule_interview/1', data={
         'interview_date': '2025-06-10',
         'interview_time': '10:00',
         'interviewer_id': 20
     }, follow_redirects=True)
 
-    response = client.get('/track/1', follow_redirects=True)
+    response = hr.get('/track/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Interview' in response.data
 
@@ -333,91 +333,91 @@ def test_interview_stage_appears_in_tracker(logged_in_client, app):
     ("hr/view_applicant/1", b"Applicant Details"),
 ])
 def test_admin_access_to_hr_pages(logged_in_client, url, expected_text):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
-    response = client.get(url, follow_redirects=True)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
+    response = admin.get(url, follow_redirects=True)
     assert response.status_code == 200
     assert expected_text in response.data
 
 def test_admin_can_upload_applicants(logged_in_client):
-    client = logged_in_client(role='admin')
-    response = create_fresher_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    response = create_fresher_test_applicant(admin)
     assert response.status_code == 200
     assert b'New applicant successfully created!' in response.data
     
-    response2 = create_experienced_test_applicant(client)
+    response2 = create_experienced_test_applicant(admin)
     assert response2.status_code == 200
     assert b'New applicant successfully created!' in response2.data
 
 def test_admin_can_view_applicants(logged_in_client):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
-    create_experienced_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
+    create_experienced_test_applicant(admin)
     
-    response = client.get('hr/applicants', follow_redirects=True)
+    response = admin.get('hr/applicants', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicants List' in response.data
 
 def test_admin_can_view_applicant_details(logged_in_client):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
-    create_experienced_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
+    create_experienced_test_applicant(admin)
     
-    response = client.get('hr/view_applicant/1', follow_redirects=True)
+    response = admin.get('hr/view_applicant/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
     
-    response = client.get('hr/view_applicant/2', follow_redirects=True)
+    response = admin.get('hr/view_applicant/2', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
 
 def test_admin_can_schedule_and_reschedule_test(logged_in_client):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
 
-    response = client.post('hr/schedule_test/1', data={'test_date': '2025-06-06'}, follow_redirects=True)
+    response = admin.post('hr/schedule_test/1', data={'test_date': '2025-06-06'}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
 
-    response = client.post('hr/reschedule_test/1', data={'test_date': '2025-06-08'}, follow_redirects=True)
+    response = admin.post('hr/reschedule_test/1', data={'test_date': '2025-06-08'}, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
 
 def test_admin_can_schedule_and_reschedule_interview(logged_in_client, app):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
 
     with app.app_context():
         db.session.add(User(id=20, username='testinterviewer', email="test@testing.com", password_hash='testcase', role='interviewer'))
         db.session.commit()
 
     data = {'interview_date': '2025-06-01', 'interview_time': '10:00', 'interviewer_id': 20}
-    response = client.post('hr/schedule_interview/1', data=data, follow_redirects=True)
+    response = admin.post('hr/schedule_interview/1', data=data, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
 
     data['interview_date'] = '2025-06-10'
-    response = client.post('hr/reschedule_interview/1', data=data, follow_redirects=True)
+    response = admin.post('hr/reschedule_interview/1', data=data, follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
 
 def test_admin_can_reject_applicant(logged_in_client):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
 
-    response = client.post('hr/reject_application/1', follow_redirects=True)
+    response = admin.post('hr/reject_application/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Rejected' in response.data
 
 def test_admin_can_view_status_tracker(logged_in_client):
-    client = logged_in_client(role='admin')
-    create_fresher_test_applicant(client)
-    create_experienced_test_applicant(client)
+    admin = logged_in_client(role='admin')
+    create_fresher_test_applicant(admin)
+    create_experienced_test_applicant(admin)
 
-    response = client.get('/track/1', follow_redirects=True)
+    response = admin.get('/track/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Recruitment Progress' in response.data
 
-    response = client.get('/track/2', follow_redirects=True)
+    response = admin.get('/track/2', follow_redirects=True)
     assert response.status_code == 200
     assert b'Recruitment Progress' in response.data
