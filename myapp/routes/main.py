@@ -1,5 +1,8 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
+from myapp.extensions import db
+from myapp.models import User  
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.applicants import Applicant
 from myapp.models.jobrequirement import JobRequirement
@@ -36,7 +39,38 @@ def check_session():
 @bp.route('/view_joblisting')
 @no_cache
 @login_required
-@role_required('hr', 'admin')
 def view_joblisting():
-    job_listings = JobRequirement.query.all()
-    return render_template('viewjobs.html', jobs=job_listings)
+    jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.job_id.desc()).all()
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    return render_template('viewjobs.html', jobs=jobs, users=hr_users)
+
+@bp.route('/filter_joblistings')
+@no_cache
+@login_required
+def filter_joblistings():
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    
+    hr_id = request.args.get('hr_id', '')
+
+    if hr_id:
+        jobs = JobRequirement.query.filter_by(created_by_id=hr_id).order_by(JobRequirement.job_position.asc()).all()
+    else:
+        jobs = JobRequirement.query.order_by(JobRequirement.job_position.asc()).all()
+    
+    return render_template('viewjobs.html', jobs=jobs, users=hr_users, current_user=current_user)
+
+@bp.route('/search_route')
+@no_cache
+@login_required
+def search_job():
+    query = request.args.get('q', '')
+    if query:
+        # Example: search in job_position or job_description (case-insensitive)
+        jobs = JobRequirement.query.filter(
+            (JobRequirement.job_position.ilike(f'%{query}%')) |
+            (JobRequirement.job_description.ilike(f'%{query}%'))
+        ).order_by(JobRequirement.job_position.asc()).all()
+    else:
+        jobs = JobRequirement.query.order_by(JobRequirement.job_position.asc()).all()
+
+    return render_template('viewjobs.html', jobs=jobs, current_user=current_user)
