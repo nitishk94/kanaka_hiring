@@ -8,4 +8,4 @@ class JobRequirement(db.Model):
     job_description = db.Column(db.Text, nullable = False)
 
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_by = db.relationship('User', backref='job_listings')
+    created_by = db.relationship('User', back_populates='job_listings')
