@@ -21,7 +21,7 @@ HR_ROLES = ('hr', 'admin')
 @bp.route('/dashboard')
 @no_cache
 @login_required
-@role_required(*HR_ROLES)
+@role_required('hr')
 def dashboard():
     return render_template('hr/dashboard.html')
 
