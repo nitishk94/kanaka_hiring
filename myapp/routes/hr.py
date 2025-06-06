@@ -461,15 +461,14 @@ def upload_joblistings():
         return {'error': 'Session expired. Please log in again.'}, 401
 
     # Get all form data using the correct field names
-    job_id = request.form.get('job_id')
     job_position = request.form.get('position_name') 
     job_description = request.form.get('job_description')
 
     # Create new job requirement
     new_jobrequirement = JobRequirement(
-        job_id=job_id,
         job_position=job_position,
-        job_description=job_description
+        job_description=job_description,
+        created_by=current_user # Uncomment if you want to track who created the job listing
     )
 
     if not job_position or not job_description:
@@ -495,23 +494,29 @@ def upload_joblistings():
     
    # return render_template('hr/addjob.html')
 
-@bp.route('/joblisiting_update/<int:job_id>', methods=['POST'])
-@no_cache
+@bp.route('/update_joblisting/<int:job_id>', methods=['GET', 'POST'])
 @login_required
-@role_required(*HR_ROLES)
+@role_required('hr', 'admin')
 def joblisting_update(job_id):
-    joblisting = JobRequirement.query.get_or_404(job_id)
-    position_name = request.form.get('position_name')
-    job_description = request.form.get('job_description')
-    
-    joblisting.position_name = position_name
-    joblisting.job_description = job_description
-    db.session.commit()
-    
-    current_app.logger.info(f"Details updated for job listing {joblisting.position_name} by {current_user.username}")
-    flash('Job listing details updated successfully', 'success')
-    
-    return render_template('hr/detailsjob.html', joblisting=joblisting)
+    job = JobRequirement.query.get_or_404(job_id)
+
+    if request.method == 'POST':
+        position = request.form.get('job_position')
+        description = request.form.get('job_description')
+
+        if not position or not description:
+            flash('Job position and description cannot be empty!', 'error')
+            return redirect(url_for('hr.joblisting_update', job_id=job_id))
+
+        job.job_position = position
+        job.job_description = description
+
+        db.session.commit()
+        flash('Job listing updated successfully!', 'success')
+        return redirect(url_for('main.view_joblisting'))
+
+    return render_template('hr/detailsjob.html', joblisting=job)
+
 
 
 
@@ -523,7 +528,7 @@ def delete_joblisting(job_id):
     joblisting = JobRequirement.query.get_or_404(job_id)
     db.session.delete(joblisting)
     db.session.commit()
-    current_app.logger.info(f"Job listing {joblisting.position_name} deleted by Admin {current_user.username}")
+    current_app.logger.info(f"Job listing {joblisting.job_position} deleted by Admin {current_user.username}")
     flash('Job listing deleted successfully', 'success')
-    return redirect(url_for('hr.view_joblisting'))
+    return redirect(url_for('main.view_joblisting'))
 
