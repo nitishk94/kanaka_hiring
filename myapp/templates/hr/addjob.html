@@ -16,6 +16,7 @@
                 <h2 class="card-title mb-4">Job Details</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+                    <!-- Position Name -->
                     <div class="form-control">
                         <label class="label" for="position_name">
                             <span class="label-text">Position Name <span class="text-error">*</span></span>
@@ -31,6 +32,7 @@
                         />
                     </div>
 
+                    <!-- Job Description -->
                     <div class="form-control col-span-2">
                         <label class="label" for="job_description">
                             <span class="label-text">Job Description <span class="text-error">*</span></span>
@@ -43,8 +45,74 @@
                             placeholder="Enter detailed job description"
                         >{{ form_data.job_description if form_data else '' }}</textarea>
                     </div>
+
+                    <!-- Job Skillset -->
+                    <div class="form-control col-span-2">
+                        <label class="label" for="job_skillset">
+                            <span class="label-text">Required Skillset <span class="text-error">*</span></span>
+                        </label>
+                        <textarea
+                            id="job_skillset"
+                            name="job_skillset"
+                            required
+                            class="textarea textarea-bordered h-24"
+                            placeholder="List required skills (comma-separated, e.g., Python, React, SQL)"
+                        >{{ form_data.job_skillset if form_data else '' }}</textarea>
+                    </div>
+
+                    <!-- Job Clients -->
+                    <div class="form-control md:col-span-1">
+                        <label class="label" for="job_clients">
+                            <span class="label-text">Client Name <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="job_clients"
+                            type="text"
+                            name="job_clients"
+                            required
+                            placeholder="Enter client name"
+                            class="input input-bordered"
+                            value="{{ form_data.job_clients if form_data else '' }}"
+                        />
+                    </div>
+
+                    <!-- Job Budget -->
+                    <div class="form-control md:col-span-1">
+                        <label class="label" for="job_budget">
+                            <span class="label-text">Budget (INR) <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="job_budget"
+                            type="number"
+                            name="job_budget"
+                            required
+                            placeholder="Enter budget amount"
+                            class="input input-bordered"
+                            min="0"
+                            step="any"
+                            value="{{ form_data.job_budget if form_data else '' }}"
+                        />
+                    </div>
+
+                    <!-- Job Experience -->
+                    <div class="form-control md:col-span-1">
+                        <label class="label" for="job_experience">
+                            <span class="label-text">Experience Required <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="job_experience"
+                            type="text"
+                            name="job_experience"
+                            required
+                            placeholder="Enter experience required (e.g., 2+ years)"
+                            class="input input-bordered"
+                            value="{{ form_data.job_experience if form_data else '' }}"
+                        />
+                    </div>
+
                 </div>
 
+                <!-- Submit button -->
                 <div class="form-control mt-6">
                     <button type="submit" class="btn btn-primary">Add Job Position</button>
                 </div>

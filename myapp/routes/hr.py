@@ -463,12 +463,20 @@ def upload_joblistings():
     # Get all form data using the correct field names
     job_position = request.form.get('position_name') 
     job_description = request.form.get('job_description')
+    job_skillset= request.form.get('job_skillset')
+    job_clients = request.form.get('job_clients')
+    job_budget = request.form.get('job_budget')
+    job_experience = request.form.get('job_experience')  
 
     # Create new job requirement
     new_jobrequirement = JobRequirement(
-        job_position=job_position,
-        job_description=job_description,
-        created_by=current_user # Uncomment if you want to track who created the job listing
+        position=job_position,
+        description=job_description,
+        created_by=current_user,
+        skillset=job_skillset,
+        clients=job_clients,
+        budget=job_budget,
+        experience=job_experience
     )
 
     if not job_position or not job_description:
@@ -478,7 +486,7 @@ def upload_joblistings():
     db.session.commit()
 
     flash('New job listing successfully created!', 'success')
-    current_app.logger.info(f"New job listing (Posting: {new_jobrequirement.job_position}) added by {current_user.name}")
+    current_app.logger.info(f"New job listing (Posting: {new_jobrequirement.position}) added by {current_user.name}")
     
     return redirect(url_for('hr.dashboard'))
 
@@ -494,22 +502,32 @@ def upload_joblistings():
     
    # return render_template('hr/addjob.html')
 
-@bp.route('/update_joblisting/<int:job_id>', methods=['GET', 'POST'])
+@bp.route('/update_joblisting/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required('hr', 'admin')
-def joblisting_update(job_id):
-    job = JobRequirement.query.get_or_404(job_id)
+def joblisting_update(id):
+    job = JobRequirement.query.get_or_404(id)
 
     if request.method == 'POST':
         position = request.form.get('job_position')
         description = request.form.get('job_description')
+        skillset= request.form.get('job_skillset')
+        clients = request.form.get('job_clients')
+        budget = request.form.get('job_budget')
+        experience = request.form.get('job_experience')  
+
+
 
         if not position or not description:
             flash('Job position and description cannot be empty!', 'error')
-            return redirect(url_for('hr.joblisting_update', job_id=job_id))
+            return redirect(url_for('hr.joblisting_update', id=id))
 
-        job.job_position = position
-        job.job_description = description
+        job.position = position
+        job.description = description
+        job.skillset = skillset
+        job.clients = clients       
+        job.budget = budget
+        job.experience = experience
 
         db.session.commit()
         flash('Job listing updated successfully!', 'success')
@@ -520,15 +538,15 @@ def joblisting_update(job_id):
 
 
 
-@bp.route('/delete_joblisting/<int:job_id>', methods=['POST'])
+@bp.route('/delete_joblisting/<int:id>', methods=['POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def delete_joblisting(job_id):
-    joblisting = JobRequirement.query.get_or_404(job_id)
+def delete_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
     db.session.delete(joblisting)
     db.session.commit()
-    current_app.logger.info(f"Job listing {joblisting.job_position} deleted by Admin {current_user.username}")
+    current_app.logger.info(f"Job listing {joblisting.position} deleted by Admin {current_user.username}")
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
 
