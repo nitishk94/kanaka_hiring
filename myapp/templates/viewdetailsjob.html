@@ -7,7 +7,7 @@
 
     <!-- Page Heading -->
     <div class="text-center mb-8">
-        <h1 class="text-5xl font-extrabold mb-2 text-primary">Job Details</h1>
+        <h1 class="text-5xl font-extrabold mb-2 text-black">Job Details</h1>
         <p class="text-lg text-gray-500">Complete information about this job opportunity.</p>
     </div>
 
@@ -16,7 +16,7 @@
         <div class="card-body space-y-6 p-8">
 
             <!-- Job Title -->
-            <h2 class="text-3xl font-bold text-center text-secondary mb-4">{{ job.position }}</h2>
+            <h2 class="text-3xl font-bold text-center text-black">{{ job.position }}</h2>
 
             <!-- Job Info Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-base">
@@ -30,7 +30,7 @@
                 <!-- Experience -->
                 <div class="form-control">
                     <label class="label font-semibold text-lg text-primary">Experience:</label>
-                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.experience if job.experience else 'Not specified' }}</div>
+                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.experience if job.experience else 'Not specified' }} years</div>
                 </div>
 
                 <!-- Clients -->
@@ -51,20 +51,14 @@
                     <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.created_by.username if job.created_by else 'Unknown' }}</div>
                 </div>
 
-                <!-- Created Date (Optional) -->
-                {# Uncomment if your table has created_at field
-                <div class="form-control">
-                    <label class="label font-semibold text-lg text-primary">Created on:</label>
-                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.created_at.strftime('%d-%m-%Y') if job.created_at else 'N/A' }}</div>
-                </div>
-                #}
+                
             </div>
 
             <!-- Job Description Full -->
             <div class="form-control mt-6">
                 <label class="label font-semibold text-lg text-primary">Job Description:</label>
-                <div class="p-4 bg-gray-50 rounded text-gray-800 leading-relaxed whitespace-pre-line border border-gray-200">
-                    {{ job.description }}
+                <div class="p-4 bg-gray-50 rounded text-gray-800 leading-relaxed whitespace-pre-line border-gray-200">
+                    {{ job.description | trim }}
                 </div>
             </div>
 
@@ -72,7 +66,7 @@
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-10">
 
                 <!-- Back button -->
-                <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-secondary w-auto px-8 text-lg">Back to Jobs List</a>
+                <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-black w-auto px-8 text-lg">Back to Jobs List</a>
 
                 <!-- If user is HR or Admin, show Edit and Delete buttons -->
                 {% if current_user.role in ['hr', 'admin'] %}
