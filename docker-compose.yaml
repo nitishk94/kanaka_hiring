@@ -3,4 +3,4 @@ services:
     container_name: python-app
     build: .
     ports:
-      -  5002:5002
+      -  5000:5000
