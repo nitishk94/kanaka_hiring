@@ -17,6 +17,17 @@
 
             <!-- Job Title -->
             <h2 class="text-3xl font-bold text-center text-black">{{ job.position }}</h2>
+            {% if not is_open %}        
+                    <p class="text-center text-gray-500">*Currently not accepting applicants*.</p>
+                {% endif %}
+
+            
+                <div class="form-control mt-6">
+                <label class="label font-semibold text-lg text-primary">Job Description:</label>
+                <div class="p-4 bg-gray-50 rounded text-gray-800 leading-relaxed whitespace-pre-line border-gray-200">
+                    {{ job.description | trim }}
+                </div>
+            </div>
 
             <!-- Job Info Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-base">
@@ -33,40 +44,44 @@
                     <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.experience if job.experience else 'Not specified' }} years</div>
                 </div>
 
-                <!-- Clients -->
-                <div class="form-control">
-                    <label class="label font-semibold text-lg text-primary">Client Name:</label>
-                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.clients if job.clients else 'Not specified' }}</div>
-                </div>
-
-                <!-- Budget -->
-                <div class="form-control">
-                    <label class="label font-semibold text-lg text-primary">Budget (INR):</label>
-                    <div class="p-3 bg-gray-100 rounded text-gray-800">₹ {{ job.budget if job.budget else 'Not specified' }}</div>
-                </div>
-
-                <!-- Created By -->
-                <div class="form-control">
-                    <label class="label font-semibold text-lg text-primary">Added by:</label>
-                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.created_by.username if job.created_by else 'Unknown' }}</div>
+                <div class="text-center my-4">
+                    <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-black w-auto px-8 text-lg">
+                        Back to Jobs List
+                    </a>
                 </div>
 
                 
-            </div>
+                
 
-            <!-- Job Description Full -->
-            <div class="form-control mt-6">
-                <label class="label font-semibold text-lg text-primary">Job Description:</label>
-                <div class="p-4 bg-gray-50 rounded text-gray-800 leading-relaxed whitespace-pre-line border-gray-200">
-                    {{ job.description | trim }}
+            {% if current_user.role in ['hr', 'admin'] %}
+                <!-- Clients -->
+                    <div class="form-control">
+                        <label class="label font-semibold text-lg text-primary">Client Name:</label>
+                        <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.clients if job.clients else 'Not specified' }}</div>
+                    </div>
+
+                    <!-- Budget -->
+                    <div class="form-control">
+                        <label class="label font-semibold text-lg text-primary">Budget (INR):</label>
+                        <div class="p-3 bg-gray-100 rounded text-gray-800">₹ {{ job.budget if job.budget else 'Not specified' }}</div>
+                    </div>
+
+                    <!-- Created By -->
+                    <div class="form-control">
+                        <label class="label font-semibold text-lg text-primary">Added by:</label>
+                        <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.created_by.username if job.created_by else 'Unknown' }}</div>
+                    </div>
+
+                    
                 </div>
-            </div>
+            {% endif %}
+
 
             <!-- Buttons Section -->
             <div class="flex flex-col md:flex-row justify-center gap-4 mt-10">
 
                 <!-- Back button -->
-                <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-black w-auto px-8 text-lg">Back to Jobs List</a>
+                
 
                 <!-- If user is HR or Admin, show Edit and Delete buttons -->
                 {% if current_user.role in ['hr', 'admin'] %}
@@ -76,6 +91,14 @@
                        class="btn btn-warning w-auto px-8 text-lg">
                         Edit
                     </a>
+
+                    <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
+                          method="POST" 
+                          onsubmit="return confirm('Are you sure you want to close this job?');">
+                        <button type="submit" class="btn btn-info w-auto px-8 text-lg">
+                            Close Job
+                        </button>
+                    </form>
 
                     <!-- Delete Button -->
                     <form action="{{ url_for('hr.delete_joblisting', id=job.id) }}" 
@@ -87,6 +110,7 @@
                     </form>
 
                 {% endif %}
+                
 
             </div>
 

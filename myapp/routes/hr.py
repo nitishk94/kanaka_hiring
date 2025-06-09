@@ -535,7 +535,17 @@ def joblisting_update(id):
 
     return render_template('hr/detailsjob.html', joblisting=job)
 
-
+@bp.route('/close_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def close_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    joblisting.is_open = False
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} closed by Admin {current_user.username}")
+    flash('Job listing closed successfully', 'success')
+    return redirect(url_for('main.view_joblisting'))
 
 
 @bp.route('/delete_joblisting/<int:id>', methods=['POST'])
