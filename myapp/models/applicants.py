@@ -45,7 +45,7 @@ class Applicant(db.Model):
     uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     is_referred = db.Column(db.Boolean, default = False)
     referred_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.job_id'), nullable=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.id'), nullable=True)
 
     history_entries = db.relationship("RecruitmentHistory", back_populates="applicant", cascade="all, delete-orphan")
     referred_candidate = db.relationship("Referral", back_populates="applicant")
