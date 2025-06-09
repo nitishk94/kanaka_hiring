@@ -10,5 +10,6 @@ class Referral(db.Model):
     referral_date = db.Column(db.Date)
     cv_file_path = db.Column(db.Text)
     job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.id'))
+    is_fresher = db.Column(db.Boolean, default=False)
     
     job = db.relationship("JobRequirement", backref="referrals")
