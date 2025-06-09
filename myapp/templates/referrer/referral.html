@@ -29,10 +29,10 @@
             <select name="position" id="position" class="select select-bordered w-full">
                 <option value="">-- Choose a Position --</option>
                 {% for id, position in job_positions %}
-                    <option value="{{ id }}"
-                        {% if form_data.position == id|string %}selected{% endif %}>
-                        {{ position }}
-                    </option>
+                        <option value="{{ id }}"
+                            {% if form_data and form_data.position == id|string %}selected{% endif %}>
+                            {{ position }}
+                        </option>
                 {% endfor %}
             </select>
         </div>
