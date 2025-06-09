@@ -12,7 +12,7 @@ class Interview(db.Model):
     date = db.Column(db.Date)
     time = db.Column(Time)
     completed = db.Column(db.Boolean, default=False)
-    job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.job_id'))
+    job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.id'))
     
     job = db.relationship("JobRequirement", backref="interviews")
     applicant = db.relationship("Applicant", backref="interviews")
