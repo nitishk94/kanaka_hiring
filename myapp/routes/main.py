@@ -41,16 +41,15 @@ def check_session():
 @login_required
 def view_joblisting():
     jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.id.desc()).all()
-    return render_template('viewjobs.html', jobs=jobs)
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    return render_template('viewjobs.html', jobs=jobs, users=hr_users)
 
 @bp.route('/view_details_joblisting/<int:id>')
 @no_cache
 @login_required
 def view_details_joblisting(id):
-    job = JobRequirement.query.options(joinedload(JobRequirement.created_by)).filter_by(id=id).first_or_404()
-   
-    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    return render_template('viewdetailsjob.html', job=job, users=hr_users)
+    job = JobRequirement.query.options(joinedload(JobRequirement.created_by)).filter_by(id=id).first_or_404() 
+    return render_template('viewdetailsjob.html', job=job, current_user=current_user)
 
 
 @bp.route('/filter_joblistings')
@@ -58,7 +57,6 @@ def view_details_joblisting(id):
 @login_required
 def filter_joblistings():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    
     hr_id = request.args.get('hr_id', '')
 
     if hr_id:
