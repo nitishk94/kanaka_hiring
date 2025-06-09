@@ -488,7 +488,7 @@ def upload_joblistings():
     flash('New job listing successfully created!', 'success')
     current_app.logger.info(f"New job listing (Posting: {new_jobrequirement.position}) added by {current_user.name}")
     
-    return redirect(url_for('hr.dashboard'))
+    return redirect(url_for('main.view_joblisting'))
 
    # except IntegrityError as e:
     #    db.session.rollback()
@@ -531,7 +531,7 @@ def joblisting_update(id):
 
         db.session.commit()
         flash('Job listing updated successfully!', 'success')
-        return redirect(url_for('main.view_joblisting'))
+        return redirect(url_for('main.view_details_joblisting', id=id ))
 
     return render_template('hr/detailsjob.html', joblisting=job)
 
