@@ -6,17 +6,17 @@
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Edit Job Details</h1>
 
-    <form method="POST" action="{{ url_for('hr.joblisting_update', job_id=joblisting.job_id) }}" class="space-y-6">
+    <form method="POST" action="{{ url_for('hr.joblisting_update', id=joblisting.id) }}" class="space-y-6">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1" for="job_position">Job Position</label>
-            <input type="text" id="job_position" name="job_position" value="{{ joblisting.job_position }}" required
+            <input type="text" id="job_position" name="job_position" value="{{ joblisting.position }}" required
                    class="input input-bordered w-full" />
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1" for="job_description">Job Description</label>
             <textarea id="job_description" name="job_description" rows="5" required
-                      class="textarea textarea-bordered w-full">{{ joblisting.job_description }}</textarea>
+                      class="textarea textarea-bordered w-full">{{ joblisting.description }}</textarea>
         </div>
 
         <div class="flex gap-4">

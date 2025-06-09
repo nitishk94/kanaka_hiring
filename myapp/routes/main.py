@@ -40,9 +40,18 @@ def check_session():
 @no_cache
 @login_required
 def view_joblisting():
-    jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.job_id.desc()).all()
+    jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.id.desc()).all()
+    return render_template('viewjobs.html', jobs=jobs)
+
+@bp.route('/view_details_joblisting/<int:id>')
+@no_cache
+@login_required
+def view_details_joblisting(id):
+    job = JobRequirement.query.options(joinedload(JobRequirement.created_by)).filter_by(id=id).first_or_404()
+   
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    return render_template('viewjobs.html', jobs=jobs, users=hr_users)
+    return render_template('viewdetailsjob.html', job=job, users=hr_users)
+
 
 @bp.route('/filter_joblistings')
 @no_cache
@@ -53,9 +62,9 @@ def filter_joblistings():
     hr_id = request.args.get('hr_id', '')
 
     if hr_id:
-        jobs = JobRequirement.query.filter_by(created_by_id=hr_id).order_by(JobRequirement.job_position.asc()).all()
+        jobs = JobRequirement.query.filter_by(created_by_id=hr_id).order_by(JobRequirement.position.asc()).all()
     else:
-        jobs = JobRequirement.query.order_by(JobRequirement.job_position.asc()).all()
+        jobs = JobRequirement.query.order_by(JobRequirement.position.asc()).all()
     
     return render_template('viewjobs.html', jobs=jobs, users=hr_users, current_user=current_user)
 
@@ -65,12 +74,11 @@ def filter_joblistings():
 def search_job():
     query = request.args.get('q', '')
     if query:
-        # Example: search in job_position or job_description (case-insensitive)
         jobs = JobRequirement.query.filter(
-            (JobRequirement.job_position.ilike(f'%{query}%')) |
-            (JobRequirement.job_description.ilike(f'%{query}%'))
-        ).order_by(JobRequirement.job_position.asc()).all()
+            (JobRequirement.position.ilike(f'%{query}%')) |
+            (JobRequirement.description.ilike(f'%{query}%'))
+        ).order_by(JobRequirement.position.asc()).all()
     else:
-        jobs = JobRequirement.query.order_by(JobRequirement.job_position.asc()).all()
+        jobs = JobRequirement.query.order_by(JobRequirement.position.asc()).all()
 
     return render_template('viewjobs.html', jobs=jobs, current_user=current_user)
