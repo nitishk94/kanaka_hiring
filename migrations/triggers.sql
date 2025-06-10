@@ -80,9 +80,7 @@ BEGIN
 
         -- Regular users can only delete themselves
         IF current_user_role NOT IN ('admin') AND NOT current_user_is_super THEN
-            IF current_user_id != OLD.id THEN
-                RAISE EXCEPTION 'You can only delete your own account';
-            END IF;
+            RAISE EXCEPTION 'Regular users cannot delete accounts';
         END IF;
 
         RETURN OLD;
