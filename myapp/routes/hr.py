@@ -31,10 +31,11 @@ def dashboard():
 @role_required(*HR_ROLES)
 def applicants():
     applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter_by(role='hr').all()
     for applicant in applicants:
         update_status(applicant.id)
-    return render_template('hr/applicants.html', applicants=applicants, users=hrs)
+    return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
         
 
 @bp.route('/upload_applicants', methods=['GET', 'POST'])
@@ -270,13 +271,24 @@ def filter_applicants():
     hr_users = User.query.filter_by(role='hr').all()
     
     hr_id = request.args.get('hr_id', '')
+    job_id = request.args.get('job_id', '')
+    status_id = request.args.get('status', '')
     
     if hr_id:
         applicants = Applicant.query.filter_by(uploaded_by=hr_id).order_by(Applicant.last_applied.desc()).all()
     else:
         applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
-    
-    return render_template('hr/applicants.html', applicants=applicants, users=hr_users)
+    if job_id:
+        jobs = JobRequirement.query.filter_by(id=job_id).filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    else:
+        jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+
+    if status_id:
+        applicants=Applicant.query.filter(Applicant.is_fresher == True).order_by(Applicant.last_applied.desc()).all()
+    else:
+        applicants=Applicant.query.order_by(Applicant.last_applied.desc()).all()
+
+    return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
 
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
@@ -397,6 +409,7 @@ def filter_interviews():
             )\
             .all()
     
+    
     return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users)
 
 @bp.route('/reschedule_interview/<int:id>', methods=['POST'])
@@ -449,8 +462,6 @@ def reschedule_interview(id):
         return redirect(url_for('hr.view_interviews'))
     return redirect(url_for('hr.view_applicant', id=interview.applicant_id))
 
-
-# Job Listing Routes
 @bp.route('/upload_joblistings', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -460,7 +471,6 @@ def upload_joblistings():
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
 
-    # Get all form data using the correct field names
     job_position = request.form.get('position_name') 
     job_description = request.form.get('job_description')
     job_skillset= request.form.get('job_skillset')
@@ -468,7 +478,6 @@ def upload_joblistings():
     job_budget = request.form.get('job_budget')
     job_experience = request.form.get('job_experience')  
 
-    # Create new job requirement
     new_jobrequirement = JobRequirement(
         position=job_position,
         description=job_description,
