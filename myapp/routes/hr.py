@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.users import User
@@ -8,12 +8,12 @@ from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
-from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant
+from myapp.utils import validate_file, update_status, can_upload_applicant, extract_cv_info
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import date, datetime
 import os
+import tempfile
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
@@ -207,6 +207,23 @@ def upload_applicants():
             return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
     return render_template('hr/upload.html', referrer_names=referrer_names)
+
+@bp.route('/parse_resume', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def parse_resume():
+    file = request.files.get('cv')
+    if not file:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[-1]) as temp:
+            file.save(temp.name)
+            data = extract_cv_info(temp.name)
+            return jsonify(data or {})
+    except Exception as e:
+        current_app.logger.exception("Error parsing resume")
+        return jsonify({'error': f'Failed to parse CV: {str(e)}'}), 500
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
