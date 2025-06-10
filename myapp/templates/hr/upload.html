@@ -198,36 +198,22 @@
                             <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
                         </label>
                         <div id="vue-referrer-select">
-                            <!-- Enhanced Vue Multiselect with virtual scroller and debounced search -->
                             <multiselect
                                 v-model="selectedReferrer"
-                                :options="filteredReferrers"
+                                :options="referrerNames"
                                 :searchable="true"
                                 :close-on-select="true"
                                 :clear-on-select="false"
                                 :preserve-search="true"
                                 :show-labels="false"
                                 placeholder="Enter referrer's name"
+                                :allow-empty="true"
                                 :custom-label="customLabel"
                                 label="name"
                                 track-by="id"
-                                @search-change="onSearchChange"
+                                @input="onInput"
                                 class="input-bordered w-full"
-                            >
-                                <template #option="props">
-                                    <virtual-list
-                                        :items="[props.option]"
-                                        :item-height="40"
-                                        height="200px"
-                                    >
-                                        <template #default="{ item }">
-                                            <div class="multiselect__option" @click="selectReferrer(item)">
-                                                {{ customLabel(item) }}
-                                            </div>
-                                        </template>
-                                    </virtual-list>
-                                </template>
-                            </multiselect>
+                            ></multiselect>
                             <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
                         </div>
                     </div>
@@ -543,11 +529,8 @@
 {% block extra_js %}
 {{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6"></script>
-<script src="https://cdn.jsdelivr.net/npm/lodash.debounce@4.0.8/index.js"></script>
-<script src="https://unpkg.com/vue-virtual-scroller@1.0.10/dist/vue-virtual-scroller.umd.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6/dist/vue-multiselect.min.css">
-<link rel="stylesheet" href="https://unpkg.com/vue-virtual-scroller@1.0.10/dist/vue-virtual-scroller.css">
+<script src="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('cvFile');
@@ -713,44 +696,34 @@
 
         // Vue Multiselect for Referrer
         if (document.getElementById('vue-referrer-select')) {
-            Vue.component('virtual-list', window.VueVirtualScroller.VirtualList);
             new Vue({
                 el: '#vue-referrer-select',
                 components: {
-                    Multiselect: window.VueMultiselect.default,
-                    VirtualList: window.VueVirtualScroller.VirtualList
+                    Multiselect: window.VueMultiselect.default
                 },
                 data: function() {
                     const referrers = JSON.parse('{{ referrer_names|tojson|safe }}');
                     const initial = "{{ form_data.referred_by if form_data else '' }}";
                     return {
                         referrerNames: referrers,
-                        selectedReferrer: referrers.find(r => r.id == initial) || null,
-                        searchQuery: '',
-                        filteredReferrers: referrers
+                        selectedReferrer: referrers.find(r => r.id == initial) || null
                     };
                 },
-                mounted() {
-                    this.filteredReferrers = this.referrerNames;
-                },
                 methods: {
-                    customLabel(referrer) {
-                        return referrer && referrer.name ? referrer.name : '';
+                    customLabel(option) {
+                        return option && option.name ? option.name : '';
                     },
-                    onSearchChange: _.debounce(function(query) {
-                        this.searchQuery = query;
-                        this.filteredReferrers = this.referrerNames.filter(ref =>
-                            ref.name.toLowerCase().includes(query.toLowerCase())
-                        );
-                    }, 300),
-                    selectReferrer(item) {
-                        this.selectedReferrer = item;
+                    onInput(val) {
+                        this.$el.querySelector('input[name="referred_by"]').value = val && val.id ? val.id : '';
                     }
                 },
                 watch: {
                     selectedReferrer(val) {
-                        this.$el.querySelector('input[name="referred_by"]').value = val && val.id ? val.id : '';
+                        this.onInput(val);
                     }
+                },
+                mounted() {
+                    this.onInput(this.selectedReferrer);
                 }
             });
         }
@@ -797,14 +770,6 @@
 }
 .options-list.show {
     display: block;
-}
-
-.multiselect__option {
-  padding: 8px;
-  cursor: pointer;
-}
-.multiselect__option:hover {
-  background-color: #f0f0f0;
 }
 </style>
 {% endblock %}
