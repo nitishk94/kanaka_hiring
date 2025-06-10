@@ -32,6 +32,10 @@ def manage_users():
 @role_required('admin')
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
+    if user.role == 'admin':
+        flash('You cannot edit this user', 'error')
+        current_app.logger.warning(f"Admin {current_user.username} attempted to edit admin user {user.username}")
+        return redirect(url_for('admin.manage_users'))
     return render_template('admin/edit_user.html', user=user)
 
 @bp.route('/change_role/<int:user_id>', methods=['POST'])
