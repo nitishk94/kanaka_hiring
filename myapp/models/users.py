@@ -15,9 +15,11 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20))
     is_superuser = db.Column(db.Boolean, default=False)
     password_changed = db.Column(db.Boolean, default=False)
+    is_superuser = db.Column(db.Boolean, default=False)
 
     referred_applicants = db.relationship("Applicant", back_populates="referrer", foreign_keys="Applicant.referred_by")
     uploaded_applicants = db.relationship("Applicant", back_populates="uploader", foreign_keys="Applicant.uploaded_by")
+    job_listings = db.relationship('JobRequirement', back_populates='created_by', foreign_keys='JobRequirement.created_by_id')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")

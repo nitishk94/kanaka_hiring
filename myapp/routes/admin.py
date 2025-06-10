@@ -32,6 +32,10 @@ def manage_users():
 @role_required('admin')
 def edit_user(user_id):
     user = User.query.get_or_404(user_id)
+    if user.role == 'admin':
+        flash('You cannot edit this user', 'error')
+        current_app.logger.warning(f"Admin {current_user.username} attempted to edit admin user {user.username}")
+        return redirect(url_for('admin.manage_users'))
     return render_template('admin/edit_user.html', user=user)
 
 @bp.route('/change_role/<int:user_id>', methods=['POST'])
@@ -51,7 +55,7 @@ def change_role(user_id):
     
     current_app.logger.info(f"Role updated for user {user.username}: {role.capitalize() if role != 'hr' else 'HR'} by Admin {current_user.username}")
     flash('User role updated successfully', 'success')
-    if request.referrer.endswith(url_for('admin.manage_users')):
+    if request.referrer and request.referrer.endswith(url_for('admin.manage_users')):
         return redirect(url_for('admin.manage_users'))
     else:
         return redirect(url_for('admin.edit_user', user_id=user_id))
@@ -84,7 +88,7 @@ def change_password(user_id):
     
     current_app.logger.info(f"Password updated for user {user.username} by Admin {current_user.username}")
     flash('User password updated successfully', 'success')
-    if request.referrer.endswith(url_for('main.profile')):
+    if request.referrer and request.referrer.endswith(url_for('main.profile')):
         return redirect(url_for('main.profile', user=current_user))
     else:
         return redirect(url_for('admin.edit_user', user_id=user_id))
