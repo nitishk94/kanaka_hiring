@@ -33,7 +33,9 @@
                                 <span class="label-text">Role <span class="text-error">*</span></span>
                             </label>
                             <select name="role" class="select select-bordered" required>
-                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                {% if current_user.is_superuser %}
+                                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                                {% endif %}
                                 <option value="hr" {% if user.role == 'hr' %}selected{% endif %}>HR</option>
                                 <option value="interviewer" {% if user.role == 'interviewer' %}selected{% endif %}>Interviewer</option>
                                 <option value="referrer" {% if user.role == 'referrer' %}selected{% endif %}>Referrer</option>
@@ -105,4 +107,4 @@
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
