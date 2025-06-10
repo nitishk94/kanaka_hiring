@@ -158,7 +158,9 @@
                 
                 <!-- All Checkboxes Section -->
                 <div class="flex items-center gap-8 mb-6 p-4 rounded-lg w-full overflow-visible whitespace-nowrap" style="background: none;">
+                    
                     <div class="form-control">
+
                         <label class="label cursor-pointer justify-start gap-4">
                             <input type="checkbox" id="fresher-toggle" name="is_fresher" class="checkbox checkbox-primary" {% if form_data and form_data.is_fresher %}checked{% endif %} />
                             <span class="label-text">Fresher</span>
@@ -193,6 +195,8 @@
                         </label>
                     </div>
 
+                    
+
                     <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
                         <label class="label" for="referred_by">
                             <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
@@ -217,10 +221,24 @@
                             <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
                         </div>
                     </div>
+                    
                 </div>
+                    <div class="form-control" id="position-section">
+                        <label class="label font-semibold text-lg text-black">Select Job Position:</label>
+                        <select name="position" id="position" class="select select-bordered w-full">
+                            <option value="">-- Choose a Position --</option>
+                            {% for id, position in job_positions %}
+                                    <option value="{{ id }}"
+                                        {% if form_data and form_data.position == id|string %}selected{% endif %}>
+                                        {{ position }}
+                                    </option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 
                 <!-- All form fields in one continuous grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
                     <!-- Basic Information -->
                     <div class="form-control w-full">
                         <label class="label" for="graduation_year">
@@ -588,7 +606,8 @@
                 'notice-period-field',
                 'tenure-field',
                 'current-offers-field',
-                'reason-change-field'
+                'reason-change-field',
+                'position-section'
             ];
 
             // Toggle internship-related checkboxes

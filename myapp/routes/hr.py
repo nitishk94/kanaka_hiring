@@ -51,6 +51,9 @@ def upload_applicants():
         {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
     ]
 
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
+    
+
     if request.method == 'POST':
         file = request.files.get('cv')
         
@@ -89,6 +92,7 @@ def upload_applicants():
         
         # Professional Information
         is_fresher = bool(request.form.get('is_fresher'))
+        job_id = request.form.get('position') if not is_fresher else None
         is_referred = bool(request.form.get('is_referred'))
         referred_by = int(request.form.get('referred_by')) if is_referred else None
         qualification = request.form.get('qualification')
@@ -177,7 +181,8 @@ def upload_applicants():
             cv_file_path=file_path,
             uploaded_by=current_user.id,
             is_referred=is_referred,
-            referred_by=referred_by
+            referred_by=referred_by,
+            job_id=job_id,
         )
         
         try:
@@ -207,7 +212,7 @@ def upload_applicants():
             current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
             return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
-    return render_template('hr/upload.html', referrer_names=referrer_names)
+    return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions)
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
@@ -215,6 +220,15 @@ def upload_applicants():
 @role_required(*HR_ROLES)
 def view_applicant(id):
     update_status(id)
+    applicant = Applicant.query.get_or_404(id)
+    interviewers = User.query.filter_by(role='interviewer').all()
+
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
 
@@ -268,26 +282,28 @@ def reschedule_test(id):
 @login_required
 @role_required(*HR_ROLES)
 def filter_applicants():
-    hr_users = User.query.filter_by(role='hr').all()
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
     status_id = request.args.get('status', '')
     
+    query = Applicant.query
+
     if hr_id:
-        applicants = Applicant.query.filter_by(uploaded_by=hr_id).order_by(Applicant.last_applied.desc()).all()
-    else:
-        applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
+        query = query.filter(Applicant.uploaded_by == int(hr_id))
+
     if job_id:
-        jobs = JobRequirement.query.filter_by(id=job_id).filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+        jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
     else:
-        jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+        jobs = JobRequirement.query.order_by(JobRequirement.position).all()
 
-    if status_id:
-        applicants=Applicant.query.filter(Applicant.is_fresher == True).order_by(Applicant.last_applied.desc()).all()
-    else:
-        applicants=Applicant.query.order_by(Applicant.last_applied.desc()).all()
+    if status_id == 'fresher':
+        query = query.filter(Applicant.is_fresher == True)
+    elif status_id == 'experienced':
+        query = query.filter(Applicant.is_fresher == False)
 
+    applicants = query.order_by(Applicant.last_applied.desc()).all()
     return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
 
 @bp.route('/applicants/<int:id>/download_cv')
