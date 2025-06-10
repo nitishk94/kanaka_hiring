@@ -543,9 +543,22 @@ def close_joblisting(id):
     joblisting = JobRequirement.query.get_or_404(id)
     joblisting.is_open = False
     db.session.commit()
-    current_app.logger.info(f"Job listing {joblisting.position} closed by Admin {current_user.username}")
+    current_app.logger.info(f"Job listing {joblisting.position} closed by {current_user.username}")
     flash('Job listing closed successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
+
+@bp.route('/open_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def open_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    joblisting.is_open = True
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} opened by {current_user.username}")
+    flash('Job listing reopened successfully', 'success')
+    return redirect(url_for('main.view_joblisting'))
+
 
 
 @bp.route('/delete_joblisting/<int:id>', methods=['POST'])

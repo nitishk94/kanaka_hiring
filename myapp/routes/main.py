@@ -40,9 +40,9 @@ def check_session():
 @no_cache
 @login_required
 def view_joblisting():
-    jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.id.desc()).all()
+    jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.is_open.desc()).all()
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    return render_template('viewjobs.html', jobs=jobs, users=hr_users)
+    return render_template('viewjobs.html', jobs=jobs, users=hr_users, is_open=jobs)
 
 @bp.route('/view_details_joblisting/<int:id>')
 @no_cache
@@ -56,15 +56,25 @@ def view_details_joblisting(id):
 @no_cache
 @login_required
 def filter_joblistings():
-    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    hr_id = request.args.get('hr_id', '')
+    hr_id = request.args.get('hr_id')
+    status = request.args.get('status')
 
+    query = JobRequirement.query
+
+    # Apply HR filter if provided
     if hr_id:
-        jobs = JobRequirement.query.filter_by(created_by_id=hr_id).order_by(JobRequirement.position.asc()).all()
-    else:
-        jobs = JobRequirement.query.order_by(JobRequirement.position.asc()).all()
-    
-    return render_template('viewjobs.html', jobs=jobs, users=hr_users, current_user=current_user)
+        query = query.filter(JobRequirement.created_by_id == hr_id)
+
+    # Apply Status filter if provided
+    if status == 'open':
+        query = query.filter(JobRequirement.is_open == True)
+    elif status == 'closed':
+        query = query.filter(JobRequirement.is_open == False)
+
+    # Fetch results
+    jobs = query.order_by(JobRequirement.id.desc()).all()
+   
+    return render_template('viewjobs.html', jobs=jobs, users=hr_id, current_user=current_user)
 
 @bp.route('/search_route')
 @no_cache

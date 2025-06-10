@@ -17,9 +17,10 @@
 
             <!-- Job Title -->
             <h2 class="text-3xl font-bold text-center text-black">{{ job.position }}</h2>
-            {% if not is_open %}        
+                {% if not is_open %}        
                     <p class="text-center text-gray-500">*Currently not accepting applicants*.</p>
                 {% endif %}
+
 
             
                 <div class="form-control mt-6">
@@ -91,14 +92,25 @@
                        class="btn btn-warning w-auto px-8 text-lg">
                         Edit
                     </a>
-
-                    <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
-                          method="POST" 
-                          onsubmit="return confirm('Are you sure you want to close this job?');">
-                        <button type="submit" class="btn btn-info w-auto px-8 text-lg">
-                            Close Job
-                        </button>
-                    </form>
+                    {% if is_open %}
+                        <!-- Reopen Button -->
+                        <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
+                              method="POST" 
+                              onsubmit="return confirm('Are you sure you want to reopen this job?');">
+                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                                Close Job
+                            </button>
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('hr.open_joblisting', id=job.id) }}" 
+                              method="POST" 
+                              onsubmit="return confirm('Are you sure you want to reopen this job?');">
+                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                                Reopen Job
+                            </button>
+                        </form>
+                        <!-- Close Button -->
+                    {% endif %}
 
                     <!-- Delete Button -->
                     <form action="{{ url_for('hr.delete_joblisting', id=job.id) }}" 
