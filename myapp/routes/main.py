@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, jsonify
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.applicants import Applicant
-from myapp.models.jobrequirement import JobRequirement
 from myapp.utils import generate_timeline, update_status
 
 bp = Blueprint('main', __name__)
@@ -31,11 +30,3 @@ def track_status(id):
 @bp.route('/check_session')
 def check_session():
     return jsonify({'active': current_user.is_authenticated})
-
-# Job Listing Routes
-@bp.route('/view_joblisting')
-@no_cache
-@login_required
-def view_joblisting():
-    job_listings = JobRequirement.query.all()
-    return render_template('hr/view_applicant.html', job_listings=job_listings)

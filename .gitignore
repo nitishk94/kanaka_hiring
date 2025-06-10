@@ -49,3 +49,4 @@ instance/
 htmlcov/
 .coverage
 *.log
+*.DS_Store
