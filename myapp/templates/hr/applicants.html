@@ -36,7 +36,6 @@
                                 <option value="{{ job.id }}"
                                     {% if request.args.get('job_id')|string == job.id|string %}selected{% endif %}>
                                     {{ job.position }}
-
                                 </option>
                             {% endfor %}
                         </select>
@@ -44,10 +43,11 @@
                     <br>
 
                     <div class="flex flex-col">
-                        <label for="status" class="font-semibold mb-1">Fresher:</label><br>
+                        <label for="status" class="font-semibold mb-1">Applicants:</label><br>
                         <select name="status" id="status" class="select select-bordered">
                             <option value="">-- All Applicants --</option>
-                            <option value="open" {% if request.args.get('status') == 'open' %}selected{% endif %}>Fresher</option>
+                            <option value="fresher" {% if request.args.get('status') == 'fresher' %}selected{% endif %}>Fresher</option>
+                            <option value="experienced" {% if request.args.get('status') == 'experienced' %}selected{% endif %}>Experienced</option>
 
                         </select>
                     </div>
@@ -55,6 +55,8 @@
 
                     <!-- Submit button -->
                     <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+                    <a href="{{ url_for('hr.filter_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
+
 
                 </div>
             </div>
@@ -80,6 +82,7 @@
                     <th>Notice Period</th>
                     <th class="w-32">Comments</th>
                     <th>HR</th>
+                    <th>Job Position</th>
                     <th>Current Stage</th>
                     <th>Actions</th>
                 </tr>
@@ -100,6 +103,7 @@
                         <td>{{ applicant.notice_period if applicant.notice_period else ''}} {{'days' if applicant.notice_period else ''}}</td>
                         <td>{{ applicant.comments }}</td>
                         <td>{{ applicant.uploader.name }}</td>
+                        <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
                         <td>
                             <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[120px] text-xs badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                                 {{ applicant.current_stage.split(' on')[0] }}

@@ -29,12 +29,7 @@ def refer_candidates():
         return {'error': 'Session expired. Please log in again.'}, 401
 
     # Fetch all job positions (id + position name) for dropdown
-    job_positions = JobRequirement.query \
-    .with_entities(JobRequirement.id, JobRequirement.position) \
-    .filter(JobRequirement.is_open == True) \
-    .all()
-
-
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
     if request.method == 'POST':
         file = request.files.get('cv')
