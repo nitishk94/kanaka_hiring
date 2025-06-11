@@ -250,7 +250,7 @@ def schedule_test(id):
             date = None
 
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    history.test_scheduled = date
+    history.test_date = date
     db.session.commit()
     flash('Test scheduled successfully', 'success')
     current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
@@ -270,7 +270,7 @@ def reschedule_test(id):
     
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     if history and history.test_result is None:
-        history.test_scheduled = date
+        history.test_date = date
         db.session.commit()
         flash('Test rescheduled successfully', 'success')
         current_app.logger.info(f"Test rescheduled for applicant {id} to {date} by {current_user.username}")

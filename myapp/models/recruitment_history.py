@@ -33,7 +33,8 @@ class RecruitmentHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     applicant_id = db.Column(db.Integer, db.ForeignKey('applicants.id'), nullable=False)
     applied_date = db.Column(db.Date)
-    test_scheduled = db.Column(db.Date)
+    test_date = db.Column(db.Date)
+    test_time = db.Column(Time)
     test_result = db.Column(db.Boolean)
     interview_round_1_date = db.Column(db.Date)
     interview_round_1_time = db.Column(Time)
@@ -62,7 +63,7 @@ class RecruitmentHistory(db.Model):
         hr_date = ensure_date(self.hr_round_date)
         round2_date = ensure_date(self.interview_round_2_date)
         round1_date = ensure_date(self.interview_round_1_date)
-        test_date = ensure_date(self.test_scheduled)
+        test_date = ensure_date(self.test_date)
 
         hr_time = ensure_time(self.hr_round_time)
         round2_time = ensure_time(self.interview_round_2_time)
