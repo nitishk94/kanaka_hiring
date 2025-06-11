@@ -12,7 +12,8 @@ from myapp.models.jobrequirement import JobRequirement
 from myapp.utils import validate_file, update_status, can_upload_applicant
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
-from datetime import date, datetime
+from datetime import datetime, date, timedelta, timezone
+import requests
 import os
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
@@ -239,7 +240,8 @@ def view_applicant(id):
 @login_required
 @role_required(*HR_ROLES)
 def schedule_test(id):
-    date = request.form['test_date']
+    date = request.form.get('test_date')
+    time = request.form.get('test_time')
 
     if isinstance(date, str):
         try:
@@ -248,7 +250,8 @@ def schedule_test(id):
             date = None
 
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    history.test_scheduled = date
+    history.test_date = date
+    history.test_time = time
     db.session.commit()
     flash('Test scheduled successfully', 'success')
     current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
@@ -259,7 +262,8 @@ def schedule_test(id):
 @login_required
 @role_required(*HR_ROLES)
 def reschedule_test(id):
-    date = request.form['test_date']
+    date = request.form.get('retest_date')
+    time = request.form.get('retest_time')
     if isinstance(date, str):
         try:
             date = datetime.strptime(date, '%Y-%m-%d').date()
@@ -268,7 +272,8 @@ def reschedule_test(id):
     
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     if history and history.test_result is None:
-        history.test_scheduled = date
+        history.test_date = date
+        history.test_time = time
         db.session.commit()
         flash('Test rescheduled successfully', 'success')
         current_app.logger.info(f"Test rescheduled for applicant {id} to {date} by {current_user.username}")
@@ -598,3 +603,54 @@ def delete_joblisting(id):
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
 
+#Convert to ISO Date format
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def start_date(id):
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    date_input = history.test_date
+    time_input = history.test_time
+    if isinstance(date_input, str):
+        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+    if isinstance(time_input, str):
+        time_input = datetime.strptime(time_input, '%H:%M').time()
+
+    dt = datetime.combine(date_input, time_input)
+    dt_utc = dt.replace(tzinfo=timezone.utc)
+
+    return dt_utc.isoformat().replace("+00:00", "Z")
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def end_date(id):
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    date_input = history.test_date
+    time_input = history.test_time
+    date_input = date_input  + timedelta(days=1)
+    if isinstance(date_input, str):
+        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+    if isinstance(time_input, str):
+        time_input = datetime.strptime(time_input, '%H:%M').time()
+
+    dt = datetime.combine(date_input, time_input)
+    dt_utc = dt.replace(tzinfo=timezone.utc)
+
+    return dt_utc.isoformat().replace("+00:00", "Z")
+
+('''@bp.route('/submit', methods=['POST'])
+def submit_data():
+    user_input = request.form.get('name')
+    
+    payload = {
+        "name": user_input
+    }
+
+    headers = {
+        "X-API-KEY": os.getenv("API_KEY"),
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post("https://api.mocha.com/v3/send", headers=headers, json=payload)
+    return f"API Response: {response.json()}" ''')
