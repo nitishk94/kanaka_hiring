@@ -35,6 +35,7 @@ build/
 *.log
 *.db
 *.sqlite
+uploads/
 
 # OS or Editor files
 .DS_Store
