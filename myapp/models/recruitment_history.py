@@ -35,6 +35,7 @@ class RecruitmentHistory(db.Model):
     applied_date = db.Column(db.Date)
     test_date = db.Column(db.Date)
     test_time = db.Column(Time)
+    
     test_result = db.Column(db.Boolean)
     interview_round_1_date = db.Column(db.Date)
     interview_round_1_time = db.Column(Time)

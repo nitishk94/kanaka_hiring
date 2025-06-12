@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.users import User
@@ -253,8 +253,13 @@ def schedule_test(id):
     history.test_date = date
     history.test_time = time
     db.session.commit()
-    flash('Test scheduled successfully', 'success')
-    current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
+    response_from_url=invite_candidate(id,testid)
+    if(response_from_url['status'] == 'Complete'):
+        flash('Test scheduled successfully', 'success')
+        current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
+    else:
+        flash('Failed to schedule test. Please try again.', response_from_url['error'])
+        current_app.logger.error(f"Failed to schedule test for applicant {id} on {date} by {current_user.username}")
     return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/reschedule_test/<int:id>', methods=['POST'])
@@ -588,3 +593,129 @@ def delete_joblisting(id):
     current_app.logger.info(f"Job listing {joblisting.position} deleted by Admin {current_user.username}")
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
+
+#Convert to ISO Date format
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def start_date(id):
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    date_input = history.test_date
+    time_input = history.test_time
+    if isinstance(date_input, str):
+        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+    if isinstance(time_input, str):
+        time_input = datetime.strptime(time_input, '%H:%M').time()
+
+    dt = datetime.combine(date_input, time_input)
+    dt_utc = dt.replace(tzinfo=timezone.utc)
+
+    return dt_utc.isoformat().replace("+00:00", "Z")
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def end_date(id):
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    date_input = history.test_date
+    time_input = history.test_time
+    date_input = date_input  + timedelta(days=1)
+    if isinstance(date_input, str):
+        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+    if isinstance(time_input, str):
+        time_input = datetime.strptime(time_input, '%H:%M').time()
+
+    dt = datetime.combine(date_input, time_input)
+    dt_utc = dt.replace(tzinfo=timezone.utc)
+
+    return dt_utc.isoformat().replace("+00:00", "Z")
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def invite_candidate(id,testId):
+    applicant = Applicant.query.get_or_404(id)
+    
+    data = {
+        "name": applicant.name,
+        "email": applicant.email,
+        "callbackUrl": " ",
+        "sendEmail" : "yes",
+        "start_date": start_date(id),
+        "end_date": end_date(id),
+        "ProctoringMode": "image",
+    }
+    testLinkId = test_type(testId) # Replace with actual test link ID
+    url_for="https://api.mocha.com/v3/tests/"+testId+"/testlinks/"+testLinkId+"/invite"
+    #headers = {
+       # "X-API-KEY": ,
+        #"Content-Type": "application/json"
+    #}
+
+    response = requests.post(url_for, headers=headers, json=data)
+    return response.json()
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def test_result(testInviteid):
+    applicant_id = RecruitmentHistory.query.filter(RecruitmentHistory.test_invitation_id==testInviteid).first().applicant_id
+    applicant= Applicant.query.get_or_404(applicant_id)
+    
+    url_for="https://api.mocha.com/v3/reports/"+testInviteid+"?reportType=1"
+    #headers = {
+       # "X-API-KEY": ,
+        #"Content-Type": "application/json"
+    #}
+
+    response = requests.get(url_for, headers=headers)
+    if response.status_code != 200:
+        flash('Failed to fetch test results. Please try again later.', 'error')
+        current_app.logger.error(f"Failed to fetch test results for applicant {id}: {response.text}")
+        return redirect(url_for('hr.view_applicant', id=id))
+    
+    result = response.json()
+    #check pass/fail criteria based on test result.
+    candidate = RecruitmentHistory.query.filter_by(applicant_id=applicant_id)
+    candidate.test_result = True  #if pass
+    db.session.commit()
+
+    print("Test Result:", result)
+
+    return render_template('hr/test_result.html', name=applicant.name, result=result, applicant_id=id)
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def test_type(testId):
+    url_for="https://api.mocha.com/v3/tests/"+testId+"/testlinks"
+    #headers = {
+       # "X-API-KEY": ,
+        #"Content-Type": "application/json"
+    #}
+
+    response = requests.get(url_for, headers=headers)
+    result=response.json()
+    for item in result:
+        if(item["testLinkName"]=='Default'):
+            return item["testLinkId"]
+        
+    return result[0]["testLinkId"]
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def get_status(data):
+    status=data['status']
+    if status == 'Complete':
+        testInvitationId=data['testInvitationId']
+        return test_result(testInvitationId)
+
+@bp.route('/api/callback', methods=['POST'])
+@no_cache
+@login_required
+def api_callback():
+    data = request.json
+    get_status(data)
+    return jsonify({"status": "received"}), 200
+
