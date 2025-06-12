@@ -54,7 +54,7 @@ def generate_timeline(id):
     ]
     
     # Test scheduling history
-    if history.test_scheduled:
+    if history.test_date:
         timeline.append({
             'title': 'Test Scheduled',
             'date': history.test_date,
