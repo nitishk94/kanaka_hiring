@@ -5,6 +5,7 @@ from myapp.extensions import db
 from myapp.models import User  
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.applicants import Applicant
+from myapp.models.jobrequirement import JobRequirement
 from myapp.utils import generate_timeline, update_status
 
 bp = Blueprint('main', __name__)
