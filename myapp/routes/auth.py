@@ -77,8 +77,10 @@ def login():
         user = None
         if '@' in username_or_email:
             user = User.query.filter_by(email=username_or_email).first()
+            print("DEBUG: email ok", user)
         else:
             user = User.query.filter_by(username=username_or_email).first()
+            print("DEBUG: username ok", user)
 
         if user and user.password_changed:
             return redirect(url_for('main.home', password_changed=True))
@@ -89,6 +91,7 @@ def login():
                 return redirect(url_for('main.home', pending_approval=True))
             
             login_user(user)
+            print("DEBUG: login ok", user)
             session.permanent = True
             current_app.logger.info(f"User logged in: {user.username}, {user.role.capitalize() if user.role != 'hr' else 'HR'}")
             if user.role == 'hr':

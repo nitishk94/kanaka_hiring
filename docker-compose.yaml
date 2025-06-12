@@ -1,0 +1,6 @@
+services:
+  app:
+    container_name: python-app
+    build: .
+    ports:
+      -  5000:5000
