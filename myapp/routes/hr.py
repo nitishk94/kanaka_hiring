@@ -520,18 +520,6 @@ def upload_joblistings():
     
     return redirect(url_for('main.view_joblisting'))
 
-   # except IntegrityError as e:
-    #    db.session.rollback()
-     #   if 'job_id' in str(e.orig):
-      #      flash('This job role is already listed.', 'error')
-       # elif 'job_description' in str(e.orig):
-        #    flash('This job role is already listed.', 'error')
-        #else:
-         #   flash('Database error. Please try again.', 'error')
-        #current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
-    
-   # return render_template('hr/addjob.html')
-
 @bp.route('/update_joblisting/<int:id>', methods=['GET', 'POST'])
 @login_required
 @role_required('hr', 'admin')
@@ -589,8 +577,6 @@ def open_joblisting(id):
     flash('Job listing reopened successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
 
-
-
 @bp.route('/delete_joblisting/<int:id>', methods=['POST'])
 @no_cache
 @login_required
@@ -602,55 +588,3 @@ def delete_joblisting(id):
     current_app.logger.info(f"Job listing {joblisting.position} deleted by Admin {current_user.username}")
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
-
-#Convert to ISO Date format
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def start_date(id):
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    date_input = history.test_date
-    time_input = history.test_time
-    if isinstance(date_input, str):
-        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
-    if isinstance(time_input, str):
-        time_input = datetime.strptime(time_input, '%H:%M').time()
-
-    dt = datetime.combine(date_input, time_input)
-    dt_utc = dt.replace(tzinfo=timezone.utc)
-
-    return dt_utc.isoformat().replace("+00:00", "Z")
-
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def end_date(id):
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    date_input = history.test_date
-    time_input = history.test_time
-    date_input = date_input  + timedelta(days=1)
-    if isinstance(date_input, str):
-        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
-    if isinstance(time_input, str):
-        time_input = datetime.strptime(time_input, '%H:%M').time()
-
-    dt = datetime.combine(date_input, time_input)
-    dt_utc = dt.replace(tzinfo=timezone.utc)
-
-    return dt_utc.isoformat().replace("+00:00", "Z")
-
-('''@bp.route('/submit', methods=['POST'])
-def submit_data():
-    user_input = request.form.get('name')
-    
-    payload = {
-        "name": user_input
-    }
-
-    headers = {
-        "X-API-KEY": os.getenv("API_KEY"),
-        "Content-Type": "application/json"
-    }
-
-    response = requests.post("https://api.mocha.com/v3/send", headers=headers, json=payload)
-    return f"API Response: {response.json()}" ''')
