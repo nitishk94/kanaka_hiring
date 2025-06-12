@@ -13,7 +13,9 @@ class User(UserMixin, db.Model):
     linkedin_profile = db.Column(db.Text)
     designation = db.Column(db.String(100))
     role = db.Column(db.String(20))
+    is_superuser = db.Column(db.Boolean, default=False)
     password_changed = db.Column(db.Boolean, default=False)
+    is_superuser = db.Column(db.Boolean, default=False)
 
     referred_applicants = db.relationship("Applicant", back_populates="referrer", foreign_keys="Applicant.referred_by")
     uploaded_applicants = db.relationship("Applicant", back_populates="uploader", foreign_keys="Applicant.uploaded_by")

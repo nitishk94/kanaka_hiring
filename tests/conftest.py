@@ -3,12 +3,6 @@ from myapp.config import TestingConfig
 from myapp.models import User
 from myapp import create_app, db
 
-class TestingConfig:
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
-    WTF_CSRF_ENABLED = False
-    SECRET_KEY = 'test-secret'
-
 @pytest.fixture
 def app():
     app = create_app(TestingConfig)
