@@ -177,7 +177,18 @@
         {% if current_user.is_authenticated %}
             sessionCheckInterval = setInterval(checkSession, 60 * 1000);
         {% endif %}
+
+        // Flash message auto-dismiss
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(function(alert) {
+                    alert.style.transition = "opacity 0.5s";
+                    alert.style.opacity = 0;
+                    setTimeout(function() { alert.style.display = "none"; }, 500);
+                });
+            }, 10000); // 3 seconds
+        });
     </script>
     {% endblock %}
 </body>
-</html> 
+</html>

@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.users import User
@@ -9,12 +9,13 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant
+from myapp.utils import validate_file, update_status, can_upload_applicant, extract_cv_info
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, date, timedelta
 import requests
 import os
+import tempfile
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
@@ -39,11 +40,11 @@ def applicants():
     return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
         
 
-@bp.route('/upload_applicants', methods=['GET', 'POST'])
+@bp.route('/upload_applicants', methods=['GET'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def upload_applicants():
+def show_upload_form():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
@@ -51,169 +52,137 @@ def upload_applicants():
     referrer_names = [
         {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
     ]
-
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
-    
-
-    if request.method == 'POST':
-        file = request.files.get('cv')
-        
-        if not validate_file(file):
-            flash('File is corrupted.', 'warning')
-            current_app.logger.warning(f"File is corrupted: {file.filename}")
-            return render_template('hr/upload.html', form_data=request.form)
-
-        # Get all form data
-        name = request.form.get('name')
-        email = request.form.get('email')
-
-        if not can_upload_applicant(email):
-            flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
-            return redirect(url_for('hr.upload_applicants'))
-        
-        applicant = Applicant.query.filter_by(email=email).first()
-        if applicant:
-            applicant.last_applied = date.today()
-            applicant.status = 'Applied'
-
-        phone_number = request.form.get('phone_number')
-        dob = request.form.get('dob')
-        # Convert dob to date object if it's a string
-        if isinstance(dob, str):
-            try:
-                dob = datetime.strptime(dob, '%Y-%m-%d').date()
-            except ValueError:
-                # fallback for other formats or None
-                dob = None
-        gender = request.form.get('gender')
-        marital_status = request.form.get('marital_status')
-        native_place = request.form.get('native_place')
-        current_location = request.form.get('current_location')
-        work_location = request.form.get('work_location')
-        
-        # Professional Information
-        is_fresher = bool(request.form.get('is_fresher'))
-        job_id = request.form.get('position') if not is_fresher else None
-        is_referred = bool(request.form.get('is_referred'))
-        referred_by = int(request.form.get('referred_by')) if is_referred else None
-        qualification = request.form.get('qualification')
-        graduation_year = request.form.get('graduation_year')
-        if graduation_year:
-            graduation_year = int(graduation_year)
-            
-        # Internship Information
-        current_internship = bool(request.form.get('current_internship'))
-        internship_duration = request.form.get('internship_duration')
-        if internship_duration:
-            internship_duration = int(internship_duration)
-        paid_internship = bool(request.form.get('paid_internship'))
-        stipend = request.form.get('stipend')
-        if stipend:
-            stipend = int(stipend)
-            
-        referenced_from = request.form.get('referenced_from')
-        linkedin_profile = request.form.get('linkedin_profile')
-        github_profile = request.form.get('github_profile')
-        
-        # Current Employment Information (if not fresher)
-        experience = request.form.get('experience')
-        is_kanaka_employee = bool(request.form.get('is_kanaka_employee'))
-        current_company = request.form.get('current_company')
-        designation = request.form.get('designation')
-        current_job_position = request.form.get('current_job_position')
-        current_ctc = request.form.get('current_ctc')
-        if current_ctc:
-            current_ctc = int(current_ctc)
-        expected_ctc = request.form.get('expected_ctc')
-        if expected_ctc:
-            expected_ctc = int(expected_ctc)
-        notice_period = request.form.get('notice_period')
-        if notice_period:
-            notice_period = int(notice_period)
-        tenure_at_current_company = request.form.get('tenure_at_current_company')
-        current_offers_yes_no = bool(request.form.get('current_offers_yes_no'))
-        current_offers_description = request.form.get('current_offers_description')
-        reason_for_change = request.form.get('reason_for_change')
-        comments = request.form.get('comments')
-
-        # Handle file upload
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
-        os.makedirs(upload_dir, exist_ok=True)
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(upload_dir, filename)
-        file.save(file_path)
-
-        # Create new applicant
-        new_applicant = Applicant(
-            name=name.title(),
-            email=email,
-            phone_number=phone_number,
-            dob=dob,
-            gender=gender,
-            marital_status=marital_status,
-            native_place=native_place.title() if native_place else None,
-            current_location=current_location.title() if current_location else None,
-            work_location=work_location.title() if work_location else None,
-            graduation_year=graduation_year,
-            is_fresher=is_fresher,
-            qualification=qualification,
-            current_internship=current_internship,
-            internship_duration=internship_duration,
-            paid_internship=paid_internship,
-            stipend=stipend,
-            experience=experience,
-            referenced_from=referenced_from,
-            linkedin_profile=linkedin_profile if linkedin_profile else 'Not Provided',
-            github_profile=github_profile if github_profile else 'Not Provided',
-            is_kanaka_employee=is_kanaka_employee,
-            current_company=current_company,
-            designation=designation,
-            current_job_position=current_job_position.title() if current_job_position else None,
-            current_ctc=current_ctc,
-            expected_ctc=expected_ctc,
-            notice_period=notice_period,
-            tenure_at_current_company=tenure_at_current_company,
-            current_offers_yes_no=current_offers_yes_no,
-            current_offers_description=current_offers_description if current_offers_description else None,
-            reason_for_change=reason_for_change if reason_for_change else 'Not Provided',
-            comments=comments if comments else 'No comments',
-            last_applied=date.today(),
-            current_stage='Need to schedule test',
-            cv_file_path=file_path,
-            uploaded_by=current_user.id,
-            is_referred=is_referred,
-            referred_by=referred_by,
-            job_id=job_id,
-        )
-        
-        try:
-            db.session.add(new_applicant)
-            db.session.commit()
-            
-            history = RecruitmentHistory(
-                applicant_id=new_applicant.id,
-                applied_date=date.today()
-            )
-
-            db.session.add(history)
-            db.session.commit()
-
-            flash('New applicant successfully created!', 'success')
-            current_app.logger.info(f"New applicant (Name: {new_applicant.name.title()}) added by {current_user.username}")
-            return redirect(url_for('hr.upload_applicants'))
-            
-        except IntegrityError as e:
-            db.session.rollback()
-            if 'email' in str(e.orig):
-                flash('This email is already registered. Please use a different one.', 'error')
-            elif 'phone_number' in str(e.orig):
-                flash('This phone number is already registered. Please use a different one.', 'error')
-            else:
-                flash('Database error. Please try again.', 'error')
-            current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
-            return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
     return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions)
+
+@bp.route('/upload_applicants', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def handle_upload_applicant():
+    if '_user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+
+    file = request.files.get('cv')
+    if not validate_file(file):
+        flash('File is corrupted.', 'warning')
+        return redirect(url_for('hr.show_upload_form'))
+
+    email = request.form.get('email')
+    if not can_upload_applicant(email):
+        flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        return redirect(url_for('hr.show_upload_form'))
+
+    applicant = Applicant.query.filter_by(email=email).first()
+    if applicant:
+        applicant.last_applied = date.today()
+        applicant.status = 'Applied'
+
+    # Collect and process form data
+    def get_bool(key): return bool(request.form.get(key))
+
+    try:
+        dob = request.form.get('dob')
+        dob = datetime.strptime(dob, '%Y-%m-%d').date() if dob else None
+    except ValueError:
+        dob = None
+
+    # Convert relevant fields
+    int_or_none = lambda x: int(x) if x else None
+
+    new_applicant = Applicant(
+        name=request.form.get('name').title(),
+        email=email,
+        phone_number=request.form.get('phone_number'),
+        dob=dob,
+        gender=request.form.get('gender'),
+        marital_status=request.form.get('marital_status'),
+        native_place=request.form.get('native_place', '').title(),
+        current_location=request.form.get('current_location', '').title(),
+        work_location=request.form.get('work_location', '').title(),
+        graduation_year=int_or_none(request.form.get('graduation_year')),
+        is_fresher=get_bool('is_fresher'),
+        qualification=request.form.get('qualification'),
+        current_internship=get_bool('current_internship'),
+        internship_duration=int_or_none(request.form.get('internship_duration')),
+        paid_internship=get_bool('paid_internship'),
+        stipend=int_or_none(request.form.get('stipend')),
+        experience=request.form.get('experience'),
+        referenced_from=request.form.get('referenced_from'),
+        linkedin_profile=request.form.get('linkedin_profile') or 'Not Provided',
+        github_profile=request.form.get('github_profile') or 'Not Provided',
+        is_kanaka_employee=get_bool('is_kanaka_employee'),
+        current_company=request.form.get('current_company'),
+        designation=request.form.get('designation'),
+        current_job_position=request.form.get('current_job_position', '').title(),
+        current_ctc=int_or_none(request.form.get('current_ctc')),
+        expected_ctc=int_or_none(request.form.get('expected_ctc')),
+        notice_period=int_or_none(request.form.get('notice_period')),
+        tenure_at_current_company=request.form.get('tenure_at_current_company'),
+        current_offers_yes_no=get_bool('current_offers_yes_no'),
+        current_offers_description=request.form.get('current_offers_description') or None,
+        reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
+        comments=request.form.get('comments') or 'No comments',
+        last_applied=date.today(),
+        current_stage='Need to schedule test',
+        uploaded_by=current_user.id,
+        is_referred=get_bool('is_referred'),
+        referred_by=int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None,
+        job_id=request.form.get('position') if not get_bool('is_fresher') else None,
+    )
+
+    # Save file
+    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(upload_dir, filename)
+    file.save(file_path)
+    new_applicant.cv_file_path = file_path
+
+    # Insert into DB
+    try:
+        db.session.add(new_applicant)
+        db.session.commit()
+
+        history = RecruitmentHistory(
+            applicant_id=new_applicant.id,
+            applied_date=date.today()
+        )
+        db.session.add(history)
+        db.session.commit()
+
+        flash('New applicant successfully created!', 'success')
+        current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
+        return redirect(url_for('hr.show_upload_form'))
+
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'email' in str(e.orig):
+            flash('This email is already registered.', 'error')
+        elif 'phone_number' in str(e.orig):
+            flash('This phone number is already registered.', 'error')
+        else:
+            flash('Database error. Please try again.', 'error')
+        current_app.logger.error(f"IntegrityError: {e}")
+        return redirect(url_for('hr.show_upload_form'))
+
+@bp.route('/parse_resume', methods=['POST'])
+@login_required
+@role_required(*HR_ROLES)
+def parse_resume():
+    file = request.files.get('cv')
+    if not file:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[-1]) as temp:
+            file.save(temp.name)
+            data = extract_cv_info(temp.name)
+            return jsonify(data or {})
+    except Exception as e:
+        current_app.logger.exception("Error parsing resume")
+        return jsonify({'error': f'Failed to parse CV: {str(e)}'}), 500
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
@@ -221,15 +190,6 @@ def upload_applicants():
 @role_required(*HR_ROLES)
 def view_applicant(id):
     update_status(id)
-    applicant = Applicant.query.get_or_404(id)
-    interviewers = User.query.filter_by(role='interviewer').all()
-
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
-
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
 
@@ -252,6 +212,7 @@ def schedule_test(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     history.test_date = date
     history.test_time = time
+    history.test_date = date
     db.session.commit()
     flash('Test scheduled successfully', 'success')
     current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
@@ -274,6 +235,7 @@ def reschedule_test(id):
     if history and history.test_result is None:
         history.test_date = date
         history.test_time = time
+        history.test_date = date
         db.session.commit()
         flash('Test rescheduled successfully', 'success')
         current_app.logger.info(f"Test rescheduled for applicant {id} to {date} by {current_user.username}")
@@ -323,6 +285,11 @@ def download_cv(id):
 @login_required
 @role_required(*HR_ROLES)
 def schedule_interview(id):
+    if "token" not in session:
+        flash("You must be logged in through Microsoft to schedule interviews.", "error")
+        return redirect(url_for('auth.login'))
+    
+    access_token = session["token"]["access_token"]
     date = request.form.get('interview_date')
     time = request.form.get('interview_time')
     interviewer_id = request.form.get('interviewer_id')
@@ -342,35 +309,87 @@ def schedule_interview(id):
             except ValueError:
                 time = None
     
+    if not date or not time:
+        flash('Invalid date or time format.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
+    
+    applicant = Applicant.query.get_or_404(id)
+    interviewer = User.query.get_or_404(interviewer_id)
     history = RecruitmentHistory.query.filter_by(applicant_id = id).first()
+    start_datetime = datetime.combine(date, time)
+    end_datetime = start_datetime + timedelta(hours=1)
 
     if not history.interview_round_1_date:
         round = 1
-        interview = Interview(applicant_id=id, date=date, time=time, round_number=round, interviewer_id=interviewer_id)
-        db.session.add(interview)
-        db.session.commit()
         history.interview_round_1_date = date
         history.interview_round_1_time = time
-        
     elif not history.interview_round_2_date:
         round = 2
-        interview = Interview(applicant_id=id, date=date, time=time, round_number=round, interviewer_id=interviewer_id)
-        db.session.add(interview)
-        db.session.commit()
         history.interview_round_2_date = date
         history.interview_round_2_time = time
-        
     else:
         round = 3
-        interview = Interview(applicant_id=id, date=date, time=time, round_number=round, interviewer_id=interviewer_id)
-        db.session.add(interview)
-        db.session.commit()
         history.hr_round_date = date
         history.hr_round_time = time
-        
+
+    interview = Interview(
+        applicant_id=id,
+        date=date,
+        time=time,
+        round_number=round,
+        interviewer_id=interviewer_id
+    )
+    db.session.add(interview)
     db.session.commit()
-    flash('Interview scheduled successfully', 'success')
-    current_app.logger.info(f"Interview round {round} scheduled for applicant {id} on {date} by {current_user.username}")
+
+    graph_endpoint = 'https://graph.microsoft.com/v1.0/me/events'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    body = {
+        "subject": f"Interview Round {'HR' if round == 3 else round} with {applicant.name}",
+        "start": {
+            "dateTime": start_datetime.isoformat(),
+            "timeZone": "Asia/Kolkata"
+        },
+        "end": {
+            "dateTime": end_datetime.isoformat(),
+            "timeZone": "Asia/Kolkata"
+        },
+        "location": {
+            "displayName": "Microsoft Teams Meeting"
+        },
+        "attendees": [
+            {
+                "emailAddress": {
+                    "address": interviewer.email,
+                    "name": interviewer.name
+                },
+                "type": "required"
+            },
+            {
+                "emailAddress": {
+                    "address": applicant.email,
+                    "name": applicant.name
+                },
+                "type": "required"
+            }
+        ],
+        "isOnlineMeeting": True,
+        "onlineMeetingProvider": "teamsForBusiness"
+    }
+
+    response = requests.post(graph_endpoint, headers=headers, json=body)
+
+    if response.status_code == 201:
+        flash('Interview scheduled and calendar invite sent.', 'success')
+        current_app.logger.info(f"Meeting created for round {'HR' if round == 3 else round} for applicant {id}")
+    else:
+        flash('Interview saved, but failed to schedule calendar meeting.', 'warning')
+        current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
+
     return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/reject_application/<int:id>', methods=['POST'])
@@ -438,6 +457,11 @@ def filter_interviews():
 @login_required
 @role_required(*HR_ROLES)
 def reschedule_interview(id):
+    if "token" not in session:
+        flash("You must be logged in through Microsoft to schedule interviews.", "error")
+        return redirect(url_for('auth.login'))
+    
+    access_token = session["token"]["access_token"]
     date = request.form.get('interview_date')
     time = request.form.get('interview_time')
     interviewer_id = request.form.get('interviewer_id')
@@ -447,7 +471,7 @@ def reschedule_interview(id):
             date = datetime.strptime(date, '%Y-%m-%d').date()
         except ValueError:
             date = None
-    
+
     if isinstance(time, str):
         try:
             time = datetime.strptime(time, '%H:%M').time()
@@ -456,14 +480,19 @@ def reschedule_interview(id):
                 time = datetime.strptime(time, '%H:%M:%S').time()
             except ValueError:
                 time = None
-    
+
     interview = Interview.query.get_or_404(id)
     
     interview.date = date
     interview.time = time
     interview.interviewer_id = interviewer_id
     
-    history = RecruitmentHistory.query.filter_by(applicant_id=interview.applicant_id).first()
+    applicant = Applicant.query.get_or_404(id=interview.applicant_id)
+    interviewer = User.query.get_or_404(interviewer_id)
+    history = RecruitmentHistory.query.filter_by(applicant_id = applicant.id).first()
+    start_datetime = datetime.combine(date, time)
+    end_datetime = start_datetime + timedelta(hours=1)
+
     if interview.round_number == 1:
         history.interview_round_1_date = date
         history.interview_round_1_time = time
@@ -473,15 +502,61 @@ def reschedule_interview(id):
     else:
         history.hr_round_date = date
         history.hr_round_time = time
-    
+
     db.session.commit()
-    flash('Interview rescheduled successfully', 'success')
-    current_app.logger.info(f"Interview round {interview.round_number} rescheduled for applicant {interview.applicant_id} to {date} by {current_user.username}")
-    
+
+    graph_endpoint = 'https://graph.microsoft.com/v1.0/me/events'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    body = {
+        "subject": f"Rescheduled Interview Round {'HR' if round == 3 else round} with {applicant.name}",
+        "start": {
+            "dateTime": start_datetime.isoformat(),
+            "timeZone": "Asia/Kolkata"
+        },
+        "end": {
+            "dateTime": end_datetime.isoformat(),
+            "timeZone": "Asia/Kolkata"
+        },
+        "location": {
+            "displayName": "Microsoft Teams Meeting"
+        },
+        "attendees": [
+            {
+                "emailAddress": {
+                    "address": interviewer.email,
+                    "name": interviewer.name
+                },
+                "type": "required"
+            },
+            {
+                "emailAddress": {
+                    "address": applicant.email,
+                    "name": applicant.name
+                },
+                "type": "required"
+            }
+        ],
+        "isOnlineMeeting": True,
+        "onlineMeetingProvider": "teamsForBusiness"
+    }
+
+    response = requests.post(graph_endpoint, headers=headers, json=body)
+
+    if response.status_code == 201:
+        flash('Interview scheduled and calendar invite sent.', 'success')
+        current_app.logger.info(f"Meeting created for round {'HR' if round == 3 else round} for applicant {id}")
+    else:
+        flash('Interview rescheduling saved, but failed to schedule calendar meeting.', 'warning')
+        current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
+
     referrer = request.referrer
     if referrer and 'view_interviews' in referrer:
         return redirect(url_for('hr.view_interviews'))
-    return redirect(url_for('hr.view_applicant', id=interview.applicant_id))
+    return redirect(url_for('hr.view_applicant', id=applicant.id))
 
 @bp.route('/upload_joblistings', methods=['GET', 'POST'])
 @no_cache
@@ -499,6 +574,9 @@ def upload_joblistings():
     job_budget = request.form.get('job_budget')
     job_experience = request.form.get('job_experience')  
 
+    if not job_position or not job_description:
+        return render_template('hr/addjob.html', form_data=request.form)
+
     new_jobrequirement = JobRequirement(
         position=job_position,
         description=job_description,
@@ -508,9 +586,6 @@ def upload_joblistings():
         budget=job_budget,
         experience=job_experience
     )
-
-    if not job_position or not job_description:
-        return render_template('hr/addjob.html', form_data=request.form)
 
     db.session.add(new_jobrequirement)
     db.session.commit()
