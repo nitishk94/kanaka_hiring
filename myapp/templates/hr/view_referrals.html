@@ -23,6 +23,7 @@
                     <th>Name</th>
                     <th>Referred By</th>
                     <th>Referral Date</th>
+                    <th>Referred for Position</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -32,6 +33,7 @@
                     <td>{{ referral.name }}</td>
                     <td>{{ referral.referred_by }}</td>
                     <td>{{ referral.referral_date }}</td>
+                    <td>{{ referral.job.position if referral.job_id else 'N/A' }}</td>
                     <td>
                         <div class="flex gap-2">
                             <a href="{{ url_for('hr.view_referrals', id=referral.id) }}" 

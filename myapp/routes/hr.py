@@ -555,7 +555,8 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    return render_template('hr/view_referrals.html', referrals=referrals)
+    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs)
 
 @bp.route('/onboarding')
 @no_cache
