@@ -11,7 +11,8 @@ from myapp.models.referrals import Referral
 from myapp.utils import validate_file, update_status, can_upload_applicant, extract_cv_info
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
-from datetime import date, datetime
+from datetime import datetime, date, timedelta, timezone
+import requests
 import os
 import tempfile
 
@@ -31,10 +32,11 @@ def dashboard():
 @role_required(*HR_ROLES)
 def applicants():
     applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter_by(role='hr').all()
     for applicant in applicants:
         update_status(applicant.id)
-    return render_template('hr/applicants.html', applicants=applicants, users=hrs)
+    return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
         
 
 @bp.route('/upload_applicants', methods=['GET', 'POST'])
@@ -49,6 +51,9 @@ def upload_applicants():
     referrer_names = [
         {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
     ]
+
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
+    
 
     if request.method == 'POST':
         file = request.files.get('cv')
@@ -88,6 +93,7 @@ def upload_applicants():
         
         # Professional Information
         is_fresher = bool(request.form.get('is_fresher'))
+        job_id = request.form.get('position') if not is_fresher else None
         is_referred = bool(request.form.get('is_referred'))
         referred_by = int(request.form.get('referred_by')) if is_referred else None
         qualification = request.form.get('qualification')
@@ -176,7 +182,8 @@ def upload_applicants():
             cv_file_path=file_path,
             uploaded_by=current_user.id,
             is_referred=is_referred,
-            referred_by=referred_by
+            referred_by=referred_by,
+            job_id=job_id,
         )
         
         try:
@@ -206,7 +213,7 @@ def upload_applicants():
             current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
             return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
-    return render_template('hr/upload.html', referrer_names=referrer_names)
+    return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions)
 
 @bp.route('/parse_resume', methods=['POST'])
 @login_required
@@ -236,12 +243,22 @@ def view_applicant(id):
 
     return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
 
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def view_applicant(id):
+    applicant = Applicant.query.get_or_404(id)
+    interviewers = User.query.filter_by(role='interviewer').all()
+
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
+
 @bp.route('/schedule_test/<int:id>', methods=['POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def schedule_test(id):
-    date = request.form['test_date']
+    date = request.form.get('test_date')
+    time = request.form.get('test_time')
 
     if isinstance(date, str):
         try:
@@ -250,6 +267,8 @@ def schedule_test(id):
             date = None
 
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    history.test_date = date
+    history.test_time = time
     history.test_date = date
     db.session.commit()
     flash('Test scheduled successfully', 'success')
@@ -261,7 +280,8 @@ def schedule_test(id):
 @login_required
 @role_required(*HR_ROLES)
 def reschedule_test(id):
-    date = request.form['test_date']
+    date = request.form.get('retest_date')
+    time = request.form.get('retest_time')
     if isinstance(date, str):
         try:
             date = datetime.strptime(date, '%Y-%m-%d').date()
@@ -270,6 +290,8 @@ def reschedule_test(id):
     
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     if history and history.test_result is None:
+        history.test_date = date
+        history.test_time = time
         history.test_date = date
         db.session.commit()
         flash('Test rescheduled successfully', 'success')
@@ -284,16 +306,29 @@ def reschedule_test(id):
 @login_required
 @role_required(*HR_ROLES)
 def filter_applicants():
-    hr_users = User.query.filter_by(role='hr').all()
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     
     hr_id = request.args.get('hr_id', '')
+    job_id = request.args.get('job_id', '')
+    status_id = request.args.get('status', '')
     
+    query = Applicant.query
+
     if hr_id:
-        applicants = Applicant.query.filter_by(uploaded_by=hr_id).order_by(Applicant.last_applied.desc()).all()
+        query = query.filter(Applicant.uploaded_by == int(hr_id))
+
+    if job_id:
+        jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
     else:
-        applicants = Applicant.query.order_by(Applicant.last_applied.desc()).all()
-    
-    return render_template('hr/applicants.html', applicants=applicants, users=hr_users)
+        jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+
+    if status_id == 'fresher':
+        query = query.filter(Applicant.is_fresher == True)
+    elif status_id == 'experienced':
+        query = query.filter(Applicant.is_fresher == False)
+
+    applicants = query.order_by(Applicant.last_applied.desc()).all()
+    return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
 
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
@@ -414,6 +449,7 @@ def filter_interviews():
             )\
             .all()
     
+    
     return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users)
 
 @bp.route('/reschedule_interview/<int:id>', methods=['POST'])
@@ -465,3 +501,109 @@ def reschedule_interview(id):
     if referrer and 'view_interviews' in referrer:
         return redirect(url_for('hr.view_interviews'))
     return redirect(url_for('hr.view_applicant', id=interview.applicant_id))
+
+@bp.route('/upload_joblistings', methods=['GET', 'POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def upload_joblistings():
+    if '_user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+
+    job_position = request.form.get('position_name') 
+    job_description = request.form.get('job_description')
+    job_skillset= request.form.get('job_skillset')
+    job_clients = request.form.get('job_clients')
+    job_budget = request.form.get('job_budget')
+    job_experience = request.form.get('job_experience')  
+
+    new_jobrequirement = JobRequirement(
+        position=job_position,
+        description=job_description,
+        created_by=current_user,
+        skillset=job_skillset,
+        clients=job_clients,
+        budget=job_budget,
+        experience=job_experience
+    )
+
+    if not job_position or not job_description:
+        return render_template('hr/addjob.html', form_data=request.form)
+
+    db.session.add(new_jobrequirement)
+    db.session.commit()
+
+    flash('New job listing successfully created!', 'success')
+    current_app.logger.info(f"New job listing (Posting: {new_jobrequirement.position}) added by {current_user.name}")
+    
+    return redirect(url_for('main.view_joblisting'))
+
+@bp.route('/update_joblisting/<int:id>', methods=['GET', 'POST'])
+@login_required
+@role_required('hr', 'admin')
+def joblisting_update(id):
+    job = JobRequirement.query.get_or_404(id)
+
+    if request.method == 'POST':
+        position = request.form.get('job_position')
+        description = request.form.get('job_description')
+        skillset= request.form.get('job_skillset')
+        clients = request.form.get('job_clients')
+        budget = request.form.get('job_budget')
+        experience = request.form.get('job_experience')  
+
+
+
+        if not position or not description:
+            flash('Job position and description cannot be empty!', 'error')
+            return redirect(url_for('hr.joblisting_update', id=id))
+
+        job.position = position
+        job.description = description
+        job.skillset = skillset
+        job.clients = clients       
+        job.budget = budget
+        job.experience = experience
+
+        db.session.commit()
+        flash('Job listing updated successfully!', 'success')
+        return redirect(url_for('main.view_details_joblisting', id=id ))
+
+    return render_template('hr/detailsjob.html', joblisting=job)
+
+@bp.route('/close_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def close_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    joblisting.is_open = False
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} closed by {current_user.username}")
+    flash('Job listing closed successfully', 'success')
+    return redirect(url_for('main.view_joblisting'))
+
+@bp.route('/open_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def open_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    joblisting.is_open = True
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} opened by {current_user.username}")
+    flash('Job listing reopened successfully', 'success')
+    return redirect(url_for('main.view_joblisting'))
+
+@bp.route('/delete_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def delete_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    db.session.delete(joblisting)
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} deleted by Admin {current_user.username}")
+    flash('Job listing deleted successfully', 'success')
+    return redirect(url_for('main.view_joblisting'))

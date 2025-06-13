@@ -57,10 +57,10 @@ def generate_timeline(id):
     ]
     
     # Test scheduling history
-    if history.test_scheduled:
+    if history.test_date:
         timeline.append({
             'title': 'Test Scheduled',
-            'date': history.test_scheduled,
+            'date': history.test_date,
             'result': history.test_result if history.test_result is not None else None,
             'status': 'Completed' if history.test_result is not None else 'Scheduled'
         })
@@ -105,7 +105,7 @@ def generate_timeline(id):
             timeline.append({'title': 'Hired', 'date': history.updated_at.date()})
     
     # Sort timeline by date
-    #timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
+    timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
     return timeline
 
 def extract_text_from_pdf(file_path):

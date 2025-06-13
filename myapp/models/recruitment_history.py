@@ -65,6 +65,7 @@ class RecruitmentHistory(db.Model):
         round2_date = ensure_date(self.interview_round_2_date)
         round1_date = ensure_date(self.interview_round_1_date)
         test_date = ensure_date(self.test_date)
+        test_date = ensure_date(self.test_date)
 
         hr_time = ensure_time(self.hr_round_time)
         round2_time = ensure_time(self.interview_round_2_time)
