@@ -457,6 +457,11 @@ def filter_interviews():
 @login_required
 @role_required(*HR_ROLES)
 def reschedule_interview(id):
+    if "token" not in session:
+        flash("You must be logged in through Microsoft to schedule interviews.", "error")
+        return redirect(url_for('auth.login'))
+    
+    access_token = session["token"]["access_token"]
     date = request.form.get('interview_date')
     time = request.form.get('interview_time')
     interviewer_id = request.form.get('interviewer_id')
@@ -466,7 +471,7 @@ def reschedule_interview(id):
             date = datetime.strptime(date, '%Y-%m-%d').date()
         except ValueError:
             date = None
-    
+
     if isinstance(time, str):
         try:
             time = datetime.strptime(time, '%H:%M').time()
@@ -475,14 +480,19 @@ def reschedule_interview(id):
                 time = datetime.strptime(time, '%H:%M:%S').time()
             except ValueError:
                 time = None
-    
+
     interview = Interview.query.get_or_404(id)
     
     interview.date = date
     interview.time = time
     interview.interviewer_id = interviewer_id
     
-    history = RecruitmentHistory.query.filter_by(applicant_id=interview.applicant_id).first()
+    applicant = Applicant.query.get_or_404(id=interview.applicant_id)
+    interviewer = User.query.get_or_404(interviewer_id)
+    history = RecruitmentHistory.query.filter_by(applicant_id = applicant.id).first()
+    start_datetime = datetime.combine(date, time)
+    end_datetime = start_datetime + timedelta(hours=1)
+
     if interview.round_number == 1:
         history.interview_round_1_date = date
         history.interview_round_1_time = time
@@ -492,15 +502,61 @@ def reschedule_interview(id):
     else:
         history.hr_round_date = date
         history.hr_round_time = time
-    
+
     db.session.commit()
-    flash('Interview rescheduled successfully', 'success')
-    current_app.logger.info(f"Interview round {interview.round_number} rescheduled for applicant {interview.applicant_id} to {date} by {current_user.username}")
-    
+
+    graph_endpoint = 'https://graph.microsoft.com/v1.0/me/events'
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    body = {
+        "subject": f"Rescheduled Interview Round {'HR' if round == 3 else round} with {applicant.name}",
+        "start": {
+            "dateTime": start_datetime.isoformat(),
+            "timeZone": "Asia/Kolkata"
+        },
+        "end": {
+            "dateTime": end_datetime.isoformat(),
+            "timeZone": "Asia/Kolkata"
+        },
+        "location": {
+            "displayName": "Microsoft Teams Meeting"
+        },
+        "attendees": [
+            {
+                "emailAddress": {
+                    "address": interviewer.email,
+                    "name": interviewer.name
+                },
+                "type": "required"
+            },
+            {
+                "emailAddress": {
+                    "address": applicant.email,
+                    "name": applicant.name
+                },
+                "type": "required"
+            }
+        ],
+        "isOnlineMeeting": True,
+        "onlineMeetingProvider": "teamsForBusiness"
+    }
+
+    response = requests.post(graph_endpoint, headers=headers, json=body)
+
+    if response.status_code == 201:
+        flash('Interview scheduled and calendar invite sent.', 'success')
+        current_app.logger.info(f"Meeting created for round {'HR' if round == 3 else round} for applicant {id}")
+    else:
+        flash('Interview rescheduling saved, but failed to schedule calendar meeting.', 'warning')
+        current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
+
     referrer = request.referrer
     if referrer and 'view_interviews' in referrer:
         return redirect(url_for('hr.view_interviews'))
-    return redirect(url_for('hr.view_applicant', id=interview.applicant_id))
+    return redirect(url_for('hr.view_applicant', id=applicant.id))
 
 @bp.route('/upload_joblistings', methods=['GET', 'POST'])
 @no_cache
