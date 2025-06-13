@@ -14,8 +14,16 @@
                 {{ applicant.current_stage }}
             </div>
         </div>
+        
     </div>
-
+    <div>
+                <a href="{{ url_for('hr.update_applicant', id=applicant.id) }}" 
+                        class="btn btn-warning w-auto px-8 text-lg">
+                            Edit
+                </a>
+            </div>
+    <br>
+ 
     <!-- Personal Information -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div class="card bg-base-100 shadow-xl lg:col-span-1">
@@ -102,7 +110,7 @@
                     <!-- Social Profiles -->
                     <div>
                         <p class="text-sm text-gray-500">LinkedIn Profile</p>
-                        {% if applicant.linkedin_profile != 'Not Provided' %}
+                        {% if applicant.linkedin_profile != ' ' %}
                             <a href="{{ applicant.linkedin_profile }}" target="_blank" class="link link-primary">View Profile</a>
                         {% else %}
                             <p class="font-semibold">Not provided</p>
@@ -110,7 +118,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">GitHub Profile</p>
-                        {% if applicant.github_profile != 'Not Provided' %}
+                        {% if applicant.github_profile != ' ' %}
                             <a href="{{ applicant.github_profile }}" target="_blank" class="link link-primary">View Profile</a>
                         {% else %}
                             <p class="font-semibold">Not provided</p>

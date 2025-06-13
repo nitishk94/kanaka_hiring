@@ -27,6 +27,7 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        password2 = request.form.get('password2')
 
         if not is_valid_email(email):
             flash('Please enter a valid email address', 'error')
@@ -38,6 +39,10 @@ def register():
 
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'error')
+            return render_template('auth/register.html', form_data=request.form)
+        
+        if password != password2:
+            flash('Passwords do not match', 'error')
             return render_template('auth/register.html', form_data=request.form)
 
         user = User(name=name, username=username, email=email)
@@ -80,8 +85,8 @@ def login():
         else:
             user = User.query.filter_by(username=username_or_email).first()
 
-        if user and user.password_changed:
-            return redirect(url_for('main.home', password_changed=True))
+        #if user and user.password_changed:
+           # return redirect(url_for('main.home', password_changed=True))
         
         if user and user.check_password(password):
             if not user.role:

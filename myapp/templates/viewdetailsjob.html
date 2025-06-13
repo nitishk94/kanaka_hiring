@@ -17,7 +17,7 @@
 
             <!-- Job Title -->
             <h2 class="text-3xl font-bold text-center text-black">{{ job.position }}</h2>
-                {% if not is_open %}        
+                {% if not job.is_open %}        
                     <p class="text-center text-gray-500">*Currently not accepting applicants*.</p>
                 {% endif %}
 
@@ -43,16 +43,7 @@
                 <div class="form-control">
                     <label class="label font-semibold text-lg text-primary">Experience:</label>
                     <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.experience if job.experience else 'Not specified' }} years</div>
-                </div>
-
-                <div class="text-center my-4">
-                    <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-black w-auto px-8 text-lg">
-                        Back to Jobs List
-                    </a>
-                </div>
-
-                
-                
+                </div>   
 
             {% if current_user.role in ['hr', 'admin'] %}
                 <!-- Clients -->
@@ -92,12 +83,12 @@
                        class="btn btn-warning w-auto px-8 text-lg">
                         Edit
                     </a>
-                    {% if is_open %}
+                    {% if job.is_open %}
                         <!-- Reopen Button -->
                         <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
                               method="POST" 
-                              onsubmit="return confirm('Are you sure you want to reopen this job?');">
-                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                              onsubmit="return confirm('Are you sure you want to close this job?');">
+                            <button type="submit" class="btn bg-sky-300 w-auto px-8 text-lg">
                                 Close Job
                             </button>
                         </form>
@@ -105,7 +96,7 @@
                         <form action="{{ url_for('hr.open_joblisting', id=job.id) }}" 
                               method="POST" 
                               onsubmit="return confirm('Are you sure you want to reopen this job?');">
-                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                            <button type="submit" class="btn bg-sky-300 w-auto px-8 text-lg">
                                 Reopen Job
                             </button>
                         </form>
@@ -122,6 +113,11 @@
                     </form>
 
                 {% endif %}
+
+                    <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-black w-auto px-8 text-lg">
+                        Back to Jobs List
+                    </a>
+                
                 
 
             </div>
