@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Job Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+
+    <!-- Page Heading -->
+    <div class="text-center mb-8">
+        <h1 class="text-5xl font-extrabold mb-2 text-black">Job Details</h1>
+        <p class="text-lg text-gray-500">Complete information about this job opportunity.</p>
+    </div>
+
+    <!-- Job Details Card -->
+    <div class="card bg-base-100 shadow-2xl mx-auto max-w-5xl border border-gray-200">
+        <div class="card-body space-y-6 p-8">
+
+            <!-- Job Title -->
+            <h2 class="text-3xl font-bold text-center text-black">{{ job.position }}</h2>
+                {% if not job.is_open %}        
+                    <p class="text-center text-gray-500">*Currently not accepting applicants*.</p>
+                {% endif %}
+                <div class="form-control mt-6">
+                <label class="label font-semibold text-lg text-primary">Job Description:</label>
+                <div class="p-4 bg-gray-50 rounded text-gray-800 leading-relaxed whitespace-pre-line border-gray-200">
+                    {{ job.description | trim }}
+                </div>
+            </div>
+
+            <!-- Job Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-base">
+
+                <!-- Skillset -->
+                <div class="form-control">
+                    <label class="label font-semibold text-lg text-primary">Skillset:</label>
+                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.skillset if job.skillset else 'Not specified' }}</div>
+                </div>
+
+                <!-- Experience -->
+                <div class="form-control">
+                    <label class="label font-semibold text-lg text-primary">Experience:</label>
+                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.experience if job.experience else 'Not specified' }} years</div>
+                </div>
+    
+            {% if current_user.role in ['hr', 'admin'] %}
+                <!-- Clients -->
+                <div class="form-control">
+                    <label class="label font-semibold text-lg text-primary">Client Name:</label>
+                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.clients if job.clients else 'Not specified' }}</div>
+                </div>
+
+                <!-- Budget -->
+                <div class="form-control">
+                    <label class="label font-semibold text-lg text-primary">Budget (INR):</label>
+                    <div class="p-3 bg-gray-100 rounded text-gray-800">₹ {{ job.budget if job.budget else 'Not specified' }}</div>
+                </div>
+
+                <!-- Created By -->
+                <div class="form-control">
+                    <label class="label font-semibold text-lg text-primary">Added by:</label>
+                    <div class="p-3 bg-gray-100 rounded text-gray-800">{{ job.created_by.username if job.created_by else 'Unknown' }}</div>
+                </div>
+            {% endif %}
+            </div>
+
+            <!-- Buttons Section -->
+            <div class="flex flex-col md:flex-row justify-center gap-4 mt-10">
+                <!-- Back button -->
+                <!-- If user is HR or Admin, show Edit and Delete buttons -->
+                {% if current_user.role in ['hr', 'admin'] %}
+                    <!-- Edit Button -->
+                    <a href="{{ url_for('hr.joblisting_update', id=job.id) }}" 
+                       class="btn btn-warning w-auto px-8 text-lg">
+                        Edit
+                    </a>
+                    {% if job.is_open %}
+                        <!-- Reopen Button -->
+                        <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
+                              method="POST" 
+                              onsubmit="return confirm('Are you sure you want to reopen this job?');">
+                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                                Close Job
+                            </button>
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('hr.open_joblisting', id=job.id) }}" 
+                              method="POST" 
+                              onsubmit="return confirm('Are you sure you want to reopen this job?');">
+                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                                Reopen Job
+                            </button>
+                        </form>
+                        <!-- Close Button -->
+                    {% endif %}
+                    <!-- Delete Button -->
+                    <form action="{{ url_for('hr.delete_joblisting', id=job.id) }}" 
+                          method="POST" 
+                          onsubmit="return confirm('Are you sure you want to delete this job?');">
+                        <button type="submit" class="btn btn-error w-auto px-8 text-lg">
+                            Delete
+                        </button>
+                    </form>
+                {% endif %}
+                    <a href="{{ url_for('main.view_joblisting') }}" class="btn btn-outline btn-black w-auto px-8 text-lg">
+                        Back to Jobs List
+                    </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

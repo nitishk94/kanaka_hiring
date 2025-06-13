@@ -3,11 +3,16 @@
 {% block title %}Refer a Candidate{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold mb-4">Refer a Candidate</h1>
-        <p class="text-lg text-gray-600">Upload the CV of the candidate you want to refer.</p>
-    </div>
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <h1 class="text-3xl font-bold mb-6">Refer a Candidate</h1>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <!-- Full Name -->
+        <div class="form-control">
+            <label class="label font-semibold text-lg text-black">Full Name:</label>
+            <input type="text" name="name" class="input input-bordered w-full" required 
+                   value="{{ form_data.name if form_data and form_data.name }}">
+        </div>
 
     <div class="max-w-4xl mx-auto">
         <div class="card bg-base-100 shadow-xl">
@@ -69,16 +74,48 @@
                     </div>
                 </form>
             </div>
+        <!-- Fresher Checkbox -->
+        <div class="form-control">
+            <label class="cursor-pointer flex items-center gap-4">
+                <input type="checkbox" name="is_fresher" id="is_fresher" class="checkbox checkbox-primary"
+                       {% if form_data and form_data.is_fresher %}checked{% endif %}>
+                <span class="label-text text-lg font-semibold text-black">Is Fresher?</span>
+            </label>
         </div>
-    </div>
+
+        <!-- Job Position Dropdown (Only for Non-Freshers) -->
+        <div class="form-control" id="position-section">
+            <label class="label font-semibold text-lg text-black">Select Job Position:</label>
+            <select name="position" id="position" class="select select-bordered w-full">
+                <option value="">-- Choose a Position --</option>
+                {% for id, position in job_positions %}
+                        <option value="{{ id }}"
+                            {% if form_data and form_data.position == id|string %}selected{% endif %}>
+                            {{ position }}
+                        </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- CV Upload -->
+        <div class="form-control">
+            <label class="label font-semibold text-lg text-black">Upload CV:</label>
+            <input type="file" name="cv" class="file-input file-input-bordered w-full" required>
+        </div>
+
+        <!-- Submit -->
+        <div class="text-center mt-6">
+            <button type="submit" class="btn btn-primary px-8 text-lg">Submit Referral</button>
+        </div>
+    </form>
 </div>
-{% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6"></script>
 <script src="https://cdn.jsdelivr.net/npm/lodash.debounce@4.0.8/index.js"></script>
 <script src="https://unpkg.com/vue-virtual-scroller@1.0.10/dist/vue-virtual-scroller.umd.js"></script>
+<!-- JavaScript to Show/Hide Job Position Based on Fresher Checkbox -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const fileInput = document.getElementById('cvFile');
@@ -194,7 +231,30 @@
                 `
             });
         }
+    function toggleSection(section, show, clearFields = true) {
+        if (show) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+            if (clearFields) {
+                section.querySelectorAll('input, select').forEach(el => el.value = '');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const fresherToggle = document.getElementById('is_fresher');
+        const positionSection = document.getElementById('position-section');
+
+        // Initial toggle on page load
+        toggleSection(positionSection, !fresherToggle.checked, false);
+
+        // Toggle on checkbox change
+        fresherToggle.addEventListener('change', function () {
+            toggleSection(positionSection, !this.checked);
+        });
     });
+});
 </script>
 {% endblock %}
 

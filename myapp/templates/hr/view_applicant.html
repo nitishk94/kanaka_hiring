@@ -268,6 +268,12 @@
                                                 </label>
                                                 <input type="date" name="test_date" class="input input-bordered w-full" required />
                                             </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="test_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="test_time" class="input input-bordered w-full" required />
+                                            </div>
                                             <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
                                         </form>
                                     </div>
@@ -280,10 +286,16 @@
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
                                         <form action="{{ url_for('hr.reschedule_test', id=applicant.id) }}" method="POST">
                                             <div class="form-control w-full">
-                                                <label class="label" for="test_date">
-                                                    <span class="label-text">Select New Date</span>
+                                                <label class="label" for="retest_date">
+                                                    <span class="label-text">Select Date</span>
                                                 </label>
-                                                <input type="date" name="test_date" class="input input-bordered w-full" required />
+                                                <input type="date" name="retest_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="retest_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="retest_time" class="input input-bordered w-full" required />
                                             </div>
                                             <button type="submit" class="btn btn-warning w-full mt-4">Reschedule</button>
                                         </form>
