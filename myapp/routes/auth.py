@@ -19,8 +19,8 @@ def register():
     
     if request.method == 'POST':
         name = request.form.get('name')
-        username = request.form.get('username')
-        email = request.form.get('email')
+        username = request.form.get('username').lower()
+        email = request.form.get('email').lower()
 
         if not is_valid_email(email):
             flash('Please enter a valid email address', 'error')
@@ -51,8 +51,8 @@ def register_referrer():
     
     if request.method == 'POST':
         name = request.form.get('name')
-        username = request.form.get('username')
-        email = request.form.get('email')
+        username = request.form.get('username').lower()
+        email = request.form.get('email').lower()
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
