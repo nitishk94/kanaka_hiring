@@ -8,82 +8,123 @@ from myapp.auth.helpers import get_msal_auth_url, get_token_from_code
 
 bp = Blueprint('auth', __name__)
 
-@bp.route('/register', methods=['GET', 'POST'])
-def register():
+ROLE_REDIRECTS = {
+    'admin': 'admin.dashboard',
+    'hr': 'hr.dashboard',
+    'interviewer': 'interviewer.dashboard',
+    'referrer': 'referrer.dashboard',
+}
+
+@bp.route('/register', methods=['GET'])
+def show_register_page():
     if current_user.is_authenticated:
         flash('You are already logged in.', 'info')
-        return redirect(url_for(f"{current_user.role}.dashboard") if current_user.role in ['admin', 'hr', 'interviewer', 'referrer'] else url_for('main.home'))
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
     
-    if request.method == 'POST':
-        name = request.form.get('name')
-        username = request.form.get('username').lower()
-        email = request.form.get('email').lower()
-
-        if not is_valid_email(email):
-            flash('Please enter a valid email address', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        user = User(name=name, username=username, email=email, auth_type='microsoft')
-        db.session.add(user)
-        db.session.commit()
-        
-        current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
-        return redirect(url_for('auth.login', registration_success=True))
-
     return render_template('auth/register.html')
 
-@bp.route('/register/referrer', methods=['GET', 'POST'])
-def register_referrer():
+@bp.route('/register', methods=['POST'])
+def handle_register():
     if current_user.is_authenticated:
         flash('You are already logged in.', 'info')
-        return redirect(url_for(f"{current_user.role}.dashboard") if current_user.role in ['admin', 'hr', 'interviewer', 'referrer'] else url_for('main.home'))
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
+
+    name = request.form.get('name')
+    username = request.form.get('username').lower()
+    email = request.form.get('email').lower()
+    password = request.form.get('password')
+    confirm_password = request.form.get('confirm_password')
+
+    if password != confirm_password:
+        flash('Passwords do not match', 'error')
+        return render_template('auth/register.html', form_data=request.form)
+
+    if not is_valid_email(email):
+        flash('Please enter a valid email address', 'error')
+        return render_template('auth/register.html', form_data=request.form)
+
+    if User.query.filter_by(email=email).first():
+        flash('Email already exists', 'error')
+        return render_template('auth/register.html', form_data=request.form)
+
+    if User.query.filter_by(username=username).first():
+        flash('Username already exists', 'error')
+        return render_template('auth/register.html', form_data=request.form)
+
+    user = User(name=name, username=username, email=email, auth_type='local')
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
     
-    if request.method == 'POST':
-        name = request.form.get('name')
-        username = request.form.get('username').lower()
-        email = request.form.get('email').lower()
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
+    current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
+    return redirect(url_for('auth.login', registration_success=True))
 
-        if password != confirm_password:
-            flash('Passwords do not match', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        if not is_valid_email(email):
-            flash('Please enter a valid email address', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'error')
-            return render_template('auth/register.html', form_data=request.form)
-
-        user = User(name=name, username=username, email=email, auth_type='local')
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        
-        current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
-        return redirect(url_for('auth.login_referrer', registration_success=True))
-
-    return render_template('auth/register.html')
-
-@bp.route('/login', methods=['GET', 'POST'])
+@bp.route('/login', methods=['GET'])
 @no_cache
 def login():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
+
+    return render_template('auth/login.html', form_data=request.args)
+
+@bp.route('/login/microsoft', methods=['POST'])
+@no_cache
+def login_microsoft():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
+
     auth_url = get_msal_auth_url(scopes=current_app.config["MS_SCOPE"])
     return redirect(auth_url)
+
+@bp.route('/login/external', methods=['POST'])
+@no_cache
+def login_external():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
+
+    username_or_email = request.form.get('username_or_email')
+    password = request.form.get('password')
+
+    if '@' in username_or_email and not is_valid_email(username_or_email):
+        flash('Please enter a valid email address', 'error')
+        return redirect(url_for('auth.login_referrer'))
+
+    user = None
+    if '@' in username_or_email:
+        user = User.query.filter_by(email=username_or_email).first()
+    else:
+        user = User.query.filter_by(username=username_or_email).first()
+
+    if user and user.password_changed:
+        return redirect(url_for('main.home', password_changed=True))
+    
+    if user and user.auth_type == 'local' and user.check_password(password):
+        if not user.role:
+            current_app.logger.info(f"Login attempt for unapproved user: {username_or_email}")
+            return redirect(url_for('main.home', pending_approval=True))
+        
+        login_user(user)
+        session.permanent = True
+        current_app.logger.info(f"User logged in: {user.username}, {user.role.capitalize() if user.role != 'hr' else 'HR'}")
+        if user.role == 'hr':
+            return redirect(url_for('hr.dashboard'))
+        elif user.role == 'admin':
+            return redirect(url_for('admin.dashboard'))
+        elif user.role == 'referrer':
+            return redirect(url_for('referrer.dashboard'))
+        elif user.role == 'interviewer':
+            return redirect(url_for('interviewer.dashboard'))
+        else:
+            flash('Invalid user role. Please contact support.', 'error')
+            current_app.logger.info(f"Invalid user: {username_or_email}")
+            return redirect(url_for('auth.login'))
+    
+    flash('Invalid username/email or password', 'error')
+    current_app.logger.info(f"Invalid login attempt: {username_or_email}")
+    return render_template('auth/login.html', form_data=request.form)
 
 @bp.route('/auth/redirect')
 @no_cache
@@ -114,8 +155,8 @@ def authorized_redirect():
     user = User.query.filter_by(email=email).first()
 
     if not user:
-        flash("You're not registered. Please contact the admin.", "error")
-        return redirect(url_for("auth.login"))
+        flash("Welcome! Please register your account.", "info")
+        return redirect(url_for("auth.show_add_new_user"))
 
     if user.auth_type != 'microsoft':
         flash("Invalid authentication method for this user.", "error")
@@ -130,56 +171,44 @@ def authorized_redirect():
     flash("Login successful!", "success")
     return redirect(url_for(f"{user.role}.dashboard"))
 
-@bp.route('/login_referrer', methods=['GET', 'POST'])
+@bp.route('/register/internal', methods=['GET'])
 @no_cache
-def login_referrer():
+def show_add_new_user():
     if current_user.is_authenticated:
         flash('You are already logged in.', 'info')
-        return redirect(url_for(f"{current_user.role}.dashboard") if current_user.role in ['admin', 'hr', 'interviewer', 'referrer'] else url_for('main.home'))
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
+
+    return render_template('auth/add_internal_user.html')
+
+@bp.route('/register/internal', methods=['GET'])
+@no_cache
+def add_new_user():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
     
-    if request.method == 'POST':
-        username_or_email = request.form.get('username_or_email')
-        password = request.form.get('password')
+    name = request.form.get('name')
+    username = request.form.get('username').lower()
+    email = request.form.get('email').lower()
 
-        if '@' in username_or_email and not is_valid_email(username_or_email):
-            flash('Please enter a valid email address', 'error')
-            return redirect(url_for('auth.login_referrer'))
+    if not is_valid_email(email):
+        flash('Please enter a valid email address', 'error')
+        return render_template('auth/add_internal_user.html', form_data=request.form)
 
-        user = None
-        if '@' in username_or_email:
-            user = User.query.filter_by(email=username_or_email).first()
-        else:
-            user = User.query.filter_by(username=username_or_email).first()
+    if User.query.filter_by(email=email).first():
+        flash('Email already exists', 'error')
+        return render_template('auth/add_internal_user.html', form_data=request.form)
 
-        #if user and user.password_changed:
-            #return redirect(url_for('main.home', password_changed=True))
-        
-        if user and user.auth_type == 'local' and user.check_password(password):
-            if not user.role:
-                current_app.logger.info(f"Login attempt for unapproved user: {username_or_email}")
-                return redirect(url_for('main.home', pending_approval=True))
-            
-            login_user(user)
-            session.permanent = True
-            current_app.logger.info(f"User logged in: {user.username}, {user.role.capitalize() if user.role != 'hr' else 'HR'}")
-            if user.role == 'hr':
-                return redirect(url_for('hr.dashboard'))
-            elif user.role == 'admin':
-                return redirect(url_for('admin.dashboard'))
-            elif user.role == 'referrer':
-                return redirect(url_for('referrer.dashboard'))
-            elif user.role == 'interviewer':
-                return redirect(url_for('interviewer.dashboard'))
-            else:
-                flash('Invalid user role. Please contact support.', 'error')
-                current_app.logger.info(f"Invalid user: {username_or_email}")
-                return redirect(url_for('auth.login'))
-        
-        flash('Invalid username/email or password', 'error')
-        current_app.logger.info(f"Invalid login attempt: {username_or_email}")
-        return render_template('auth/login.html', form_data=request.form)
+    if User.query.filter_by(username=username).first():
+        flash('Username already exists', 'error')
+        return render_template('auth/add_internal_user.html', form_data=request.form)
 
-    return render_template('auth/login.html')
+    user = User(name=name, username=username, email=email, auth_type='microsoft')
+    db.session.add(user)
+    db.session.commit()
+    
+    current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
+    return redirect(url_for('auth.login', registration_success=True))
 
 @bp.route('/logout')
 @no_cache
