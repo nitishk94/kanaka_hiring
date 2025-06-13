@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Register{% endblock %}
+{% block title %}New User{% endblock %}
 
 {% block content %}
 <div class="hero min-h-[calc(100vh-4rem)]">
     <div class="hero-content flex-col lg:flex-row-reverse">
         <div class="text-center lg:text-left lg:ml-8">
-            <h1 class="text-5xl font-bold">Create Account!</h1>
-            <p class="py-6">Join Kanaka Application Tracking System to help streamline the hiring process and manage applicants effectively.</p>
+            <h1 class="text-5xl font-bold">Add Internal User</h1>
+            <p class="py-6">Create a new user account for the Kanaka Application Tracking System.</p>
         </div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            <form method="POST" action="{{ url_for('auth.handle_register') }}" class="card-body">
+            <form method="POST" action="{{ url_for('auth.add_new_user') }}" class="card-body">
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Name <span class="text-error">*</span></span>
@@ -91,61 +91,6 @@
                     </label>
                     <p class="validator-hint hidden">
                         Enter a valid email address
-                    </p>
-                </div>
-
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Password <span class="text-error">*</span></span>
-                    </label>
-                    <label class="input validator">
-                        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                                <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
-                                <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
-                            </g>
-                        </svg>
-                        <input
-                            type="password"
-                            name="password"
-                            required
-                            placeholder="Password"
-                            minlength="8"
-                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                            title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
-                        />
-                    </label>
-                    <p class="validator-hint hidden">
-                        Must be more than 8 characters, including
-                        <br />At least one number
-                        <br />At least one lowercase letter
-                        <br />At least one uppercase letter
-                    </p>
-                </div>
-
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Confirm Password <span class="text-error">*</span></span>
-                    </label>
-                    <label class="input validator">
-                        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                                <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
-                                <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle>
-                            </g>
-                        </svg>
-                        <input
-                            type="password"
-                            name="confirm_password"
-                            required
-                            placeholder="Confirm password"
-                            minlength="8"
-                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-                            title="Must match the password above"
-                        />
-                    </label>
-                    <p class="validator-hint hidden">
-                        Must match the password above
                     </p>
                 </div>
 
