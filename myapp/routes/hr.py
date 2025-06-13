@@ -9,7 +9,7 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant, extract_cv_info
+from myapp.utils import validate_file, update_status, can_upload_applicant
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
@@ -166,23 +166,6 @@ def handle_upload_applicant():
             flash('Database error. Please try again.', 'error')
         current_app.logger.error(f"IntegrityError: {e}")
         return redirect(url_for('hr.show_upload_form'))
-
-@bp.route('/parse_resume', methods=['POST'])
-@login_required
-@role_required(*HR_ROLES)
-def parse_resume():
-    file = request.files.get('cv')
-    if not file:
-        return jsonify({'error': 'No file uploaded'}), 400
-
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[-1]) as temp:
-            file.save(temp.name)
-            data = extract_cv_info(temp.name)
-            return jsonify(data or {})
-    except Exception as e:
-        current_app.logger.exception("Error parsing resume")
-        return jsonify({'error': f'Failed to parse CV: {str(e)}'}), 500
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
@@ -608,8 +591,6 @@ def joblisting_update(id):
         clients = request.form.get('job_clients')
         budget = request.form.get('job_budget')
         experience = request.form.get('job_experience')  
-
-
 
         if not position or not description:
             flash('Job position and description cannot be empty!', 'error')
