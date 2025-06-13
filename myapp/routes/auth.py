@@ -8,9 +8,6 @@ from myapp.auth.helpers import get_msal_auth_url, get_token_from_code
 
 bp = Blueprint('auth', __name__)
 
-# Microsoft Authentication Configuration
-MS_SCOPE = ["User.Read", "Calendars.ReadWrite", "Mail.Send"]
-
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -85,7 +82,7 @@ def register_referrer():
 @bp.route('/login', methods=['GET', 'POST'])
 @no_cache
 def login():
-    auth_url = get_msal_auth_url(scopes=MS_SCOPE)
+    auth_url = get_msal_auth_url(scopes=current_app.config["MS_SCOPE"])
     return redirect(auth_url)
 
 @bp.route('/auth/redirect')
@@ -96,15 +93,26 @@ def authorized_redirect():
         flash("Authorization failed.", "error")
         return redirect(url_for("auth.login"))
 
-    token = get_token_from_code(code, scopes=MS_SCOPE)
-    if not token:
+    token = get_token_from_code(code, scopes=current_app.config["MS_SCOPE"])
+    if not token or "id_token_claims" not in token:
         flash("Token acquisition failed.", "error")
         return redirect(url_for("auth.login"))
+    
+    session["token"] = token
+    session["ms_authenticated"] = True
 
     msal_user = token.get("id_token_claims", {})
-    email = msal_user.get("preferred_username") or msal_user.get("email")
+    email = (msal_user.get("preferred_username") or
+             msal_user.get("email") or
+             msal_user.get("upn"))
+    
+    if not email:
+        flash("Unable to determine user email from Microsoft.", "error")
+        return redirect(url_for("auth.login"))
 
+    email = email.lower()
     user = User.query.filter_by(email=email).first()
+
     if not user:
         flash("You're not registered. Please contact the admin.", "error")
         return redirect(url_for("auth.login"))
@@ -119,7 +127,6 @@ def authorized_redirect():
 
     login_user(user)
     session.permanent = True
-    session["ms_authenticated"] = True
     flash("Login successful!", "success")
     return redirect(url_for(f"{user.role}.dashboard"))
 

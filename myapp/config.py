@@ -20,7 +20,8 @@ class Config:
     MS_SCOPE = [
         "User.Read",
         "Calendars.ReadWrite",
-        "Mail.Send"
+        "Mail.Send",
+        "OnlineMeetings.ReadWrite"
     ]
 
 class TestingConfig(Config):
