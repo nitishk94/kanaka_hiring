@@ -2,5 +2,20 @@ services:
   app:
     container_name: python-app
     build: .
-    ports:
+    environment:
+      SQLALCHEMY_DATABASE_URI: 'postgresql://postgres:postgres@192.168.1.99:5432/postgres'
+      CLIENT_ID: '32af36a7-fa67-4fdb-aec5-4079b4ba1ddd'
+      CLIENT_SECRET: 'fd329c88-d214-4e8e-b32e-3efc645266c4'
+      TENANT_ID: '1f6dd068-1556-4bb0-a23c-a3c17f26ba87'
+    ports: 
       -  5000:5000
+    volumes:
+      - migration-volume:/app/migrations
+
+volumes:
+  migration-volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/application/data/migrations
+      o: bind
