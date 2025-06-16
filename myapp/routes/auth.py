@@ -68,7 +68,7 @@ def login():
 
     return render_template('auth/login.html', form_data=request.args)
 
-@bp.route('/login/microsoft', methods=['POST'])
+@bp.route('/login/microsoft', methods=['GET', 'POST'])
 @no_cache
 def login_microsoft():
     if current_user.is_authenticated:
