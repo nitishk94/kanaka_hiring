@@ -10,4 +10,4 @@ WORKDIR /app
 COPY . .
 
 ENV PATH="/opt/venv/bin:$PATH" FLASK_APP=run.py
-CMD ["flask","run","--host=0.0.0.0"]
+CMD ["flask","run","--host=0.0.0.0", "--cert=/app/ssl/cert.pem", "--key=/app/ssl/key.pem"]

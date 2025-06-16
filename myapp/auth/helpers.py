@@ -23,12 +23,13 @@ def build_msal_app(cache=None):
 def get_msal_auth_url(scopes):
     cache = _load_cache()
     msal_app = build_msal_app(cache)
+    state = str(uuid.uuid4())
+    session['msal_state'] = state
     auth_url = msal_app.get_authorization_request_url(
         scopes,
-        state=str(uuid.uuid4()),
+        state=state,
         redirect_uri=url_for('auth.authorized_redirect', _external=True)
     )
-    
     _save_cache(cache)
     return auth_url
 

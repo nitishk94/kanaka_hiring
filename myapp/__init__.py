@@ -1,4 +1,5 @@
 from flask import Flask, session, flash, redirect, url_for, got_request_exception
+from flask_session import Session
 from myapp.extensions import db, login_manager, migrate
 from myapp.routes import register_routes
 from logging.handlers import RotatingFileHandler
@@ -23,7 +24,6 @@ def unauthorized():
 def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object(config_class or config.Config)
-    
     app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -31,6 +31,7 @@ def create_app(config_class=None):
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.session_protection = "basic"
+    Session(app)
     migrate.init_app(app, db)
 
     if not os.path.exists('logs'):

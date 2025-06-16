@@ -129,39 +129,67 @@ def login_external():
 @bp.route('/auth/redirect')
 @no_cache
 def authorized_redirect():
+    # 1. Check Azure error param
+    if "error" in request.args:
+        err = request.args.get("error")
+        desc = request.args.get("error_description", "")
+        current_app.logger.error(f"MSAL callback error: {err}, {desc}")
+        flash(f"Authentication error: {desc or err}", "error")
+        return redirect(url_for("auth.login"))
+
+    # 2. Validate state
+    incoming_state = request.args.get("state")
+    stored_state = session.get("msal_state")
+    current_app.logger.debug(f"State: stored={stored_state}, incoming={incoming_state}")
+    if not stored_state or stored_state != incoming_state:
+        current_app.logger.error("State mismatch or missing")
+        flash("Authentication state mismatch. Please try again.", "error")
+        return redirect(url_for("auth.login"))
+    session.pop("msal_state", None)
+
+    # 3. Get code
     code = request.args.get('code')
     if not code:
+        current_app.logger.error("Authorization code missing")
         flash("Authorization failed.", "error")
         return redirect(url_for("auth.login"))
 
+    # 4. Exchange code for token
     token = get_token_from_code(code, scopes=current_app.config["MS_SCOPE"])
-    if not token or "id_token_claims" not in token:
+    current_app.logger.debug(f"MSAL token result: {token}")
+    if not token:
+        current_app.logger.error("No token result returned")
         flash("Token acquisition failed.", "error")
         return redirect(url_for("auth.login"))
-    
+    if "error" in token:
+        current_app.logger.error(f"Acquire token error: {token.get('error')} - {token.get('error_description')}")
+        flash(f"Authentication failed: {token.get('error_description')}", "error")
+        return redirect(url_for("auth.login"))
+    if "id_token_claims" not in token:
+        current_app.logger.error(f"No id_token_claims in token: {token}")
+        flash("Token acquisition failed.", "error")
+        return redirect(url_for("auth.login"))
+
+    # 5. Proceed with user info
     session["token"] = token
     session["ms_authenticated"] = True
-
-    msal_user = token.get("id_token_claims", {})
+    msal_user = token["id_token_claims"]
     email = (msal_user.get("preferred_username") or
              msal_user.get("email") or
              msal_user.get("upn"))
-    
     if not email:
+        current_app.logger.error("No email in id_token_claims")
         flash("Unable to determine user email from Microsoft.", "error")
         return redirect(url_for("auth.login"))
 
     email = email.lower()
     user = User.query.filter_by(email=email).first()
-
     if not user:
         flash("Welcome! Please register your account.", "info")
         return redirect(url_for("auth.show_add_new_user"))
-
     if user.auth_type != 'microsoft':
         flash("Invalid authentication method for this user.", "error")
         return redirect(url_for("auth.login"))
-
     if not user.role:
         flash("Your account is pending admin approval.", "warning")
         return redirect(url_for("main.home"))
@@ -180,7 +208,7 @@ def show_add_new_user():
 
     return render_template('auth/add_internal_user.html')
 
-@bp.route('/register/internal', methods=['GET'])
+@bp.route('/register/internal', methods=['POST'])
 @no_cache
 def add_new_user():
     if current_user.is_authenticated:
