@@ -258,26 +258,13 @@
 
                         {% if 'Rejected' not in applicant.current_stage %}
                             {% if applicant.current_stage == 'Need to schedule test' %}
-                                <div class="dropdown dropdown-top">
-                                    <label tabindex="0" class="btn btn-primary">Schedule Test</label>
-                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                        <form action="{{ url_for('hr.schedule_test', id=applicant.id) }}" method="POST">
-                                            <div class="form-control w-full">
-                                                <label class="label" for="test_date">
-                                                    <span class="label-text">Select Date</span>
-                                                </label>
-                                                <input type="date" name="test_date" class="input input-bordered w-full" required />
-                                            </div>
-                                            <div class="form-control w-full">
-                                                <label class="label" for="test_time">
-                                                    <span class="label-text">Select Time</span>
-                                                </label>
-                                                <input type="time" name="test_time" class="input input-bordered w-full" required />
-                                            </div>
-                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
-                                        </form>
-                                    </div>
-                                </div>
+                                <div class="flex gap-2">
+                                <a href="{{ url_for('hr.schedule_test', id=applicant.id) }}" 
+                                   class="btn btn-warning btn-info">
+                                    
+                                    Schedule Test
+                                </a>
+                            </div>
                             {% endif %}
                             
                             {% if applicant.history_entries[0].test_result is none and applicant.history_entries[0].test_scheduled and not applicant.history_entries[0].interview_round_1_date %}

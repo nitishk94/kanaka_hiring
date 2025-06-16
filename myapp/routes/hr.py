@@ -13,6 +13,7 @@ from myapp.utils import validate_file, update_status, can_upload_applicant
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta, timezone
+from pytz import timezone, utc
 import requests
 import os
 
@@ -234,33 +235,6 @@ def view_applicant(id):
     interviewers = User.query.filter_by(role='interviewer').all()
 
     return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
-
-@bp.route('/schedule_test/<int:id>', methods=['POST'])
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def schedule_test(id):
-    date = request.form.get('test_date')
-    time = request.form.get('test_time')
-
-    if isinstance(date, str):
-        try:
-            date = datetime.strptime(date, '%Y-%m-%d').date()
-        except ValueError:
-            date = None
-
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    history.test_date = date
-    history.test_time = time
-    db.session.commit()
-    response_from_url=invite_candidate(id,testid)
-    if(response_from_url['status'] == 'Complete'):
-        flash('Test scheduled successfully', 'success')
-        current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
-    else:
-        flash('Failed to schedule test. Please try again.', response_from_url['error'])
-        current_app.logger.error(f"Failed to schedule test for applicant {id} on {date} by {current_user.username}")
-    return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/reschedule_test/<int:id>', methods=['POST'])
 @no_cache
@@ -594,66 +568,163 @@ def delete_joblisting(id):
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
 
-#Convert to ISO Date format
+
+@bp.route('/schedule_test/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def start_date(id):
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    date_input = history.test_date
-    time_input = history.test_time
-    if isinstance(date_input, str):
-        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
-    if isinstance(time_input, str):
-        time_input = datetime.strptime(time_input, '%H:%M').time()
+def schedule_test(id):
+    applicant = Applicant.query.get_or_404(id)
 
-    dt = datetime.combine(date_input, time_input)
-    dt_utc = dt.replace(tzinfo=timezone.utc)
+    if request.method == 'POST':
+        test_id = request.form.get('test_id')
+        test_link = request.form.get('test_link')
+        date = request.form.get('test_date')
+        time = request.form.get('test_time')
 
-    return dt_utc.isoformat().replace("+00:00", "Z")
+        if not test_link:
+            # Call schedule_default if no test link
+            return schedule_default(test_id, id, date, time)
+        else:
+            # Call schedule_linkid if link is selected
+            return schedule_linkid(id, test_id, test_link, date, time)
+
+    # On GET, show form
+    url = "https://apiv3.imocha.io/v3/tests"
+    headers = {
+        "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type": "application/json"
+    }
+    response = requests.get(url, headers=headers)
+    result = response.json()
+    test_dict = {test["testId"]: test["testName"] for test in result["tests"]}
+
+    return render_template('hr/test_schedule.html', tests=test_dict, applicant=applicant)
+
+@bp.route('/get-testlinks/<int:testId>')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def get_test_links(testId):
+    url = f"https://apiv3.imocha.io/v3/tests/"+str(testId)+"/testlinks"
+    headers = {
+        "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        result = response.json()
+        test_links = [
+            {
+                "id": link["testLinkId"],
+                "name": link.get("testLinkName", "Unnamed Link")
+            }
+            for link in result.get("testLinks", [])
+        ]
+        return jsonify(test_links)
+    else:
+        return jsonify([]), 400
 
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def end_date(id):
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    date_input = history.test_date
-    time_input = history.test_time
-    date_input = date_input  + timedelta(days=1)
-    if isinstance(date_input, str):
-        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
-    if isinstance(time_input, str):
-        time_input = datetime.strptime(time_input, '%H:%M').time()
+def schedule_default(testId,id,test_date, test_time):
+    url_for="https://apiv3.imocha.io/v3/tests/"+str(testId)+"/invite"
+    headers = {
+        "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type": "application/json"
+    }
+    
+    applicant = Applicant.query.get_or_404(id)
+    history= RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    data = {
+        "name": applicant.name,
+        "email": applicant.email,
+        "sendEmail" : "yes",
+        "startDateTime": start_date(test_date, test_time),
+        "endDateTime": end_date(test_date, test_time),
+        "timeZoneId": 1720,
+        "ProctoringMode": "image",
+    }
+    response = requests.post(url_for, headers=headers, json=data)  
 
-    dt = datetime.combine(date_input, time_input)
-    dt_utc = dt.replace(tzinfo=timezone.utc)
-
-    return dt_utc.isoformat().replace("+00:00", "Z")
+    if response.status_code != 200:
+        flash('Failed to schedule test. Please try again later.', 'error')
+        current_app.logger.error(f"Failed to schedule test for applicant {id}: {response.text}")
+    else:
+        flash('Test scheduled successfully', 'success')
+        current_app.logger.info(f"Test scheduled for applicant {id} by {current_user.username}")
+        response_data = response.json()
+        history.test_invitation_id = response_data['testInvitationId']
+        db.session.commit()
+    return redirect(url_for('hr.view_applicant', id=id))
 
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def invite_candidate(id,testId):
+def schedule_linkid(id,testId, testLinkId, test_date, test_time):
     applicant = Applicant.query.get_or_404(id)
     
     data = {
         "name": applicant.name,
         "email": applicant.email,
-        "callbackUrl": " ",
         "sendEmail" : "yes",
-        "start_date": start_date(id),
-        "end_date": end_date(id),
+        "startDateTime": start_date(test_date, test_time),
+        "endDateTime": end_date(test_date, test_time),
+        "timeZoneId": 1720,
         "ProctoringMode": "image",
     }
-    testLinkId = test_type(testId) # Replace with actual test link ID
-    url_for="https://api.mocha.com/v3/tests/"+testId+"/testlinks/"+testLinkId+"/invite"
-    #headers = {
-       # "X-API-KEY": ,
-        #"Content-Type": "application/json"
-    #}
+
+    url_for="https://apiv3.imocha.io/v3/tests/"+testId+"/testlinks/"+testLinkId+"/invite"
+    headers = {
+        "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type": "application/json"
+    }
 
     response = requests.post(url_for, headers=headers, json=data)
-    return response.json()
+    result = response.json()
+    return result
+
+#Convert to ISO Date format
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def start_date(date_input, time_input):
+    
+    if isinstance(date_input, str):
+        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+    if isinstance(time_input, str):
+        time_input = datetime.strptime(time_input, '%H:%M').time()
+
+    dt = datetime.combine(date_input, time_input)
+
+    local_tz = timezone('Asia/Kolkata')
+
+    local_dt = local_tz.localize(dt)
+    utc_dt = local_dt.astimezone(utc)
+
+    return utc_dt.isoformat().replace('+00:00', 'Z')
+
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def end_date(date_input, time_input):
+    if isinstance(date_input, str):
+        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
+    if isinstance(time_input, str):
+        time_input = datetime.strptime(time_input, '%H:%M').time()
+    
+    date_input = date_input  + timedelta(days=1)
+    dt = datetime.combine(date_input, time_input)
+
+    local_tz = timezone('Asia/Kolkata')
+
+    local_dt = local_tz.localize(dt)
+    utc_dt = local_dt.astimezone(utc)
+
+    return utc_dt.isoformat().replace('+00:00', 'Z')
 
 @no_cache
 @login_required
@@ -663,10 +734,10 @@ def test_result(testInviteid):
     applicant= Applicant.query.get_or_404(applicant_id)
     
     url_for="https://api.mocha.com/v3/reports/"+testInviteid+"?reportType=1"
-    #headers = {
-       # "X-API-KEY": ,
-        #"Content-Type": "application/json"
-    #}
+    headers = {
+        "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type": "application/json"
+    }
 
     response = requests.get(url_for, headers=headers)
     if response.status_code != 200:
@@ -683,24 +754,6 @@ def test_result(testInviteid):
     print("Test Result:", result)
 
     return render_template('hr/test_result.html', name=applicant.name, result=result, applicant_id=id)
-
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def test_type(testId):
-    url_for="https://api.mocha.com/v3/tests/"+testId+"/testlinks"
-    #headers = {
-       # "X-API-KEY": ,
-        #"Content-Type": "application/json"
-    #}
-
-    response = requests.get(url_for, headers=headers)
-    result=response.json()
-    for item in result:
-        if(item["testLinkName"]=='Default'):
-            return item["testLinkId"]
-        
-    return result[0]["testLinkId"]
 
 @no_cache
 @login_required

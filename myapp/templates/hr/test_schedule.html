@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Test{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <h1 class="text-3xl font-bold mb-6">Schedule a Test</h1>
+
+    <form method="POST" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="space-y-6" id="testForm">
+        <!-- Test Date -->
+        <div class="form-control">
+            <label class="label font-semibold text-lg text-black">Select Test Date:</label>
+            <input type="date" name="test_date" class="input input-bordered w-full" required>
+        </div>
+
+        <!-- Test Time -->
+        <div class="form-control">
+            <label class="label font-semibold text-lg text-black">Select Test Time:</label>
+            <input type="time" name="test_time" class="input input-bordered w-full" required>
+        </div>
+
+        <!-- Test ID Dropdown -->
+        <div class="form-control">
+            <label class="label font-semibold text-lg text-black">Select Test ID:</label>
+            <select name="test_id" id="test_id" class="select select-bordered w-full" required>
+                <option value="">-- Select Test ID --</option>
+                {% for testId, testName in tests.items() %}
+                    <option value="{{ testId }}">{{ testId }} - {{ testName }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Test Link Dropdown -->
+        <div class="form-control" id="testLinkContainer">
+            <label class="label font-semibold text-lg text-black">Select Test Link:</label>
+            <select name="test_link" id="test_link" class="select select-bordered w-full">
+                <option value="">-- Select Test Link --</option>
+            </select>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-center mt-4">
+            <button type="submit" class="btn btn-primary text-lg">Schedule Test</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const testIdSelect = document.getElementById('test_id');
+    const testLinkSelect = document.getElementById('test_link');
+
+    testIdSelect.addEventListener('change', async function () {
+        const selectedTestId = this.value;
+        testLinkSelect.innerHTML = '<option value="">-- Select Test Link --</option>';
+
+        if (selectedTestId) {
+            try {
+                const response = await fetch(`/get-testlinks/${selectedTestId}`);
+                const links = await response.json();
+
+                if (response.ok && links.length > 0) {
+                    links.forEach(link => {
+                        const opt = document.createElement('option');
+                        opt.value = link.id;
+                        opt.textContent = `${link.id} - ${link.name}`;
+                        testLinkSelect.appendChild(opt);
+                    });
+                } else {
+                    const opt = document.createElement('option');
+                    opt.textContent = 'No links available';
+                    opt.disabled = true;
+                    testLinkSelect.appendChild(opt);
+                }
+            } catch (err) {
+                console.error("Failed to load links", err);
+                alert("Failed to load test links.");
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
