@@ -314,6 +314,11 @@ def schedule_interview(id):
         round = 3
         history.hr_round_date = date
         history.hr_round_time = time
+    
+    existing = Interview.query.filter_by(applicant_id=id, round_number=round).first()
+    if existing:
+        flash("This interview round has already been scheduled.", "warning")
+        return redirect(url_for('hr.view_applicant', id=id))
 
     interview = Interview(
         applicant_id=id,

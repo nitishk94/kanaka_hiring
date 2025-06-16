@@ -5,7 +5,6 @@ from myapp.extensions import db
 from myapp.utils import is_valid_email
 from myapp.auth.decorators import no_cache
 from myapp.auth.helpers import get_msal_auth_url, get_token_from_code
-from myapp.auth.helpers import get_msal_auth_url, get_token_from_code
 
 bp = Blueprint('auth', __name__)
 
@@ -15,17 +14,7 @@ ROLE_REDIRECTS = {
     'interviewer': 'interviewer.dashboard',
     'referrer': 'referrer.dashboard',
 }
-bp = Blueprint('auth', __name__)
 
-ROLE_REDIRECTS = {
-    'admin': 'admin.dashboard',
-    'hr': 'hr.dashboard',
-    'interviewer': 'interviewer.dashboard',
-    'referrer': 'referrer.dashboard',
-}
-
-@bp.route('/register', methods=['GET'])
-def show_register_page():
 @bp.route('/register', methods=['GET'])
 def show_register_page():
     if current_user.is_authenticated:
@@ -49,29 +38,7 @@ def handle_register():
     if password != confirm_password:
         flash('Passwords do not match', 'error')
         return render_template('auth/register.html', form_data=request.form)
-        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
-    
-    return render_template('auth/register.html')
 
-@bp.route('/register', methods=['POST'])
-def handle_register():
-    if current_user.is_authenticated:
-        flash('You are already logged in.', 'info')
-        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
-
-    name = request.form.get('name')
-    username = request.form.get('username').lower()
-    email = request.form.get('email').lower()
-    password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
-
-    if password != confirm_password:
-        flash('Passwords do not match', 'error')
-        return render_template('auth/register.html', form_data=request.form)
-
-    if not is_valid_email(email):
-        flash('Please enter a valid email address', 'error')
-        return render_template('auth/register.html', form_data=request.form)
     if not is_valid_email(email):
         flash('Please enter a valid email address', 'error')
         return render_template('auth/register.html', form_data=request.form)
@@ -79,13 +46,7 @@ def handle_register():
     if User.query.filter_by(email=email).first():
         flash('Email already exists', 'error')
         return render_template('auth/register.html', form_data=request.form)
-    if User.query.filter_by(email=email).first():
-        flash('Email already exists', 'error')
-        return render_template('auth/register.html', form_data=request.form)
 
-    if User.query.filter_by(username=username).first():
-        flash('Username already exists', 'error')
-        return render_template('auth/register.html', form_data=request.form)
     if User.query.filter_by(username=username).first():
         flash('Username already exists', 'error')
         return render_template('auth/register.html', form_data=request.form)
@@ -97,15 +58,7 @@ def handle_register():
     
     current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
     return redirect(url_for('auth.login', registration_success=True))
-    user = User(name=name, username=username, email=email, auth_type='local')
-    user.set_password(password)
-    db.session.add(user)
-    db.session.commit()
-    
-    current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
-    return redirect(url_for('auth.login', registration_success=True))
 
-@bp.route('/login', methods=['GET'])
 @bp.route('/login', methods=['GET'])
 @no_cache
 def login():
@@ -124,19 +77,6 @@ def login_microsoft():
 
     auth_url = get_msal_auth_url(scopes=current_app.config["MS_SCOPE"])
     return redirect(auth_url)
-
-@bp.route('/login/external', methods=['POST'])
-@no_cache
-def login_external():
-    if current_user.is_authenticated:
-        flash('You are already logged in.', 'info')
-        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
-
-    username_or_email = request.form.get('username_or_email')
-    password = request.form.get('password')
-        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
-
-    return render_template('auth/login.html', form_data=request.args)
 
 @bp.route('/login/microsoft', methods=['GET', 'POST'])
 @no_cache
@@ -212,7 +152,7 @@ def authorized_redirect():
         err = request.args.get("error")
         desc = request.args.get("error_description", "")
         current_app.logger.error(f"MSAL callback error: {err}, {desc}")
-        flash(f"Authentication error: {desc or err}", "error")
+        flash(f"Authentication error", "error")
         return redirect(url_for("auth.login"))
 
     # 2. Validate state
@@ -221,7 +161,7 @@ def authorized_redirect():
     current_app.logger.debug(f"State: stored={stored_state}, incoming={incoming_state}")
     if not stored_state or stored_state != incoming_state:
         current_app.logger.error("State mismatch or missing")
-        flash("Authentication state mismatch. Please try again.", "error")
+        flash("Authentication mismatch. Please try again.", "error")
         return redirect(url_for("auth.login"))
     session.pop("msal_state", None)
 
@@ -234,14 +174,13 @@ def authorized_redirect():
 
     # 4. Exchange code for token
     token = get_token_from_code(code, scopes=current_app.config["MS_SCOPE"])
-    current_app.logger.debug(f"MSAL token result: {token}")
     if not token:
         current_app.logger.error("No token result returned")
         flash("Token acquisition failed.", "error")
         return redirect(url_for("auth.login"))
     if "error" in token:
         current_app.logger.error(f"Acquire token error: {token.get('error')} - {token.get('error_description')}")
-        flash(f"Authentication failed: {token.get('error_description')}", "error")
+        flash(f"Token authentication failed", "error")
         return redirect(url_for("auth.login"))
     if "id_token_claims" not in token:
         current_app.logger.error(f"No id_token_claims in token: {token}")
@@ -276,15 +215,6 @@ def authorized_redirect():
     session.permanent = True
     flash("Login successful!", "success")
     return redirect(url_for(f"{user.role}.dashboard"))
-
-@bp.route('/register/internal', methods=['GET'])
-@no_cache
-def show_add_new_user():
-    if current_user.is_authenticated:
-        flash('You are already logged in.', 'info')
-        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
-
-    return render_template('auth/add_internal_user.html')
 
 @bp.route('/register/internal', methods=['POST'])
 @no_cache
@@ -329,10 +259,6 @@ def logout():
     session.pop("token_cache", None)
     session.pop("user", None) 
 
-    
-    session.pop("token_cache", None)
-    session.pop("user", None) 
-
     flash("You have been logged out.", "info")
 
     if session.get("ms_authenticated"):
@@ -342,15 +268,3 @@ def logout():
             f"?post_logout_redirect_uri={url_for('main.home', _external=True)}"
         )
         return redirect(ms_logout_url)
-
-
-    if session.get("ms_authenticated"):
-        session.pop("ms_authenticated")
-        ms_logout_url = (
-            f"https://login.microsoftonline.com/common/oauth2/v2.0/logout"
-            f"?post_logout_redirect_uri={url_for('main.home', _external=True)}"
-        )
-        return redirect(ms_logout_url)
-
-    return redirect(url_for('main.home'))
-
