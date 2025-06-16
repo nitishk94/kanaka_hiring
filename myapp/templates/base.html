@@ -77,8 +77,8 @@
                 {% if request.endpoint != 'auth.login' %}
                     <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">Login</a>
                 {% endif %}
-                {% if request.endpoint != 'auth.register' %}
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register</a>
+                {% if request.endpoint != 'auth.show_register_page' %}
+                    <a href="{{ url_for('auth.show_register_page') }}" class="btn btn-primary">Register</a>
                 {% endif %}
             {% endif %}
         </div>
@@ -186,7 +186,7 @@
                     alert.style.opacity = 0;
                     setTimeout(function() { alert.style.display = "none"; }, 500);
                 });
-            }, 10000); // 3 seconds
+            }, 10000);
         });
     </script>
     {% endblock %}
