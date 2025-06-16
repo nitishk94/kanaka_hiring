@@ -33,9 +33,11 @@ build/
 
 # Log files and databases
 logs/
+logs/
 *.log
 *.db
 *.sqlite
+uploads/
 uploads/
 
 # OS or Editor files
