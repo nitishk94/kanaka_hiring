@@ -1,9 +1,12 @@
+from flask import flash
 from myapp.extensions import db
 from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory
 from datetime import datetime, timedelta
 import zipfile
 import re
+
+from myapp.models.referrals import Referral
 
 def can_upload_applicant(email):
     applicant = Applicant.query.filter_by(email=email).first()
@@ -115,3 +118,8 @@ def generate_timeline(id):
     # Sort timeline by date
     #timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
     return timeline
+
+
+
+    
+    

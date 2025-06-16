@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, flash, redirect, render_template, jsonify, request, url_for
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from myapp.extensions import db
@@ -6,6 +6,7 @@ from myapp.models import User
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.applicants import Applicant
 from myapp.models.jobrequirement import JobRequirement
+from myapp.models.referrals import Referral
 from myapp.utils import generate_timeline, update_status
 
 bp = Blueprint('main', __name__)
@@ -20,6 +21,19 @@ def home():
 @login_required
 def profile():
     return render_template('profile.html', user=current_user)
+
+@bp.route('/track_referral_status/<int:id>', methods=['GET', 'POST'])
+@no_cache
+@login_required
+def track_referral_status(id):
+    history = Referral.query.filter_by(id=id).first()
+    name=history.name
+    applicant = Applicant.query.filter_by(name=name).first()
+    if not applicant:
+        flash('Referral not yet updated', 'warning')
+        return redirect(url_for('referrer.referrals'))
+    else:
+        return track_status(applicant.id)
 
 @bp.route('/track/<int:id>', methods=['GET', 'POST'])
 @no_cache
