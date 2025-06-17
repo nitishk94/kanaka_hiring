@@ -9,7 +9,7 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today
+from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
@@ -38,7 +38,6 @@ def applicants():
         update_status(applicant.id)
     return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
         
-
 @bp.route('/upload_applicants', methods=['GET'])
 @no_cache
 @login_required
@@ -338,6 +337,36 @@ def schedule_interview(id):
     db.session.add(interview)
     db.session.commit()
 
+    attendees = [
+        {
+            "emailAddress": {
+                "address": interviewer.email,
+                "name": interviewer.name
+            },
+            "type": "required"
+        },
+        {
+            "emailAddress": {
+                "address": applicant.email,
+                "name": applicant.name
+            },
+            "type": "required"
+        }
+    ]
+
+    hrs = User.query.filter_by(role='hr').all()
+    for hr in hrs:
+        if hr.id != current_user.id:
+            attendees.append({
+                "emailAddress": {
+                    "address": hr.email,
+                    "name": hr.name
+                },
+                "type": "optional"
+            })
+    
+    attendees.append(get_json_info())
+
     graph_endpoint = 'https://graph.microsoft.com/v1.0/me/events'
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -357,22 +386,7 @@ def schedule_interview(id):
         "location": {
             "displayName": "Microsoft Teams Meeting"
         },
-        "attendees": [
-            {
-                "emailAddress": {
-                    "address": interviewer.email,
-                    "name": interviewer.name
-                },
-                "type": "required"
-            },
-            {
-                "emailAddress": {
-                    "address": applicant.email,
-                    "name": applicant.name
-                },
-                "type": "required"
-            }
-        ],
+        "attendees": attendees,
         "isOnlineMeeting": True,
         "onlineMeetingProvider": "teamsForBusiness"
     }
@@ -477,13 +491,13 @@ def reschedule_interview(id):
             except ValueError:
                 time = None
 
-    interview = Interview.query.get_or_404(id)
+    applicant = Applicant.query.get_or_404(id)
+    interview = Interview.query.filter_by(applicant_id=id, completed=False).first()
     
     interview.date = date
     interview.time = time
     interview.interviewer_id = interviewer_id
-    
-    applicant = Applicant.query.get_or_404(id=interview.applicant_id)
+
     interviewer = User.query.get_or_404(interviewer_id)
     history = RecruitmentHistory.query.filter_by(applicant_id = applicant.id).first()
     start_datetime = datetime.combine(date, time)
@@ -500,6 +514,36 @@ def reschedule_interview(id):
         history.hr_round_time = time
 
     db.session.commit()
+
+    attendees = [
+        {
+            "emailAddress": {
+                "address": interviewer.email,
+                "name": interviewer.name
+            },
+            "type": "required"
+        },
+        {
+            "emailAddress": {
+                "address": applicant.email,
+                "name": applicant.name
+            },
+            "type": "required"
+        }
+    ]
+
+    hrs = User.query.filter_by(role='hr').all()
+    for hr in hrs:
+        if hr.id != current_user.id:
+            attendees.append({
+                "emailAddress": {
+                    "address": hr.email,
+                    "name": hr.name
+                },
+                "type": "optional"
+            })
+    
+    attendees.append(get_json_info())
 
     graph_endpoint = 'https://graph.microsoft.com/v1.0/me/events'
     headers = {
@@ -520,22 +564,7 @@ def reschedule_interview(id):
         "location": {
             "displayName": "Microsoft Teams Meeting"
         },
-        "attendees": [
-            {
-                "emailAddress": {
-                    "address": interviewer.email,
-                    "name": interviewer.name
-                },
-                "type": "required"
-            },
-            {
-                "emailAddress": {
-                    "address": applicant.email,
-                    "name": applicant.name
-                },
-                "type": "required"
-            }
-        ],
+        "attendees": attendees,
         "isOnlineMeeting": True,
         "onlineMeetingProvider": "teamsForBusiness"
     }
@@ -657,3 +686,43 @@ def delete_joblisting(id):
     current_app.logger.info(f"Job listing {joblisting.position} deleted by Admin {current_user.username}")
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
+
+@bp.route('/available_interviewers', methods=['GET'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def available_interviewers():
+    date_str = request.args.get('date')
+    time_str = request.args.get('time')
+
+    if not date_str or not time_str:
+        return jsonify([])
+
+    try:
+        interview_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+        
+        if not is_future_or_today(interview_datetime.date()):
+            return jsonify([])
+
+        interviewers = User.query.filter(User.role.in_(['interviewer', 'hr'])).all()
+        scheduled_interviews = Interview.query.filter(
+            Interview.date == interview_datetime.date(),
+            Interview.interviewer_id.in_([i.id for i in interviewers])
+        ).all()
+        busy_interviewers = set()
+        interview_time = interview_datetime.time()
+        for interview in scheduled_interviews:
+            if (interview.time <= interview_time and 
+                (interview.time.hour == interview_time.hour or 
+                 interview.time.hour == interview_time.hour - 1)):
+                busy_interviewers.add(interview.interviewer_id)
+
+        available_interviewers = [
+            {"id": interviewer.id, "name": interviewer.name}
+            for interviewer in interviewers
+            if interviewer.id not in busy_interviewers
+        ]
+
+        return jsonify(available_interviewers)
+    except ValueError:
+        return jsonify([])

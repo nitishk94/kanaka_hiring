@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import zipfile
 import re
 import os
+import json
 
 def can_upload_applicant_email(email):
     applicant = Applicant.query.filter_by(email=email).first()
@@ -121,3 +122,7 @@ def is_future_or_today(date_obj):
         return False
     today = datetime.now().date()
     return date_obj >= today
+
+def get_json_info():
+    with open('/app/myapp/config/config.json') as f:
+        return json.load(f)

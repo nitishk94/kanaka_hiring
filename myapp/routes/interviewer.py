@@ -56,6 +56,7 @@ def view_interviewee(id):
 @role_required(*INTERVIEWER_ROLES)
 def submit_feedback(id):
     feedback = request.form.get('feedback')
+    interviewer = User.query.get_or_404(current_user.id)
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     interview = Interview.query.filter_by(applicant_id=id).filter_by(interviewer_id=current_user.id).filter_by(completed=False).first()
 
@@ -74,6 +75,8 @@ def submit_feedback(id):
         interview.completed = True
         flash('Feedback submitted successfully', 'success')
         current_app.logger.info(f"Feedback submitted for applicant {id} by {current_user.username}")
+
+    interviewer.blocked_for_interview = False
 
     db.session.commit()
     return redirect(url_for('interviewer.view_interviews'))
