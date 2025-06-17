@@ -3,7 +3,9 @@ from myapp.extensions import db
 from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory
 from datetime import datetime, timedelta
+from myapp.models.testresult import TestResult
 import zipfile
+import requests
 import re
 
 from myapp.models.referrals import Referral
@@ -119,7 +121,39 @@ def generate_timeline(id):
     #timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
     return timeline
 
+def store_result(id):
+    applicant = Applicant.query.get_or_404(id)
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    testInviteid = history.test_id
 
-
+    api_url="https://apiv3.imocha.io/v3/reports/"+str(testInviteid)+"?reportType=1"
+    headers = {
+        "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type": "application/json"
+    }
     
+    response = requests.get(api_url, headers=headers)
+    if response.status_code == 200:
+        result = response.json()
+        if result.get('status') == 'Complete':
+            test_result = TestResult(
+                testlink_id=testInviteid,
+                name=applicant.name,
+                email=result['candidateEmail'],
+                date = datetime.strptime(result['attemptedOn'], '%Y-%m-%dT%H:%M:%S.%fZ').date(),
+                score=result['candidatePoints'],
+                total_score=result['totalTestPoints'],
+                time_taken=result['timeTaken']/60,
+                test_time=result['testDuration'],
+                test_name=result['testName'],
+                pdf_link=result['pdfReportUrl'],
+                sections=str(result['sections']),
+                applicant_id=id
+            )
+            db.session.add(test_result)
+            history.test_result = True
+            db.session.commit()
+            return True
+    else:
+        return False
     

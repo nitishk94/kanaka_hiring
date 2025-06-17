@@ -6,7 +6,27 @@
 <div class="container mx-auto px-4 py-8 max-w-2xl">
     <h1 class="text-3xl font-bold mb-6">Schedule a Test</h1>
 
-    <form method="POST" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="space-y-6" id="testForm">
+    <!-- Step 1: Test ID selection form -->
+    <form method="GET" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="mb-8 space-y-4">
+        <div class="form-control">
+            <label class="label font-semibold text-lg text-black">Select Test ID:</label>
+            <select name="test_id" class="select select-bordered w-full" onchange="this.form.submit()">
+                <option value="">-- Select Test ID --</option>
+                {% for testId, testName in tests.items() %}
+                    <option value="{{ testId }}" {% if selected_test_id == testId %}selected{% endif %}>
+                        {{ testId }} - {{ testName }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if selected_test_id %}
+    <!-- Step 2: Schedule Test form (visible only if test ID is selected) -->
+    <form method="POST" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="space-y-6">
+        <!-- Hidden field for selected test ID -->
+        <input type="hidden" name="test_id" value="{{ selected_test_id }}">
+
         <!-- Test Date -->
         <div class="form-control">
             <label class="label font-semibold text-lg text-black">Select Test Date:</label>
@@ -19,22 +39,18 @@
             <input type="time" name="test_time" class="input input-bordered w-full" required>
         </div>
 
-        <!-- Test ID Dropdown -->
-        <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Select Test ID:</label>
-            <select name="test_id" id="test_id" class="select select-bordered w-full" required>
-                <option value="">-- Select Test ID --</option>
-                {% for testId, testName in tests.items() %}
-                    <option value="{{ testId }}">{{ testId }} - {{ testName }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
         <!-- Test Link Dropdown -->
-        <div class="form-control" id="testLinkContainer">
+        <div class="form-control">
             <label class="label font-semibold text-lg text-black">Select Test Link:</label>
-            <select name="test_link" id="test_link" class="select select-bordered w-full">
+            <select name="test_link" class="select select-bordered w-full">
                 <option value="">-- Select Test Link --</option>
+                {% if test_links %}
+                    {% for linkId, linkName in test_links.items() %}
+                        <option value="{{ linkId }}">{{ linkId }} - {{ linkName }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option disabled>No links available for this test</option>
+                {% endif %}
             </select>
         </div>
 
@@ -43,43 +59,6 @@
             <button type="submit" class="btn btn-primary text-lg">Schedule Test</button>
         </div>
     </form>
+    {% endif %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const testIdSelect = document.getElementById('test_id');
-    const testLinkSelect = document.getElementById('test_link');
-
-    testIdSelect.addEventListener('change', async function () {
-        const selectedTestId = this.value;
-        testLinkSelect.innerHTML = '<option value="">-- Select Test Link --</option>';
-
-        if (selectedTestId) {
-            try {
-                const response = await fetch(`/get-testlinks/${selectedTestId}`);
-                const links = await response.json();
-
-                if (response.ok && links.length > 0) {
-                    links.forEach(link => {
-                        const opt = document.createElement('option');
-                        opt.value = link.id;
-                        opt.textContent = `${link.id} - ${link.name}`;
-                        testLinkSelect.appendChild(opt);
-                    });
-                } else {
-                    const opt = document.createElement('option');
-                    opt.textContent = 'No links available';
-                    opt.disabled = true;
-                    testLinkSelect.appendChild(opt);
-                }
-            } catch (err) {
-                console.error("Failed to load links", err);
-                alert("Failed to load test links.");
-            }
-        }
-    });
-});
-</script>
 {% endblock %}

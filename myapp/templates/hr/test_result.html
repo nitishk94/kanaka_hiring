@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Test Result{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Test Result</h1>
+    </div>
+
+    <!-- Test Overview -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Candidate Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <p class="text-sm text-gray-500">Candidate Name:</p>
+                    <p class="font-semibold">{{ result.candidateName or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Candidate Email Address:</p>
+                    <p class="font-semibold">{{ result.candidateEmail or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Score:</p>
+                    <p class="font-semibold">{{ result.score }}/{{ result.totalTestPoints }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Time Taken:</p>
+                    <p class="font-semibold">{{ result.timeTaken/60 }} minutes</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Percentage:</p>
+                    <p class="font-semibold">{{ result.scorePercentage }}%</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Performance Category:</p>
+                    <p class="font-semibold">{{ result.performanceCategory or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Test Name:</p>
+                    <p class="font-semibold">{{ result.testName or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Result PDF url:</p>
+                    {% if result.pdfReportUrl %}
+                        <a href="{{ result.pdfReportUrl }}" target="_blank" class="link link-primary">
+                            View PDF Report
+                        </a>
+                    {% else %}
+                        <p class="font-semibold">N/A</p>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Details -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Section Details</h2>
+
+            {% if result['sections'] %}
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <tbody>
+                            <p>{{ section }}</p>
+                            {% for section in result['sections'] %}
+                                <div class="card bg-base-100 shadow-md mb-4 p-4">
+                                    <h3 class="text-xl font-bold mb-2">{{ section['sectionName'] }}</h3>
+                                    <p><strong>Score:</strong> {{ section['candidateScore'] }} / {{ section['sectionScore'] }}</p>
+                                    <p><strong>Time Taken:</strong> {{ (section['sectionTimeTaken'] / 60) | round(2) }} minutes out of {{ section['sectionTime']}}</p>
+                                </div>
+                            {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No section details available.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Close Button -->
+    <div class="flex justify-end">
+        <a href="{{ url_for('hr.view_applicant', id=id) }}" class="btn btn-warning px-6 text-lg">Close</a>
+    </div>
+</div>
+{% endblock %}

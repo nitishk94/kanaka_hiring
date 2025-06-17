@@ -1,5 +1,4 @@
 from myapp.extensions import db
-from myapp.extensions import db
 
 class JobRequirement(db.Model):
     __tablename__ = 'jobrequirement'

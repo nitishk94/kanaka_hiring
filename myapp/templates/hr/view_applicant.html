@@ -283,6 +283,15 @@
                                 </a>
                             </div>
                             {% endif %}
+
+                            {% if applicant.current_stage != 'Need to schedule test' and not applicant.history_entries[0].interview_round_2_date %}
+                                <div class="flex gap-2">
+                                <a href="{{ url_for('hr.test_result', id=applicant.id) }}" 
+                                   class="btn btn-warning btn-info">
+                                    View Test Result
+                                </a>
+                            </div>
+                            {% endif %}
                             
                             {% if applicant.history_entries[0].test_result is none and applicant.history_entries[0].test_scheduled and not applicant.history_entries[0].interview_round_1_date %}
                                 <div class="dropdown dropdown-top">

@@ -35,7 +35,7 @@ class RecruitmentHistory(db.Model):
     applied_date = db.Column(db.Date)
     test_date = db.Column(db.Date)
     test_time = db.Column(Time)
-    
+    test_id = db.Column(db.Integer, nullable=True)
     test_result = db.Column(db.Boolean)
     interview_round_1_date = db.Column(db.Date)
     interview_round_1_time = db.Column(Time)
@@ -111,4 +111,5 @@ def after_history_update(mapper, connection, target):
         Applicant.__table__.update()
         .where(Applicant.id == target.applicant_id)
         .values(current_stage=new_stage)
-    )    
+    )   
+
