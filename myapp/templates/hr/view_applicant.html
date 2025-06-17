@@ -14,8 +14,16 @@
                 {{ applicant.current_stage }}
             </div>
         </div>
+        
     </div>
-
+    <div>
+                <a href="{{ url_for('hr.update_applicant', id=applicant.id) }}" 
+                        class="btn btn-warning w-auto px-8 text-lg">
+                            Edit
+                </a>
+            </div>
+    <br>
+ 
     <!-- Personal Information -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div class="card bg-base-100 shadow-xl lg:col-span-1">
@@ -102,7 +110,7 @@
                     <!-- Social Profiles -->
                     <div>
                         <p class="text-sm text-gray-500">LinkedIn Profile</p>
-                        {% if applicant.linkedin_profile != 'Not Provided' %}
+                        {% if applicant.linkedin_profile != ' ' %}
                             <a href="{{ applicant.linkedin_profile }}" target="_blank" class="link link-primary">View Profile</a>
                         {% else %}
                             <p class="font-semibold">Not provided</p>
@@ -110,7 +118,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">GitHub Profile</p>
-                        {% if applicant.github_profile != 'Not Provided' %}
+                        {% if applicant.github_profile != ' ' %}
                             <a href="{{ applicant.github_profile }}" target="_blank" class="link link-primary">View Profile</a>
                         {% else %}
                             <p class="font-semibold">Not provided</p>
@@ -196,7 +204,9 @@
                             <p class="font-semibold whitespace-pre-line">{{ applicant.comments }}</p>
                         </div>
                     {% endif %}
+                    
                 </div>
+
             </div>
         </div>
 
@@ -244,6 +254,13 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">Application Status</h2>
                 <div class="flex justify-between items-center">
+                    
+                {% if applicant.job_id %}
+                        <div>
+                            <p class="text-sm text-gray-500">Applying for</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.job.position if applicant.job_id else 'N/A'  }}</p>
+                        </div>
+                    {% endif %}
                     <div class="flex items-center gap-4">
                         <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                             {{ applicant.current_stage }}

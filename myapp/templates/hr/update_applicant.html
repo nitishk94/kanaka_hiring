@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Applicant Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <h1 class="text-4xl font-bold mb-2 text-black">Edit Applicant Details</h1>
+    <p class="mb-6 text-gray-600">Update the information below and click <b>Save Changes</b> to update the applicant's record. Fields marked with <span class="text-error">*</span> are required.</p>
+
+    <form method="POST" action="{{ url_for('hr.update_applicant', id=applicant.id) }}" enctype="multipart/form-data" class="space-y-8">
+        <!-- Personal Information Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Personal Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Name -->
+                    <div class="form-control">
+                        <label class="label" for="name">
+                            <span class="label-text">Full Name <span class="text-error">*</span></span>
+                        </label>
+                        <input id="name" type="text" name="name" required placeholder="Enter full name" pattern="[A-Za-z\s]+" title="Please enter a valid name (letters and spaces only)" class="input input-bordered" value="{{ applicant.name if applicant else '' }}" />
+                    </div>
+                    <!-- DOB -->
+                    <div class="form-control">
+                        <label class="label" for="dob">
+                            <span class="label-text">Date of Birth <span class="text-error">*</span></span>
+                        </label>
+                        <input id="dob" type="date" name="dob" required class="input input-bordered" value="{{ applicant.dob if applicant else '' }}" />
+                    </div>
+                    <!-- Email -->
+                    <div class="form-control">
+                        <label class="label" for="email">
+                            <span class="label-text">Email <span class="text-error">*</span></span>
+                        </label>
+                        <input id="email" type="email" name="email" required placeholder="Enter email" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" title="Please enter a valid email address" class="input input-bordered" value="{{ applicant.email if applicant else '' }}" />
+                    </div>
+                    <!-- Phone -->
+                    <div class="form-control">
+                        <label class="label" for="phone_number">
+                            <span class="label-text">Phone Number <span class="text-error">*</span></span>
+                        </label>
+                        <input id="phone_number" type="tel" name="phone_number" required placeholder="Enter phone number" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" class="input input-bordered" value="{{ applicant.phone_number if applicant else '' }}" />
+                    </div>
+                    <!-- Gender -->
+                    <div class="form-control">
+                        <label class="label" for="gender">
+                            <span class="label-text">Gender <span class="text-error">*</span></span>
+                        </label>
+                        <select id="gender" name="gender" class="select select-bordered" required>
+                            <option value="">Select gender</option>
+                            <option value="male" {% if applicant.gender and applicant.gender == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if applicant.gender and applicant.gender == 'female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                    <!-- Marital Status -->
+                    <div class="form-control">
+                        <label class="label" for="marital_status">
+                            <span class="label-text">Marital Status <span class="text-error">*</span></span>
+                        </label>
+                        <select id="marital_status" name="marital_status" class="select select-bordered" required>
+                            <option value="">Select status</option>
+                            <option value="Single" {% if applicant.marital_status and applicant.marital_status == 'Single' %}selected{% endif %}>Single</option>
+                            <option value="Married" {% if applicant.marital_status and applicant.marital_status == 'Married' %}selected{% endif %}>Married</option>
+                        </select>
+                    </div>
+                    <!-- Native Place -->
+                    <div class="form-control">
+                        <label class="label" for="native_place">
+                            <span class="label-text">Native Place <span class="text-error">*</span></span>
+                        </label>
+                        <input id="native_place" type="text" name="native_place" required placeholder="Enter native place" class="input input-bordered" value="{{ applicant.native_place if applicant.native_place else '' }}" />
+                    </div>
+                    <!-- Current Location -->
+                    <div class="form-control">
+                        <label class="label" for="current_location">
+                            <span class="label-text">Current Location <span class="text-error">*</span></span>
+                        </label>
+                        <input id="current_location" type="text" name="current_location" required placeholder="Enter current location" class="input input-bordered" value="{{ applicant.current_location if applicant.current_location else '' }}" />
+                    </div>
+                    <!-- Work Location -->
+                    <div class="form-control">
+                        <label class="label" for="work_location">
+                            <span class="label-text">Work Location <span class="text-error">*</span></span>
+                        </label>
+                        <input id="work_location" type="text" name="work_location" required placeholder="Enter work location" class="input input-bordered" value="{{ applicant.work_location if applicant.work_location else '' }}" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Professional Information Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Professional Information</h2>
+                <!-- All Checkboxes Section -->
+                <div class="flex items-center gap-8 mb-6 p-4 rounded-lg w-full overflow-visible whitespace-nowrap" style="background: none;">
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="fresher-toggle" name="is_fresher" class="checkbox checkbox-primary" {% if applicant and applicant.is_fresher %}checked{% endif %} />
+                            <span class="label-text">Fresher</span>
+                        </label>
+                    </div>
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="referral-toggle" name="is_referred" class="checkbox checkbox-primary" {% if applicant and applicant.is_referred %}checked{% endif %} />
+                            <span class="label-text">Referral</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control" id="current-internship-toggle-container" style="display: none;">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="current-internship-toggle" name="current_internship" class="checkbox checkbox-primary" {% if applicant and applicant.current_internship %}checked{% endif %} />
+                            <span class="label-text">Currently in Internship</span>
+                        </label>
+                    </div>
+
+                    <div class="form-control" id="paid-internship-toggle" style="display: none;">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="paid-internship" name="paid_internship" class="checkbox checkbox-primary" {% if applicant and applicant.paid_internship %}checked{% endif %} />
+                            <span class="label-text">Paid Internship</span>
+                        </label>
+                    </div>
+
+                    <div id="current-offers-toggle" class="form-control" style="display: none;">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="current-offers" name="current_offers_yes_no" class="checkbox checkbox-primary" {% if applicant and applicant.current_offers_yes_no %}checked{% endif %} />
+                            <span class="label-text">Has Current Offers</span>
+                        </label>
+                    </div>
+                </div>
+                    <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
+                        <label class="label" for="referred_by">
+                            <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
+                        </label>
+                        <div id="vue-referrer-select">
+                            <multiselect
+                                v-model="selectedReferrer"
+                                :options="referrerNames"
+                                :searchable="true"
+                                :close-on-select="true"
+                                :clear-on-select="false"
+                                :preserve-search="true"
+                                :show-labels="false"
+                                placeholder="Enter referrer's name"
+                                :allow-empty="true"
+                                :custom-label="customLabel"
+                                label="name"
+                                track-by="id"
+                                @input="onInput"
+                                class="input-bordered w-full"
+                            ></multiselect>
+                            <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
+                        </div>
+                    </div>
+                
+                <!-- Job Position Dropdown -->
+                <div class="form-control" id="position-section">
+                    <label class="label-text">Select Job Position:</label>
+                    <select name="position" id="position" class="select select-bordered w-full">
+                        <option value="">-- Choose a Position --</option>
+                        {% for id, position in job_positions %}
+                            <option value="{{ id }}" {% if form_data and applicant.position == id|string %}selected{% endif %}>{{ position }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- All form fields in one continuous grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Basic Information -->
+                    <div class="form-control w-full">
+                        <label class="label" for="graduation_year">
+                            <span class="label-text">Graduation Year <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="graduation_year"
+                            type="number"
+                            name="graduation_year"
+                            placeholder="Enter graduation year"
+                            class="input input-bordered w-full"
+                            min="1950"
+                            max="2030"
+                            required
+                            value="{{ applicant.graduation_year if applicant.graduation_year else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="qualification">
+                            <span class="label-text">Qualification <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="qualification"
+                            type="text"
+                            name="qualification"
+                            required
+                            placeholder="Enter qualification"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.qualification if applicant.qualification else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="referenced_from">
+                            <span class="label-text">Referenced From <span class="text-error">*</span></span>
+                        </label>
+                        <select id="referenced_from" name="referenced_from" class="select select-bordered w-full" required>
+                            <option value="">Select source</option>
+                            <option value="Naukri" {% if applicant.referenced_from and applicant.referenced_from == 'Naukri' %}selected{% endif %}>Naukri</option>
+                            <option value="LinkedIn" {% if applicant.referenced_from and applicant.referenced_from == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
+                            <option value="Third-party" {% if applicant.referenced_from and applicant.referenced_from == 'Third-party' %}selected{% endif %}>Third-party</option>
+                        </select>
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="linkedin">
+                            <span class="label-text">LinkedIn Profile</span>
+                        </label>
+                        <input
+                            id="linkedin"
+                            type="url"
+                            name="linkedin_profile"
+                            placeholder="Enter LinkedIn profile URL"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.linkedin_profile if applicant.linkedin_profile else '' }}"
+                        />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label" for="github">
+                            <span class="label-text">GitHub Link</span>
+                        </label>
+                        <input
+                            id="github"
+                            type="url"
+                            name="github_profile"
+                            placeholder="Enter GitHub profile URL"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.github_profile if applicant.github_profile else '' }}"
+                        />
+                    </div>
+
+                    <!-- Fresher Section -->
+                    <div id="internship-duration-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="internship_duration">
+                            <span class="label-text">Internship Duration (months) <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="internship_duration"
+                            type="number"
+                            name="internship_duration"
+                            placeholder="Enter duration in months"
+                            class="input input-bordered w-full"
+                            min="0"
+                            value="{{ applicant.internship_duration if applicant.internship_duration else '' }}"
+                        />
+                    </div>
+
+                    <div id="stipend-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="stipend">
+                            <span class="label-text">Stipend <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="stipend"
+                            type="number"
+                            name="stipend"
+                            placeholder="Enter stipend amount"
+                            class="input input-bordered w-full"
+                            min="0"
+                            value="{{ applicant.stipend if applicant.stipend else '' }}"
+                        />
+                    </div>
+
+                    <!-- Working Professional Section -->
+                    <div id="experience-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="experience">
+                            <span class="label-text">Experience <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="experience"
+                            type="text"
+                            name="experience"
+                            required
+                            placeholder="Enter years of experience"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.experience if applicant.experience else '' }}"
+                        />
+                    </div>
+
+                    <div id="kanaka-employee-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="is_kanaka_employee">
+                            <span class="label-text">Previously Kanaka Employee <span class="text-error">*</span></span>
+                        </label>
+                        <select id="is_kanaka_employee" name="is_kanaka_employee" class="select select-bordered w-full" required>
+                            <option value="">Select option</option>
+                            <option value="yes" {% if applicant.is_kanaka_employee and applicant.is_kanaka_employee %}selected{% endif %}>Yes</option>
+                            <option value="no" {% if applicant.is_kanaka_employee and applicant.is_kanaka_employee %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+
+                    <div id="current-company-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="current_company">
+                            <span class="label-text">Current Company <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="current_company"
+                            type="text"
+                            name="current_company"
+                            placeholder="Enter current company"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.current_company if applicant.current_company else '' }}"
+                            required
+                        />
+                    </div>
+
+                    <div id="designation-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="designation">
+                            <span class="label-text">Designation <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="designation"
+                            type="text"
+                            name="designation"
+                            required
+                            placeholder="Enter designation"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.designation if applicant.designation else '' }}"
+                        />
+                    </div>
+
+                    <div id="job-position-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="current_job_position">
+                            <span class="label-text">Current Job Position <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="current_job_position"
+                            type="text"
+                            name="current_job_position"
+                            required
+                            placeholder="Enter job position"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.current_job_position if applicant.current_job_position else '' }}"
+                        />
+                    </div>
+
+                    <div id="current-ctc-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="current_ctc">
+                            <span class="label-text">Current CTC (in LPA)<span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="current_ctc"
+                            type="number"
+                            name="current_ctc"
+                            placeholder="Enter current CTC"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.current_ctc if applicant.current_ctc else '' }}"
+                            required
+                        />
+                    </div>
+
+                    <div id="expected-ctc-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="expected_ctc">
+                            <span class="label-text">Expected CTC (in LPA)</span>
+                        </label>
+                        <input
+                            id="expected_ctc"
+                            type="number"
+                            name="expected_ctc"
+                            placeholder="Enter expected CTC"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.expected_ctc if applicant.expected_ctc else '' }}"
+                        />
+                    </div>
+
+                    <div id="notice-period-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="notice_period">
+                            <span class="label-text">Notice Period (days) <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="notice_period"
+                            type="number"
+                            name="notice_period"
+                            placeholder="Enter notice period in days"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.notice_period if applicant.notice_period else '' }}"
+                            required
+                        />
+                    </div>
+
+                    <div id="tenure-field" class="form-control w-full" style="display: none;">
+                        <label class="label" for="tenure_at_current_company">
+                            <span class="label-text">Tenure at Current Company <span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="tenure_at_current_company"
+                            type="text"
+                            name="tenure_at_current_company"
+                            placeholder="Enter tenure"
+                            class="input input-bordered w-full"
+                            value="{{ applicant.tenure_at_current_company if applicant.tenure_at_current_company else '' }}"
+                            required
+                        />
+                    </div>
+
+                    <div id="current-offers-field" class="form-control w-full md:col-span-2" style="display: none;">
+                        <label class="label" for="current_offers_description">
+                            <span class="label-text">Current Offers Description</span>
+                        </label>
+                        <textarea
+                            id="current_offers_description"
+                            name="current_offers_description"
+                            class="textarea textarea-bordered h-24 w-full"
+                            placeholder="Enter details about current offers"
+                        >{{ applicant.current_offers_description if applicant.current_offers_description else '' }}</textarea>
+                    </div>
+
+                    <div id="reason-change-field" class="form-control w-full md:col-span-2" style="display: none;">
+                        <label class="label" for="reason_for_change">
+                            <span class="label-text">Reason for Change</span>
+                        </label>
+                        <textarea
+                            id="reason_for_change"
+                            name="reason_for_change"
+                            class="textarea textarea-bordered h-32 w-full"
+                            placeholder="Enter reason for change"
+                        >{{ form_data.reason_for_change if form_data else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CV Upload Card -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title mb-4">CV Upload & Comments</h2>
+                <div class="form-control">
+                    <label class="label" for="cvFile">
+                        <span class="label-text">CV Upload <span class="text-error">*</span></span>
+                    </label>
+                    <div class="space-y-2">
+                        <input type="file" name="cv" id="cvFile" class="file-input file-input-bordered w-full" accept=".pdf,.docx" required />
+                        <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
+                        <p id="fileError" class="text-error text-sm"></p>
+                    </div>
+                    <div class="form-control mt-6">
+                        <label class="label" for="comments">
+                            <span class="label-text">Comments/Summary</span>
+                        </label>
+                        <textarea id="comments" name="comments" class="textarea textarea-bordered h-24" placeholder="Enter additional comments or summary">{{ applicant.comments if applicant else '' }}</textarea>
+                    </div>
+                </div>
+                <div class="flex gap-4 justify-center mt-6">
+                    <button type="submit" class="btn btn-primary px-8">Save Changes</button>
+                    <a href="{{ url_for('hr.view_applicant', id=applicant.id) }}" class="btn btn-error px-8">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6/dist/vue-multiselect.min.css">
+<script src="https://cdn.jsdelivr.net/npm/vue-multiselect@2.1.6"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('cvFile');
+        const errorElement = document.getElementById('fileError');
+        const fresherToggle = document.getElementById('fresher-toggle');
+        const referralToggle = document.getElementById('referral-toggle');
+        const currentInternshipToggle = document.getElementById('current-internship-toggle');
+        const paidInternshipToggle = document.getElementById('paid-internship');
+        const currentOffersToggle = document.getElementById('current-offers');
+        const currentInternshipContainer = document.getElementById('current-internship-toggle-container');
+        const paidInternshipContainer = document.getElementById('paid-internship-toggle');
+        const currentOffersSection = document.getElementById('current-offers-toggle');
+
+        // Helper function to toggle section visibility and handle required fields
+        function toggleSection(section, isVisible, clearValues = true) {
+            if (!section) return;
+            
+            const requiredFields = section.querySelectorAll('[required]');
+            const inputs = section.querySelectorAll('input, select, textarea');
+            
+            section.style.display = isVisible ? 'block' : 'none';
+            
+            requiredFields.forEach(field => {
+                if (isVisible) {
+                    field.setAttribute('required', 'required');
+                } else {
+                    field.removeAttribute('required');
+                }
+            });
+
+            inputs.forEach(input => {
+                input.disabled = !isVisible;
+                if (!isVisible && clearValues) {
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                }
+            });
+        }
+
+        // Fresher toggle functionality
+        fresherToggle.addEventListener('change', function() {
+            const internshipDurationField = document.getElementById('internship-duration-field');
+            const stipendField = document.getElementById('stipend-field');
+            const professionalFields = [
+                'experience-field',
+                'kanaka-employee-field',
+                'current-company-field',
+                'designation-field',
+                'job-position-field',
+                'current-ctc-field',
+                'expected-ctc-field',
+                'notice-period-field',
+                'tenure-field',
+                'current-offers-field',
+                'reason-change-field',
+                'position-section'
+            ];
+
+            // Toggle internship-related checkboxes
+            toggleSection(currentInternshipContainer, this.checked);
+            toggleSection(currentOffersSection, !this.checked);
+
+            if (this.checked) {
+                // Show internship fields
+                toggleSection(internshipDurationField, currentInternshipToggle.checked);
+                // Hide professional fields
+                professionalFields.forEach(fieldId => {
+                    toggleSection(document.getElementById(fieldId), false);
+                });
+            } else {
+                // Hide internship fields
+                toggleSection(internshipDurationField, false);
+                toggleSection(stipendField, false);
+                toggleSection(paidInternshipContainer, false);
+                currentInternshipToggle.checked = false;
+                paidInternshipToggle.checked = false;
+                // Show professional fields
+                professionalFields.forEach(fieldId => {
+                    // Only show current-offers-field if the checkbox is checked
+                    if (fieldId === 'current-offers-field') {
+                        toggleSection(document.getElementById(fieldId), currentOffersToggle.checked);
+                    } else {
+                        toggleSection(document.getElementById(fieldId), true);
+                    }
+                });
+            }
+        });
+
+        // Referral toggle functionality
+        referralToggle.addEventListener('change', function() {
+            const referrerSection = document.getElementById('referrer-section');
+            toggleSection(referrerSection, this.checked, false);
+            
+            const referrerInput = document.getElementById('referred_by');
+            referrerInput.required = this.checked;
+            if (!this.checked) {
+                referrerInput.value = '';
+            }
+        });
+
+        // Current Internship toggle functionality
+        currentInternshipToggle.addEventListener('change', function() {
+            const internshipDurationField = document.getElementById('internship-duration-field');
+            const stipendField = document.getElementById('stipend-field');
+            
+            toggleSection(internshipDurationField, this.checked);
+            toggleSection(paidInternshipContainer, this.checked);
+            
+            if (!this.checked) {
+                paidInternshipToggle.checked = false;
+                toggleSection(stipendField, false);
+            }
+        });
+
+        // Paid Internship toggle functionality
+        paidInternshipToggle.addEventListener('change', function() {
+            const stipendField = document.getElementById('stipend-field');
+            toggleSection(stipendField, this.checked);
+        });
+
+        // Current offers toggle functionality
+        currentOffersToggle.addEventListener('change', function() {
+            const currentOffersField = document.getElementById('current-offers-field');
+            toggleSection(currentOffersField, this.checked);
+            
+            const description = document.getElementById('current_offers_description');
+            if (!this.checked) {
+                description.value = '';
+            }
+        });
+
+        // Set initial states
+        if (fresherToggle) {
+            fresherToggle.dispatchEvent(new Event('change'));
+        }
+        if (referralToggle) {
+            referralToggle.dispatchEvent(new Event('change'));
+        }
+        if (currentInternshipToggle && currentInternshipToggle.checked) {
+            currentInternshipToggle.dispatchEvent(new Event('change'));
+        }
+        if (currentOffersToggle && currentOffersToggle.checked) {
+            currentOffersToggle.dispatchEvent(new Event('change'));
+        }
+
+        // File validation
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const fileSizeMB = file.size / (1024 * 1024);
+                    if (fileSizeMB > 5) {
+                        errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
+                        this.value = '';
+                    } else {
+                        errorElement.textContent = '';
+                    }
+                }
+            });
+        }
+
+        // Vue Multiselect for Referrer
+        if (document.getElementById('vue-referrer-select')) {
+            new Vue({
+                el: '#vue-referrer-select',
+                components: {
+                    Multiselect: window.VueMultiselect.default
+                },
+                data: function() {
+                    const referrers = JSON.parse('{{ referrer_names|default([])|tojson|safe }}');
+                    const initial = "{{ applicant.referred_by|default('') }}";
+
+                    return {
+                        referrerNames: referrers,
+                        selectedReferrer: referrers.find(r => r.id == initial) || null
+                    };
+                },
+                methods: {
+                    customLabel(option) {
+                        return option && option.name ? option.name : '';
+                    },
+                    onInput(val) {
+                        this.$el.querySelector('input[name="referred_by"]').value = val && val.id ? val.id : '';
+                    }
+                },
+                watch: {
+                    selectedReferrer(val) {
+                        this.onInput(val);
+                    }
+                },
+                mounted() {
+                    this.onInput(this.selectedReferrer);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Referrer searchbox styles */
+.search-box {
+    overflow: visible;
+    position: relative;
+    width: 100%;
+}
+
+.search-input {
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    box-shadow: none;
+    background: #fff;
+    z-index: 2;
+}
+
+.options-list {
+    overflow: visible;
+    border-radius: 0.5rem;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    min-width: 100%;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0.25rem 0;
+    margin-top: -2px;
+    display: none;
+}
+.options-list.show {
+    display: block;
+}
+</style>
+{% endblock %}

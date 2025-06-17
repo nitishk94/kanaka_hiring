@@ -9,7 +9,7 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant
+from myapp.utils import can_update_applicant, validate_file, update_status, can_upload_applicant
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta, timezone
@@ -164,8 +164,8 @@ def upload_applicants():
             stipend=stipend,
             experience=experience,
             referenced_from=referenced_from,
-            linkedin_profile=linkedin_profile if linkedin_profile else 'Not Provided',
-            github_profile=github_profile if github_profile else 'Not Provided',
+            linkedin_profile=linkedin_profile if linkedin_profile else ' ',
+            github_profile=github_profile if github_profile else ' ',
             is_kanaka_employee=is_kanaka_employee,
             current_company=current_company,
             designation=designation,
@@ -184,7 +184,7 @@ def upload_applicants():
             uploaded_by=current_user.id,
             is_referred=is_referred,
             referred_by=referred_by,
-            job_id=job_id,
+            job_id=job_id if job_id else None,
         )
         
         try:
@@ -215,6 +215,168 @@ def upload_applicants():
             return render_template('hr/upload.html', referrer_names=referrer_names, form_data=request.form)
 
     return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions)
+
+@bp.route('/update_applicants/<int:id>', methods=['GET', 'POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def update_applicant(id):
+    if '_user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+
+    referrer_names = [
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+    ]
+
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
+    applicant = Applicant.query.get_or_404(id)
+    
+
+    if request.method == 'POST':
+        file = request.files.get('cv')
+        
+        if not validate_file(file):
+            flash('File is corrupted.', 'warning')
+            current_app.logger.warning(f"File is corrupted: {file.filename}")
+            return render_template('hr/upload.html', form_data=request.form)
+
+        # Get all form data
+        name = request.form.get('name')
+        email = request.form.get('email')
+
+        if not can_update_applicant(id,email):
+            flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+            return redirect(url_for('hr.upload_applicants'))
+        
+        applicant = Applicant.query.filter_by(email=email).first()
+        if applicant:
+            applicant.last_applied = date.today()
+            applicant.status = 'Applied'
+
+        phone_number = request.form.get('phone_number')
+        dob = request.form.get('dob')
+        # Convert dob to date object if it's a string
+        if isinstance(dob, str):
+            try:
+                dob = datetime.strptime(dob, '%Y-%m-%d').date()
+            except ValueError:
+                # fallback for other formats or None
+                dob = None
+        gender = request.form.get('gender')
+        marital_status = request.form.get('marital_status')
+        native_place = request.form.get('native_place')
+        current_location = request.form.get('current_location')
+        work_location = request.form.get('work_location')
+        
+        # Professional Information
+        is_fresher = bool(request.form.get('is_fresher'))
+        job_id = request.form.get('position') if not is_fresher else None
+        is_referred = bool(request.form.get('is_referred'))
+        referred_by = int(request.form.get('referred_by')) if is_referred else None
+        qualification = request.form.get('qualification')
+        graduation_year = request.form.get('graduation_year')
+        if graduation_year:
+            graduation_year = int(graduation_year)
+            
+        # Internship Information
+        current_internship = bool(request.form.get('current_internship'))
+        internship_duration = request.form.get('internship_duration')
+        if internship_duration:
+            internship_duration = int(internship_duration)
+        paid_internship = bool(request.form.get('paid_internship'))
+        stipend = request.form.get('stipend')
+        if stipend:
+            stipend = int(stipend)
+            
+        referenced_from = request.form.get('referenced_from')
+        linkedin_profile = request.form.get('linkedin_profile')
+        github_profile = request.form.get('github_profile')
+        
+        # Current Employment Information (if not fresher)
+        experience = request.form.get('experience')
+        is_kanaka_employee = bool(request.form.get('is_kanaka_employee'))
+        current_company = request.form.get('current_company')
+        designation = request.form.get('designation')
+        current_job_position = request.form.get('current_job_position')
+        current_ctc = request.form.get('current_ctc')
+        if current_ctc:
+            current_ctc = int(current_ctc)
+        expected_ctc = request.form.get('expected_ctc')
+        if expected_ctc:
+            expected_ctc = int(expected_ctc)
+        notice_period = request.form.get('notice_period')
+        if notice_period:
+            notice_period = int(notice_period)
+        tenure_at_current_company = request.form.get('tenure_at_current_company')
+        current_offers_yes_no = bool(request.form.get('current_offers_yes_no'))
+        current_offers_description = request.form.get('current_offers_description')
+        reason_for_change = request.form.get('reason_for_change')
+        comments = request.form.get('comments')
+
+        # Handle file upload
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
+
+        applicant.name=name.title()
+        applicant.email=email
+        applicant.phone_number=phone_number
+        applicant.dob=dob
+        applicant.gender=gender
+        applicant.marital_status=marital_status
+        applicant.native_place=native_place.title() if native_place else None
+        applicant.current_location=current_location.title() if current_location else None
+        applicant.work_location=work_location.title() if work_location else None
+        applicant.graduation_year=graduation_year
+        applicant.is_fresher=is_fresher
+        applicant.qualification=qualification
+        applicant.current_internship=current_internship
+        applicant.internship_duration=internship_duration
+        applicant.paid_internship=paid_internship
+        applicant.stipend=stipend
+        applicant.experience=experience
+        applicant.referenced_from=referenced_from
+        applicant.linkedin_profile=linkedin_profile if linkedin_profile else ' '
+        applicant.github_profile=github_profile if github_profile else ' '
+        applicant.is_kanaka_employee=is_kanaka_employee
+        applicant.current_company=current_company
+        applicant.designation=designation
+        applicant.current_job_position=current_job_position.title() if current_job_position else None
+        applicant.current_ctc=current_ctc
+        applicant.expected_ctc=expected_ctc
+        applicant.notice_period=notice_period
+        applicant.tenure_at_current_company=tenure_at_current_company
+        applicant.current_offers_yes_no=current_offers_yes_no
+        applicant.current_offers_description=current_offers_description if current_offers_description else None
+        applicant.reason_for_change=reason_for_change if reason_for_change else 'Not Provided'
+        applicant.comments=comments if comments else 'No comments'
+        applicant.job_id=job_id if job_id else None
+        applicant.is_referred=is_referred
+        applicant.referred_by=referred_by
+        
+        try:
+            db.session.commit()
+
+            flash('Applicant details successfully updated!', 'success')
+            current_app.logger.info(f"Applicant (Name: {applicant.name.title()}) details updates by {current_user.username}")
+            return redirect(url_for('hr.view_applicant', id=applicant.id))
+            
+        except IntegrityError as e:
+            db.session.rollback()
+            if 'email' in str(e.orig):
+                flash('This email is already registered. Please use a different one.', 'error')
+            elif 'phone_number' in str(e.orig):
+                flash('This phone number is already registered. Please use a different one.', 'error')
+            else:
+                flash('Database error. Please try again.', 'error')
+            current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
+            return render_template('hr/view_applicant.html', referrer_names=referrer_names, form_data=request.form)
+
+    return render_template('hr/update_applicant.html', applicant=applicant, job_positions=job_positions, referrer_names=referrer_names)
+
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
@@ -372,7 +534,8 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    return render_template('hr/view_referrals.html', referrals=referrals)
+    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs)
 
 @bp.route('/onboarding')
 @no_cache
@@ -512,12 +675,6 @@ def joblisting_update(id):
         clients = request.form.get('job_clients')
         budget = request.form.get('job_budget')
         experience = request.form.get('job_experience')  
-
-
-
-        if not position or not description:
-            flash('Job position and description cannot be empty!', 'error')
-            return redirect(url_for('hr.joblisting_update', id=id))
 
         job.position = position
         job.description = description

@@ -1,9 +1,12 @@
+from flask import flash
 from myapp.extensions import db
 from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory
 from datetime import datetime, timedelta
 import zipfile
 import re
+
+from myapp.models.referrals import Referral
 
 def can_upload_applicant(email):
     applicant = Applicant.query.filter_by(email=email).first()
@@ -15,6 +18,17 @@ def can_upload_applicant(email):
         return True
     return False
 
+def can_update_applicant(id, email):
+    applicant = Applicant.query.filter_by(email=email).first()
+    if applicant.id == id:
+        return True
+    else:
+        six_months = (datetime.now() - timedelta(days=180)).date()
+        if applicant.last_applied < six_months:
+            return True
+        return False
+        
+        
 def validate_file(file):
     header = file.read(1024)
     file.seek(0)
@@ -54,10 +68,10 @@ def generate_timeline(id):
     ]
     
     # Test scheduling history
-    if history.test_scheduled:
+    if history.test_date:
         timeline.append({
             'title': 'Test Scheduled',
-            'date': history.test_scheduled,
+            'date': history.test_date,
             'result': history.test_result if history.test_result is not None else None,
             'status': 'Completed' if history.test_result is not None else 'Scheduled'
         })
@@ -104,3 +118,8 @@ def generate_timeline(id):
     # Sort timeline by date
     #timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
     return timeline
+
+
+
+    
+    

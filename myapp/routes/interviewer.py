@@ -4,6 +4,7 @@ from myapp.auth.decorators import role_required, no_cache
 from myapp.models.interviews import Interview
 from myapp.models.applicants import Applicant
 from myapp.models.users import User
+from myapp.models.jobrequirement import JobRequirement
 from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.extensions import db
 from sqlalchemy.orm import joinedload
@@ -23,6 +24,7 @@ def dashboard():
 @login_required
 @role_required(*INTERVIEWER_ROLES, 'hr')
 def view_interviews():
+    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     if current_user.role == 'interviewer':
         interviews = Interview.query.filter_by(interviewer_id=current_user.id).filter_by(completed=False).all()
         applicant_ids = [interview.applicant_id for interview in interviews]
@@ -40,7 +42,7 @@ def view_interviews():
             )\
             .all()
 
-        return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users, interviewers=interviewers)
+        return render_template('hr/view_interviews.html',jobs=jobs ,interviews=interviews, users=hr_users, interviewers=interviewers)
 
 @bp.route('/view_interviewee/<int:id>')
 @no_cache

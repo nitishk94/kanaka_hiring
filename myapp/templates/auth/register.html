@@ -94,11 +94,11 @@
                     </p>
                 </div>
 
-                <div class="form-control">
+                <div class="form-control relative mb-4">
                     <label class="label">
                         <span class="label-text">Password <span class="text-error">*</span></span>
                     </label>
-                    <label class="input validator">
+                    <label class="input validator relative w-full">
                         <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
                                 <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
@@ -108,12 +108,24 @@
                         <input
                             type="password"
                             name="password"
+                            id="myInput1"
                             required
                             placeholder="Password"
                             minlength="8"
                             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                             title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
                         />
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg id="eyeIcon1" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5
+                                c4.477 0 8.268 2.943 9.542 7
+                                -1.274 4.057-5.065 7-9.542 7
+                                -4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
                     </label>
                     <p class="validator-hint hidden">
                         Must be more than 8 characters, including
@@ -127,7 +139,7 @@
                     <label class="label">
                         <span class="label-text">Confirm Password <span class="text-error">*</span></span>
                     </label>
-                    <label class="input validator">
+                    <label class="input validator  relative">
                         <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                             <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
                                 <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path>
@@ -137,12 +149,24 @@
                         <input
                             type="password"
                             name="password2"
+                            id="myInput2"
                             required
                             placeholder="Confirm password"
                             minlength="8"
                             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                             title="Must match the password above"
                         />
+                        <button type="button" onclick="togglePassword2()" class="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg id="eyeIcon2" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5
+                                c4.477 0 8.268 2.943 9.542 7
+                                -1.274 4.057-5.065 7-9.542 7
+                                -4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
                     </label>
                     <p class="validator-hint hidden">
                         Must match the password above
@@ -153,23 +177,72 @@
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>
             </form>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} mx-4 mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                                {% if category == 'error' %}
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                {% else %}
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                {% endif %}
-                            </svg>
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+            
         </div>
     </div>
 </div>
+{% block extra_js %}
+<script>
+    function togglePassword1() {
+        const input = document.getElementById("myInput1");
+        const icon = document.getElementById("eyeIcon1");
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7
+                      a9.956 9.956 0 012.042-3.362m1.644-1.644
+                      A9.953 9.953 0 0112 5c4.477 0 8.268 2.943 9.542 7
+                      a9.973 9.973 0 01-4.126 5.317M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 3l18 18" />
+            `;
+        } else {
+            input.type = "password";
+            icon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5
+                      c4.477 0 8.268 2.943 9.542 7
+                      -1.274 4.057-5.065 7-9.542 7
+                      -4.477 0-8.268-2.943-9.542-7z" />
+            `;
+        }
+    }
+
+    function togglePassword2() {
+        const input = document.getElementById("myInput2");
+        const icon = document.getElementById("eyeIcon2");
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7
+                      a9.956 9.956 0 012.042-3.362m1.644-1.644
+                      A9.953 9.953 0 0112 5c4.477 0 8.268 2.943 9.542 7
+                      a9.973 9.973 0 01-4.126 5.317M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 3l18 18" />
+            `;
+        } else {
+            input.type = "password";
+            icon.innerHTML = `
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5
+                      c4.477 0 8.268 2.943 9.542 7
+                      -1.274 4.057-5.065 7-9.542 7
+                      -4.477 0-8.268-2.943-9.542-7z" />
+            `;
+        }
+    }
+</script>
+
+
+
+{% endblock %}
 {% endblock %}
