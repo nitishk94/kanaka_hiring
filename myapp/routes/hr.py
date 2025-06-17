@@ -805,7 +805,7 @@ def schedule_default(testId,id,test_date, test_time):
         "timeZoneId": 1720,
         "ProctoringMode": "image",
     }
-    response = requests.post(url_for, headers=headers, json=data)  
+    response = requests.post(url_for, headers=headers, data=data)  
 
     if response.status_code != 200:
         flash('Failed to schedule test. Please try again later.', 'error')
