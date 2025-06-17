@@ -490,6 +490,9 @@ def reschedule_interview(id):
                 time = datetime.strptime(time, '%H:%M:%S').time()
             except ValueError:
                 time = None
+    
+    if not is_future_or_today(date):
+        flash("Choose a proper date", "error")
 
     applicant = Applicant.query.get_or_404(id)
     interview = Interview.query.filter_by(applicant_id=id, completed=False).first()
@@ -700,21 +703,25 @@ def available_interviewers():
 
     try:
         interview_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-        
+
         if not is_future_or_today(interview_datetime.date()):
             return jsonify([])
 
-        interviewers = User.query.filter(User.role.in_(['interviewer', 'hr'])).all()
+        interviewers = User.query.filter_by(role='interviewer').all()
+        interviewer_ids = [i.id for i in interviewers]
+
         scheduled_interviews = Interview.query.filter(
             Interview.date == interview_datetime.date(),
-            Interview.interviewer_id.in_([i.id for i in interviewers])
+            Interview.interviewer_id.in_(interviewer_ids)
         ).all()
+
         busy_interviewers = set()
-        interview_time = interview_datetime.time()
+
         for interview in scheduled_interviews:
-            if (interview.time <= interview_time and 
-                (interview.time.hour == interview_time.hour or 
-                 interview.time.hour == interview_time.hour - 1)):
+            scheduled_datetime = datetime.combine(interview.date, interview.time)
+            time_diff = abs((scheduled_datetime - interview_datetime))
+
+            if time_diff < timedelta(hours=1):
                 busy_interviewers.add(interview.interviewer_id)
 
         available_interviewers = [
@@ -724,5 +731,6 @@ def available_interviewers():
         ]
 
         return jsonify(available_interviewers)
+
     except ValueError:
         return jsonify([])

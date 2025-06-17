@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const date = dateInput.value;
             const time = timeInput.value;
             if (!date || !time) return;
-            const url = '/hr/available_interviewers';
+            const url = `/hr/available_interviewers?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok');
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.forEach(function(interviewer) {
                     const option = document.createElement('option');
                     option.value = interviewer.id;
-                    option.textContent = interviewer.username;
+                    option.textContent = interviewer.name;
                     interviewerSelect.appendChild(option);
                 });
             } catch (err) {

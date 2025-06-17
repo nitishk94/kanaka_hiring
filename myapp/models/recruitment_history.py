@@ -91,10 +91,11 @@ class RecruitmentHistory(db.Model):
                 else:
                     return f"{round_name} completed"
 
-        if test_date >= today:
-            return f"Test scheduled on {test_date.strftime('%Y-%m-%d')}"
-        elif test_date < today:
-            return "Test completed"
+        if test_date:
+            if test_date >= today:
+                return f"Test scheduled on {test_date.strftime('%Y-%m-%d')}"
+            elif test_date < today:
+                return "Test completed"
             
         return "Need to schedule test"
         

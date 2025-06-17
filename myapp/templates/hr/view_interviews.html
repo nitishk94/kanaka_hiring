@@ -109,3 +109,42 @@
     {% endfor %}
 </div>
 {% endblock %} 
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form[action*="schedule_interview"], form[action*="reschedule_interview"]').forEach(function(form) {
+        const dateInput = form.querySelector('input[name="interview_date"]');
+        const timeInput = form.querySelector('input[name="interview_time"]');
+        const interviewerSelect = form.querySelector('select[name="interviewer_id"]');
+
+        async function updateInterviewers() {
+            const date = dateInput.value;
+            const time = timeInput.value;
+            if (!date || !time) return;
+            const url = `/hr/available_interviewers?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                interviewerSelect.innerHTML = '<option value="">Select an interviewer</option>';
+                data.forEach(function(interviewer) {
+                    const option = document.createElement('option');
+                    option.value = interviewer.id;
+                    option.textContent = interviewer.name;
+                    interviewerSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error fetching available interviewers:', err);
+                interviewerSelect.innerHTML = '<option value="">Error loading interviewers</option>';
+            }
+        }
+
+        if (dateInput && timeInput && interviewerSelect) {
+            dateInput.addEventListener('change', updateInterviewers);
+            timeInput.addEventListener('change', updateInterviewers);
+        }
+    });
+});
+</script>
+{% endblock %}
