@@ -78,16 +78,6 @@ def login_microsoft():
     auth_url = get_msal_auth_url(scopes=current_app.config["MS_SCOPE"])
     return redirect(auth_url)
 
-@bp.route('/login/microsoft', methods=['GET', 'POST'])
-@no_cache
-def login_microsoft():
-    if current_user.is_authenticated:
-        flash('You are already logged in.', 'info')
-        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
-
-    auth_url = get_msal_auth_url(scopes=current_app.config["MS_SCOPE"])
-    return redirect(auth_url)
-
 @bp.route('/login/external', methods=['POST'])
 @no_cache
 def login_external():
@@ -105,11 +95,6 @@ def login_external():
         flash('Please enter a valid email address', 'error')
         return redirect(url_for('auth.login_referrer'))
 
-    user = None
-    if '@' in username_or_email:
-        user = User.query.filter_by(email=username_or_email).first()
-    else:
-        user = User.query.filter_by(username=username_or_email).first()
     user = None
     if '@' in username_or_email:
         user = User.query.filter_by(email=username_or_email).first()
@@ -262,9 +247,7 @@ def logout():
     flash("You have been logged out.", "info")
 
     if session.get("ms_authenticated"):
-        session.pop("ms_authenticated")
-        ms_logout_url = (
-            f"https://login.microsoftonline.com/common/oauth2/v2.0/logout"
-            f"?post_logout_redirect_uri={url_for('main.home', _external=True)}"
-        )
-        return redirect(ms_logout_url)
+        session.pop("ms_authenticated", None)
+        session.pop("token", None)
+
+    return redirect(url_for('main.home'))

@@ -51,7 +51,6 @@ def view_details_joblisting(id):
     job = JobRequirement.query.options(joinedload(JobRequirement.created_by)).filter_by(id=id).first_or_404() 
     return render_template('viewdetailsjob.html', job=job, current_user=current_user)
 
-
 @bp.route('/filter_joblistings')
 @no_cache
 @login_required

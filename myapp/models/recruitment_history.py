@@ -85,7 +85,7 @@ class RecruitmentHistory(db.Model):
         
         for interview_date, interview_time, interview, round_name in interview_rounds:
             if interview_date:
-                if interview_date >= today and not interview.completed:
+                if interview and interview_date >= today and not interview.completed:
                     interviewer_name = self.get_interviewer_name(interview)
                     return self.format_scheduled_interview(interview_date, interview_time, round_name, interviewer_name)
                 else:

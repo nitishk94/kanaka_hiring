@@ -9,13 +9,12 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant
+from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
 import requests
 import os
-import tempfile
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
@@ -69,8 +68,13 @@ def handle_upload_applicant():
         flash('File is corrupted.', 'warning')
         return redirect(url_for('hr.show_upload_form'))
 
-    email = request.form.get('email')
-    if not can_upload_applicant(email):
+    email = request.form.get('email').lower()
+    if not can_upload_applicant_email(email):
+        flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        return redirect(url_for('hr.show_upload_form'))
+
+    phone_number = request.form.get('phone_number')
+    if not can_upload_applicant_phone(phone_number):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         return redirect(url_for('hr.show_upload_form'))
 
@@ -94,7 +98,7 @@ def handle_upload_applicant():
     new_applicant = Applicant(
         name=request.form.get('name').title(),
         email=email,
-        phone_number=request.form.get('phone_number'),
+        phone_number=phone_number,
         dob=dob,
         gender=request.form.get('gender'),
         marital_status=request.form.get('marital_status'),
@@ -294,6 +298,10 @@ def schedule_interview(id):
     
     if not date or not time:
         flash('Invalid date or time format.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
+
+    if not is_future_or_today(date):
+        flash('Interview date must be today or in the future.', 'error')
         return redirect(url_for('hr.view_applicant', id=id))
     
     applicant = Applicant.query.get_or_404(id)

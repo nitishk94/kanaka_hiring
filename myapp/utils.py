@@ -6,8 +6,18 @@ import zipfile
 import re
 import os
 
-def can_upload_applicant(email):
+def can_upload_applicant_email(email):
     applicant = Applicant.query.filter_by(email=email).first()
+    if not applicant:
+        return True
+    
+    six_months = (datetime.now() - timedelta(days=180)).date()
+    if applicant.last_applied < six_months:
+        return True
+    return False
+
+def can_upload_applicant_phone(number):
+    applicant = Applicant.query.filter_by(phone_number=number).first()
     if not applicant:
         return True
     
@@ -105,3 +115,9 @@ def generate_timeline(id):
     # Sort timeline by date
     timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
     return timeline
+
+def is_future_or_today(date_obj):
+    if not date_obj:
+        return False
+    today = datetime.now().date()
+    return date_obj >= today

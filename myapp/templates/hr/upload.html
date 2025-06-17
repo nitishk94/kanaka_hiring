@@ -742,47 +742,6 @@
                 fileInput.value = '';
                 return;
             }
-
-            errorElement.textContent = '';
-
-            // Send file to backend via AJAX
-            const formData = new FormData();
-            formData.append('cv', file);
-
-            fetch('/hr/parse_resume', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.text())  // instead of .json()
-            .then(text => console.log('Raw response:', text));
-
-            fetch('/hr/parse_resume', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    console.warn('Parse error:', data.error);
-                    return;
-                }
-
-                // Auto-fill the form fields if values are found
-                if (data.name) document.getElementById('name').value = data.name;
-                if (data.email) document.getElementById('email').value = data.email;
-                if (data.phone) document.getElementById('phone_number').value = data.phone;
-                if (data.dob) document.getElementById('dob').value = data.dob;
-                if (data.gender) document.getElementById('gender').value = data.gender.toLowerCase();
-                if (data.marital_status) document.getElementById('marital_status').value = data.marital_status;
-                if (data.native_place) document.getElementById('native_place').value = data.native_place;
-                if (data.current_location) document.getElementById('current_location').value = data.current_location;
-                if (data.work_location) document.getElementById('work_location').value = data.work_location;
-                if (data.linkedin_profile) document.getElementById('linkedin').value = data.linkedin_profile;
-                if (data.github_profile) document.getElementById('github').value = data.github_profile;
-            })
-            .catch(err => {
-                console.error('CV parse error:', err);
-            });
         });
     });
 </script>
