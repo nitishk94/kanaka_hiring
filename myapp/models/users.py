@@ -20,7 +20,8 @@ class User(UserMixin, db.Model):
     referred_applicants = db.relationship("Applicant", back_populates="referrer", foreign_keys="Applicant.referred_by")
     uploaded_applicants = db.relationship("Applicant", back_populates="uploader", foreign_keys="Applicant.uploaded_by")
     job_listings = db.relationship('JobRequirement', back_populates='created_by', foreign_keys='JobRequirement.created_by_id')
-    job_listings = db.relationship('JobRequirement', back_populates='created_by', foreign_keys='JobRequirement.created_by_id')
+    scheduled_interviews = db.relationship('Interview', back_populates='scheduler', foreign_keys='Interview.scheduler_id')
+    interviews_as_interviewer = db.relationship('Interview', back_populates='interviewer', foreign_keys='Interview.interviewer_id')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")

@@ -14,7 +14,7 @@ class Interview(db.Model):
     completed = db.Column(db.Boolean, default=False)
     job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.id'))
     
-    job = db.relationship("JobRequirement", backref="interviews")
-    applicant = db.relationship("Applicant", backref="interviews")
-    interviewer = db.relationship("User", backref="interviews_as_interviewer", foreign_keys=[interviewer_id])
-    scheduler = db.relationship("User", backref="interviews_as_scheduler", foreign_keys=[scheduler_id])
+    job = db.relationship("JobRequirement", back_populates="interviews")
+    applicant = db.relationship("Applicant", back_populates="interviews")
+    interviewer = db.relationship("User", foreign_keys=[interviewer_id], back_populates="interviews_as_interviewer")
+    scheduler = db.relationship("User", foreign_keys=[scheduler_id], back_populates="scheduled_interviews")

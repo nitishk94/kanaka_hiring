@@ -31,7 +31,7 @@ def view_interviews():
     else:
         hr_users = User.query.filter_by(role='hr').all()
         interviewers = User.query.filter_by(role='interviewer').all()
-        interviews = Interview.query\
+        interviews = db.session.query(Interview)\
             .filter_by(completed=False)\
             .options(
                 joinedload(Interview.applicant),
