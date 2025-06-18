@@ -1,10 +1,5 @@
 from datetime import datetime
 from flask import jsonify, request
-from models.testresult import TestResult
-from models.applicants import Applicant
-from models.recruitment_history import RecruitmentHistory
-from extensions import db
-
 import requests
 
 
@@ -91,13 +86,17 @@ def test_result(testInviteid):
     return result
 
 def get_test_links(testId):
-    url = f"https://apiv3.imocha.io/v3/tests/"+str(testId)+"/testlinks"
+    url = f"https://apiv3.imocha.io/v3/candidates/testattempts?state=completed"
     headers = {
         "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
         "Content-Type": "application/json"
     }
+    data ={
+        "StartDateTime":"2025-06-15T18:18:00Z",
+        "EndDateTime":"2020-06-22T18:18:00Z"
+    }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, json=data)
     result = response.json()
     return result
       
@@ -111,7 +110,7 @@ def main():
         #print(f"Invite Response: {invite_response}")
         #testInvitationId = invite_response.get('testInvitationId')
         #print(f"Test Invitation ID: {testInvitationId}")
-        print(store_result(2))
+        print(get_test_links(testId))
 
     else:
         print("No tests found.")

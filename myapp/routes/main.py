@@ -72,7 +72,7 @@ def view_details_joblisting(id):
 def filter_joblistings():
     hr_id = request.args.get('hr_id')
     status = request.args.get('status')
-
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     query = JobRequirement.query
 
     # Apply HR filter if provided
@@ -88,7 +88,7 @@ def filter_joblistings():
     # Fetch results
     jobs = query.order_by(JobRequirement.id.desc()).all()
    
-    return render_template('viewjobs.html', jobs=jobs, users=hr_id, current_user=current_user)
+    return render_template('viewjobs.html', jobs=jobs, users=hr_users)
 
 @bp.route('/search_route')
 @no_cache

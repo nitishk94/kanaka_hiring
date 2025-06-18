@@ -45,6 +45,7 @@
 
                     <!-- Submit button -->
                     <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+                    <a href="{{ url_for('main.filter_joblistings') }}" class="btn btn-primary mt-2">Clear Filter</a>
 
                 </form>
             </div>
@@ -83,7 +84,7 @@
                     {% endif %}
                     <h2 class="text-xl font-bold mb-2">{{ job.position }}</h2>
                     <p class="text-gray-700 mb-4">{{ job.skillset }}</p>
-                    <p class="text-gray-700 mb-4">{{ job.experience }} </p>
+                    <p class="text-gray-700 mb-4">Experience: {{ job.experience }} years</p>
                     <p class="text-sm text-gray-500 mb-4">Added by: {{ job.created_by.username if job.created_by else 'Unknown' }}</p>
                 </div>
 

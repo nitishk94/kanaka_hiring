@@ -184,7 +184,7 @@ def upload_applicants():
             uploaded_by=current_user.id,
             is_referred=is_referred,
             referred_by=referred_by,
-            job_id=job_id if job_id else None,
+            job_id=job_id if job_id else 'None',
         )
         
         try:
@@ -440,9 +440,15 @@ def filter_applicants():
         query = query.filter(Applicant.uploaded_by == int(hr_id))
 
     if job_id:
-        jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
-    else:
-        jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+
+        query = query.filter(Applicant.job_id.isnot(None))
+
+    jobs = (
+        JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
+        if job_id else
+        JobRequirement.query.order_by(JobRequirement.position).all()
+    )
+    
 
     if status_id == 'fresher':
         query = query.filter(Applicant.is_fresher == True)
@@ -536,6 +542,33 @@ def view_referrals():
     referrals = Referral.query.all()
     jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs)
+
+@bp.route('/filter_referrals')
+@no_cache
+@login_required
+def filter_referrals():
+    referral_id = request.args.get('referral_id')
+    job_id = request.args.get('job_id')
+    referral_users = User.query.filter_by(role='referral').all()
+
+
+    query = JobRequirement.query
+
+    # Apply HR filter if provided
+    if referral_id:
+        query = query.filter(Referral.id == referral_id)
+    
+
+    # Apply Status filter if provided
+    if job_id:
+        jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
+    else:
+        jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+
+    # Fetch results
+    jobs = query.order_by(JobRequirement.id.desc()).all()
+   
+    return render_template('hr/view_referrals.html', jobs=jobs, users=referral_users)
 
 @bp.route('/onboarding')
 @no_cache
@@ -826,8 +859,8 @@ def schedule_linkid(id, testId, testLinkId, test_date, test_time):
     if history.test_id:
         flash('Test already scheduled for this applicant.', 'warning')
         return redirect(url_for('hr.view_applicant', id=applicant.id))
-    history.start_date = test_date
-    history.start_time = test_time
+    history.test_date = test_date
+    history.test_time = test_time
     data = {
         "name": applicant.name,
         "email": applicant.email,
@@ -853,7 +886,7 @@ def schedule_linkid(id, testId, testLinkId, test_date, test_time):
         response_data = response.json()
         history = RecruitmentHistory.query.filter_by(applicant_id=applicant.id).first()
         if history:
-            history.test_invitation_id = response_data.get('testInvitationId')
+            history.test_id = response_data.get('testInvitationId')
             db.session.commit()
         flash('Test scheduled successfully via link.', 'success')
         current_app.logger.info(f"Test scheduled (link) for applicant {applicant.id} by {current_user.username}")

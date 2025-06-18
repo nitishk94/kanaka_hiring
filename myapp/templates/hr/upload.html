@@ -217,6 +217,7 @@
                                 track-by="id"
                                 @input="onInput"
                                 class="input-bordered w-full"
+                                required
                             ></multiselect>
                             <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
                         </div>
@@ -352,6 +353,7 @@
                             id="experience"
                             type="text"
                             name="experience"
+                            min="1"
                             required
                             placeholder="Enter years of experience"
                             class="input input-bordered w-full"

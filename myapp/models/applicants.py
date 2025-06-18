@@ -52,6 +52,7 @@ class Applicant(db.Model):
     uploader = db.relationship("User", foreign_keys=[uploaded_by], back_populates="uploaded_applicants")
     referrer = db.relationship("User", foreign_keys=[referred_by], back_populates="referred_applicants")
     job = db.relationship("JobRequirement", foreign_keys=[job_id],backref="applicants")
+    test_results = db.relationship("TestResult", back_populates="applicant")
 
 @event.listens_for(Applicant, 'after_insert')
 def link_applicant_to_referral(mapper, connection, target):
