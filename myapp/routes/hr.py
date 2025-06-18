@@ -691,7 +691,7 @@ def reschedule_interview(id):
     }
 
     body = {
-        "subject": f"Rescheduled Interview Round {'HR' if round == 3 else round} with {applicant.name}",
+        "subject": f"Rescheduled Interview Round {'HR' if interview.round_number == 3 else interview.round_number} with {applicant.name}",
         "start": {
             "dateTime": start_datetime.isoformat(),
             "timeZone": "Asia/Kolkata"
