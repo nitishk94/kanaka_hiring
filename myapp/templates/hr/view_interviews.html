@@ -52,11 +52,6 @@
                     <td>Round {{ interview.round_number }}</td>
                     <td>
                         {{ interview.scheduler.name if interview.scheduler else 'No Scheduler' }}
-                        {% if interview.scheduler %}
-                            (ID: {{ interview.scheduler_id }}, Name: {{ interview.scheduler.name }}, Username: {{ interview.scheduler.username }})
-                        {% else %}
-                            (No scheduler data)
-                        {% endif %}
                     </td>
                     <td>
                         <!-- The button that opens modal -->

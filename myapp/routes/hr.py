@@ -332,7 +332,8 @@ def schedule_interview(id):
         date=date,
         time=time,
         round_number=round,
-        interviewer_id=interviewer_id
+        interviewer_id=interviewer_id,
+        scheduler_id=current_user.id
     )
     db.session.add(interview)
     db.session.commit()
@@ -500,6 +501,7 @@ def reschedule_interview(id):
     interview.date = date
     interview.time = time
     interview.interviewer_id = interviewer_id
+    interview.scheduler_id = current_user.id
 
     interviewer = User.query.get_or_404(interviewer_id)
     history = RecruitmentHistory.query.filter_by(applicant_id = applicant.id).first()
