@@ -1,3 +1,4 @@
+from flask import flash
 from myapp.extensions import db
 from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory

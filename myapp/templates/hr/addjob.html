@@ -69,7 +69,6 @@
                             id="job_clients"
                             type="text"
                             name="job_clients"
-                            required
                             placeholder="Enter client name"
                             class="input input-bordered"
                             value="{{ form_data.job_clients if form_data else '' }}"
@@ -97,14 +96,14 @@
                     <!-- Job Experience -->
                     <div class="form-control md:col-span-1">
                         <label class="label" for="job_experience">
-                            <span class="label-text">Experience Required <span class="text-error">*</span></span>
+                            <span class="label-text">Experience Required(in years)<span class="text-error">*</span></span>
                         </label>
                         <input
                             id="job_experience"
                             type="text"
                             name="job_experience"
                             required
-                            placeholder="Enter experience required (e.g., 2+ years)"
+                            placeholder="Enter experience required"
                             class="input input-bordered"
                             value="{{ form_data.job_experience if form_data else '' }}"
                         />

@@ -77,8 +77,8 @@
                         <!-- Reopen Button -->
                         <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
                               method="POST" 
-                              onsubmit="return confirm('Are you sure you want to reopen this job?');">
-                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                              onsubmit="return confirm('Are you sure you want to close this job?');">
+                            <button type="submit" class="btn bg-sky-300 w-auto px-8 text-lg">
                                 Close Job
                             </button>
                         </form>
@@ -86,7 +86,7 @@
                         <form action="{{ url_for('hr.open_joblisting', id=job.id) }}" 
                               method="POST" 
                               onsubmit="return confirm('Are you sure you want to reopen this job?');">
-                            <button type="submit" class="btn btn-success w-auto px-8 text-lg">
+                            <button type="submit" class="btn bg-sky-300 w-auto px-8 text-lg">
                                 Reopen Job
                             </button>
                         </form>

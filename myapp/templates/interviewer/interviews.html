@@ -23,6 +23,7 @@
                     <th>Name</th>
                     <th>Experience</th>
                     <th>Qualification</th>
+                    <th>Position applying for</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -38,6 +39,12 @@
                         {% endif %}
                     </td>
                     <td>{{ applicant.qualification }}</td>
+                    <td>{% if applicant.job_id %}
+                        <div>
+                            <p class="text-sm text-gray-500">Applying for</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.job.position if applicant.job_id else 'N/A'  }}</p>
+                        </div>
+                    {% endif %}</td>
                     <td>
                         <div class="flex gap-2">
                             <a href="{{ url_for('interviewer.view_interviewee', id=applicant.id) }}" 

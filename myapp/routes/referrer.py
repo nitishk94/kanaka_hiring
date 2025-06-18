@@ -48,12 +48,6 @@ def refer_candidates():
             flash('Name is required.', 'warning')
             return render_template('referrer/referral.html', form_data=request.form, job_positions=job_positions)
 
-        # Validate position for experienced
-        if not is_fresher and not job_id:
-            flash('Please select a job position for experienced candidates.', 'warning')
-            return render_template('referrer/referral.html', form_data=request.form, job_positions=job_positions)
-
-        # Handle file upload
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'referrals')
         os.makedirs(upload_dir, exist_ok=True)
         filename = secure_filename(file.filename)
@@ -93,4 +87,5 @@ def refer_candidates():
 @role_required('referrer', 'admin')
 def referrals():
     referrals = Referral.query.filter_by(referrer_id=current_user.id).order_by(Referral.referral_date.desc()).all()
-    return render_template('referrer/candidates.html', referrals=referrals)
+    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    return render_template('referrer/candidates.html', referrals=referrals, jobs=jobs)
