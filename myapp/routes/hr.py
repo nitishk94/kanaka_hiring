@@ -75,10 +75,6 @@ def handle_upload_applicant():
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
-    else:
-        applicant = Applicant.query.filter_by(email=email).first()
-        applicant.last_applied = date.today()
-        applicant.status = 'Applied'
 
     phone_number = request.form.get('phone_number')
     if not can_upload_applicant_phone(phone_number):
