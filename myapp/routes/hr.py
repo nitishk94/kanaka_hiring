@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from sqlalchemy import and_
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
@@ -31,12 +32,42 @@ def dashboard():
 @login_required
 @role_required(*HR_ROLES)
 def applicants():
+    search_query = request.args.get('search', '').strip()
+    
+    if search_query:
+        return redirect(url_for('hr.search_applicants', query=search_query))
+        
     applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
-    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
-    hrs = User.query.filter_by(role='hr').all()
+    jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     for applicant in applicants:
         update_status(applicant.id)
     return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
+
+@bp.route('/search_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def search_applicants():
+    search_query = request.args.get('query', '').strip()
+    
+    if not search_query:
+        return redirect(url_for('hr.applicants'))
+    
+    if '@' in search_query:
+        applicants = Applicant.query.filter(
+            Applicant.email.ilike(f'%{search_query}%')
+        ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    else:
+        applicants = Applicant.query.filter(
+            Applicant.name.ilike(f'%{search_query}%'),
+        ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    
+    
+    jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    
+    return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs, search_query=search_query)
         
 @bp.route('/upload_applicants', methods=['GET'])
 @no_cache
@@ -365,6 +396,8 @@ def reschedule_test(id):
 @role_required(*HR_ROLES)
 def filter_applicants():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+    applicants = query.order_by(Applicant.last_applied.desc()).all()
     
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
@@ -376,16 +409,13 @@ def filter_applicants():
         query = query.filter(Applicant.uploaded_by == int(hr_id))
 
     if job_id:
-        jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
-    else:
-        jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+        query = query.filter(Applicant.job_id == int(job_id))
 
     if status_id == 'fresher':
         query = query.filter(Applicant.is_fresher == True)
     elif status_id == 'experienced':
         query = query.filter(Applicant.is_fresher == False)
 
-    applicants = query.order_by(Applicant.last_applied.desc()).all()
     return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
 
 @bp.route('/applicants/<int:id>/download_cv')
