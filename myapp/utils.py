@@ -5,8 +5,17 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from datetime import datetime, timedelta
 import zipfile
 import re
-import os
 import json
+
+def can_update_applicant(id, email):
+    applicant = Applicant.query.filter_by(email=email).first()
+    if applicant.id == id:
+        return True
+    else:
+        six_months = (datetime.now() - timedelta(days=180)).date()
+        if applicant.last_applied < six_months:
+            return True
+        return False
 
 def can_upload_applicant_email(email):
     applicant = Applicant.query.filter_by(email=email).first()

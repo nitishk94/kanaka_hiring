@@ -13,15 +13,13 @@
             <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                 {{ applicant.current_stage }}
             </div>
-        </div>
-        
+        </div>  
     </div>
     <div>
-                <a href="{{ url_for('hr.update_applicant', id=applicant.id) }}" 
-                        class="btn btn-warning w-auto px-8 text-lg">
-                            Edit
-                </a>
-            </div>
+        <a href="{{ url_for('hr.show_update_form', id=applicant.id) }}" class="btn btn-warning w-auto px-8 text-lg">
+            Edit
+        </a>
+    </div>
     <br>
  
     <!-- Personal Information -->
@@ -110,7 +108,7 @@
                     <!-- Social Profiles -->
                     <div>
                         <p class="text-sm text-gray-500">LinkedIn Profile</p>
-                        {% if applicant.linkedin_profile != ' ' %}
+                        {% if applicant.linkedin_profile != 'Not Provided' %}
                             <a href="{{ applicant.linkedin_profile }}" target="_blank" class="link link-primary">View Profile</a>
                         {% else %}
                             <p class="font-semibold">Not provided</p>
@@ -118,7 +116,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">GitHub Profile</p>
-                        {% if applicant.github_profile != ' ' %}
+                        {% if applicant.github_profile != 'Not Provided' %}
                             <a href="{{ applicant.github_profile }}" target="_blank" class="link link-primary">View Profile</a>
                         {% else %}
                             <p class="font-semibold">Not provided</p>

@@ -9,7 +9,7 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info
+from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info, can_update_applicant
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
@@ -46,13 +46,15 @@ def show_upload_form():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
+    
+    form_data = session.pop('form_data', None)
 
     referrer_names = [
         {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
-    return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions)
+    return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
 
 @bp.route('/upload_applicants', methods=['POST'])
 @login_required
@@ -65,22 +67,24 @@ def handle_upload_applicant():
     file = request.files.get('cv')
     if not validate_file(file):
         flash('File is corrupted.', 'warning')
+        session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
 
     email = request.form.get('email').lower()
     if not can_upload_applicant_email(email):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
+    else:
+        applicant = Applicant.query.filter_by(email=email).first()
+        applicant.last_applied = date.today()
+        applicant.status = 'Applied'
 
     phone_number = request.form.get('phone_number')
     if not can_upload_applicant_phone(phone_number):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
-
-    applicant = Applicant.query.filter_by(email=email).first()
-    if applicant:
-        applicant.last_applied = date.today()
-        applicant.status = 'Applied'
 
     # Collect and process form data
     def get_bool(key): return bool(request.form.get(key))
@@ -94,6 +98,13 @@ def handle_upload_applicant():
     # Convert relevant fields
     int_or_none = lambda x: int(x) if x else None
 
+    is_fresher = get_bool('is_fresher')
+    experience = request.form.get('experience')
+    if not is_fresher and '0' in experience:
+        flash("Experience cannot be 0", "error")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.show_upload_form'))
+
     new_applicant = Applicant(
         name=request.form.get('name').title(),
         email=email,
@@ -105,13 +116,13 @@ def handle_upload_applicant():
         current_location=request.form.get('current_location', '').title(),
         work_location=request.form.get('work_location', '').title(),
         graduation_year=int_or_none(request.form.get('graduation_year')),
-        is_fresher=get_bool('is_fresher'),
+        is_fresher=is_fresher,
         qualification=request.form.get('qualification'),
         current_internship=get_bool('current_internship'),
         internship_duration=int_or_none(request.form.get('internship_duration')),
         paid_internship=get_bool('paid_internship'),
         stipend=int_or_none(request.form.get('stipend')),
-        experience=request.form.get('experience'),
+        experience=experience,
         referenced_from=request.form.get('referenced_from'),
         linkedin_profile=request.form.get('linkedin_profile') or 'Not Provided',
         github_profile=request.form.get('github_profile') or 'Not Provided',
@@ -168,9 +179,30 @@ def handle_upload_applicant():
         else:
             flash('Database error. Please try again.', 'error')
         current_app.logger.error(f"IntegrityError: {e}")
+        session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
 
-@bp.route('/update_applicants/<int:id>', methods=['GET', 'POST'])
+@bp.route('/update_applicants/<int:id>', methods=['GET'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def show_update_form(id):
+    if '_user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+    
+    form_data = session.pop('form_data', None)
+
+    applicant = Applicant.query.get_or_404(id)
+
+    referrer_names = [
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+    ]
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
+
+    return render_template('hr/update_applicant.html', applicant=applicant, referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
+
+@bp.route('/update_applicants/<int:id>', methods=['POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
@@ -178,159 +210,98 @@ def update_applicant(id):
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
-
-    referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
-    ]
-
-    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
+    
     applicant = Applicant.query.get_or_404(id)
     
+    file = request.files.get('cv')
+    if not validate_file(file):
+        flash('File is corrupted.', 'warning')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('show_update_form'), id=id)
 
-    if request.method == 'POST':
-        file = request.files.get('cv')
-        
-        if not validate_file(file):
-            flash('File is corrupted.', 'warning')
-            current_app.logger.warning(f"File is corrupted: {file.filename}")
-            return render_template('hr/upload.html', form_data=request.form)
+    email = request.form.get('email').lower()
+    if not can_update_applicant(email):
+        flash('The entered email already exists. Please enter a different email.', 'error')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('show_update_form'), id=id)
 
-        # Get all form data
-        name = request.form.get('name')
-        email = request.form.get('email')
+    def get_bool(key): return bool(request.form.get(key))
+    int_or_none = lambda x: int(x) if x else None
 
-        if not can_update_applicant(id,email):
-            flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
-            return redirect(url_for('hr.upload_applicants'))
-        
-        applicant = Applicant.query.filter_by(email=email).first()
-        if applicant:
-            applicant.last_applied = date.today()
-            applicant.status = 'Applied'
+    is_fresher = get_bool('is_fresher')
+    experience = request.form.get('experience')
+    if not is_fresher and '0' in experience:
+        flash("Experience cannot be 0", "error")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('show_update_form'), id=id)
 
-        phone_number = request.form.get('phone_number')
+    try:
         dob = request.form.get('dob')
-        # Convert dob to date object if it's a string
-        if isinstance(dob, str):
-            try:
-                dob = datetime.strptime(dob, '%Y-%m-%d').date()
-            except ValueError:
-                # fallback for other formats or None
-                dob = None
-        gender = request.form.get('gender')
-        marital_status = request.form.get('marital_status')
-        native_place = request.form.get('native_place')
-        current_location = request.form.get('current_location')
-        work_location = request.form.get('work_location')
+        dob = datetime.strptime(dob, '%Y-%m-%d').date() if dob else None
+    except ValueError:
+        dob = None
+
+    applicant.name = request.form.get('name').title()
+    applicant.email = email
+    applicant.phone_number = request.form.get('phone_number')
+    applicant.dob = dob
+    applicant.gender = request.form.get('gender')
+    applicant.marital_status = request.form.get('marital_status')
+    applicant.native_place = request.form.get('native_place', '').title()
+    applicant.current_location = request.form.get('current_location', '').title()
+    applicant.work_location = request.form.get('work_location', '').title()
+    applicant.graduation_year = int_or_none(request.form.get('graduation_year'))
+    applicant.is_fresher = is_fresher
+    applicant.qualification = request.form.get('qualification')
+    applicant.current_internship = get_bool('current_internship')
+    applicant.internship_duration = int_or_none(request.form.get('internship_duration'))
+    applicant.paid_internship = get_bool('paid_internship')
+    applicant.stipend = int_or_none(request.form.get('stipend'))
+    applicant.experience = experience
+    applicant.referenced_from = request.form.get('referenced_from')
+    applicant.linkedin_profile = request.form.get('linkedin_profile') or 'Not Provided'
+    applicant.github_profile = request.form.get('github_profile') or 'Not Provided'
+    applicant.is_kanaka_employee = get_bool('is_kanaka_employee')
+    applicant.current_company = request.form.get('current_company')
+    applicant.designation = request.form.get('designation')
+    applicant.current_job_position = request.form.get('current_job_position', '').title()
+    applicant.current_ctc = int_or_none(request.form.get('current_ctc'))
+    applicant.expected_ctc = int_or_none(request.form.get('expected_ctc'))
+    applicant.notice_period = int_or_none(request.form.get('notice_period'))
+    applicant.tenure_at_current_company = request.form.get('tenure_at_current_company')
+    applicant.current_offers_yes_no = get_bool('current_offers_yes_no')
+    applicant.current_offers_description = request.form.get('current_offers_description') or None
+    applicant.reason_for_change = request.form.get('reason_for_change') or 'Not Provided'
+    applicant.comments = request.form.get('comments') or 'No comments'
+    applicant.job_id = request.form.get('position') if not get_bool('is_fresher') else None
+    applicant.is_referred = get_bool('is_referred')
+    applicant.referred_by = int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None
+
+    # Handle file upload
+    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(upload_dir, filename)
+    file.save(file_path)
+    
+    try:
+        db.session.commit()
+
+        flash('Applicant details successfully updated!', 'success')
+        current_app.logger.info(f"Applicant (Name: {applicant.name.title()}) details updated by {current_user.username}")
+        return redirect(url_for('hr.view_applicant', id=applicant.id))
         
-        # Professional Information
-        is_fresher = bool(request.form.get('is_fresher'))
-        job_id = request.form.get('position') if not is_fresher else None
-        is_referred = bool(request.form.get('is_referred'))
-        referred_by = int(request.form.get('referred_by')) if is_referred else None
-        qualification = request.form.get('qualification')
-        graduation_year = request.form.get('graduation_year')
-        if graduation_year:
-            graduation_year = int(graduation_year)
-            
-        # Internship Information
-        current_internship = bool(request.form.get('current_internship'))
-        internship_duration = request.form.get('internship_duration')
-        if internship_duration:
-            internship_duration = int(internship_duration)
-        paid_internship = bool(request.form.get('paid_internship'))
-        stipend = request.form.get('stipend')
-        if stipend:
-            stipend = int(stipend)
-            
-        referenced_from = request.form.get('referenced_from')
-        linkedin_profile = request.form.get('linkedin_profile')
-        github_profile = request.form.get('github_profile')
-        
-        # Current Employment Information (if not fresher)
-        experience = request.form.get('experience')
-        is_kanaka_employee = bool(request.form.get('is_kanaka_employee'))
-        current_company = request.form.get('current_company')
-        designation = request.form.get('designation')
-        current_job_position = request.form.get('current_job_position')
-        current_ctc = request.form.get('current_ctc')
-        if current_ctc:
-            current_ctc = int(current_ctc)
-        expected_ctc = request.form.get('expected_ctc')
-        if expected_ctc:
-            expected_ctc = int(expected_ctc)
-        notice_period = request.form.get('notice_period')
-        if notice_period:
-            notice_period = int(notice_period)
-        tenure_at_current_company = request.form.get('tenure_at_current_company')
-        current_offers_yes_no = bool(request.form.get('current_offers_yes_no'))
-        current_offers_description = request.form.get('current_offers_description')
-        reason_for_change = request.form.get('reason_for_change')
-        comments = request.form.get('comments')
-
-        # Handle file upload
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
-        os.makedirs(upload_dir, exist_ok=True)
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(upload_dir, filename)
-        file.save(file_path)
-
-        applicant.name=name.title()
-        applicant.email=email
-        applicant.phone_number=phone_number
-        applicant.dob=dob
-        applicant.gender=gender
-        applicant.marital_status=marital_status
-        applicant.native_place=native_place.title() if native_place else None
-        applicant.current_location=current_location.title() if current_location else None
-        applicant.work_location=work_location.title() if work_location else None
-        applicant.graduation_year=graduation_year
-        applicant.is_fresher=is_fresher
-        applicant.qualification=qualification
-        applicant.current_internship=current_internship
-        applicant.internship_duration=internship_duration
-        applicant.paid_internship=paid_internship
-        applicant.stipend=stipend
-        applicant.experience=experience
-        applicant.referenced_from=referenced_from
-        applicant.linkedin_profile=linkedin_profile if linkedin_profile else ' '
-        applicant.github_profile=github_profile if github_profile else ' '
-        applicant.is_kanaka_employee=is_kanaka_employee
-        applicant.current_company=current_company
-        applicant.designation=designation
-        applicant.current_job_position=current_job_position.title() if current_job_position else None
-        applicant.current_ctc=current_ctc
-        applicant.expected_ctc=expected_ctc
-        applicant.notice_period=notice_period
-        applicant.tenure_at_current_company=tenure_at_current_company
-        applicant.current_offers_yes_no=current_offers_yes_no
-        applicant.current_offers_description=current_offers_description if current_offers_description else None
-        applicant.reason_for_change=reason_for_change if reason_for_change else 'Not Provided'
-        applicant.comments=comments if comments else 'No comments'
-        applicant.job_id=job_id if job_id else None
-        applicant.is_referred=is_referred
-        applicant.referred_by=referred_by
-        
-        try:
-            db.session.commit()
-
-            flash('Applicant details successfully updated!', 'success')
-            current_app.logger.info(f"Applicant (Name: {applicant.name.title()}) details updates by {current_user.username}")
-            return redirect(url_for('hr.view_applicant', id=applicant.id))
-            
-        except IntegrityError as e:
-            db.session.rollback()
-            if 'email' in str(e.orig):
-                flash('This email is already registered. Please use a different one.', 'error')
-            elif 'phone_number' in str(e.orig):
-                flash('This phone number is already registered. Please use a different one.', 'error')
-            else:
-                flash('Database error. Please try again.', 'error')
-            current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
-            return render_template('hr/view_applicant.html', referrer_names=referrer_names, form_data=request.form)
-
-    return render_template('hr/update_applicant.html', applicant=applicant, job_positions=job_positions, referrer_names=referrer_names)
-
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'email' in str(e.orig):
+            flash('This email is already registered. Please use a different one.', 'error')
+        elif 'phone_number' in str(e.orig):
+            flash('This phone number is already registered. Please use a different one.', 'error')
+        else:
+            flash('Database error. Please try again.', 'error')
+        current_app.logger.error(f"IntegrityError creating applicant: {str(e)}")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('show_update_form'), id=id)
 
 @bp.route('/view_applicant/<int:id>')
 @no_cache
@@ -600,7 +571,7 @@ def onboarding():
 @login_required
 @role_required(*HR_ROLES)
 def filter_interviews():
-    hr_users = User.query.filter_by(role='hr').all()
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     
     hr_id = request.args.get('hr_id', '')
     

@@ -201,6 +201,15 @@ def authorized_redirect():
     flash("Login successful!", "success")
     return redirect(url_for(f"{user.role}.dashboard"))
 
+@bp.route('/register/internal', methods=['GET'])
+@no_cache
+def show_add_new_user():
+    if current_user.is_authenticated:
+        flash('You are already logged in.', 'info')
+        return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
+    
+    return render_template('auth/add_internal_user.html')
+
 @bp.route('/register/internal', methods=['POST'])
 @no_cache
 def add_new_user():
