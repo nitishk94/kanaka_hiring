@@ -11,7 +11,7 @@ class JobRequirement(db.Model):
     clients = db.Column(db.Text, nullable = True)
     budget = db.Column(db.String(50), nullable = False)
     is_open = db.Column(db.Boolean, default=True, nullable=True)
-    for_vendor = db.Column(db.boolean, default=False, nullable=True)
+    for_vendor = db.Column(db.Boolean, default=False, nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     created_by = db.relationship('User', back_populates='job_listings')

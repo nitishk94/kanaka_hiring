@@ -24,14 +24,32 @@
                 </div>
             </form>
             <!-- Sort By Dropdown -->
+            <form method="GET" action="{{ url_for('hr.sort_applicants') }}" class="flex items-center gap-4">
                 <div class="flex flex-col">
-                    <label for="sort_by" class="font-semibold mb-1">Sort By:</label><br>
-                    <select name="sort_by" id="sort_by" class="select select-bordered">
-                        <option value="date" {% if request.args.get('sort_by') == 'date' or not request.args.get('sort_by') %}selected{% endif %}>Application Date (Latest)</option>
-                        <option value="name" {% if request.args.get('sort_by') == 'name' %}selected{% endif %}>Applicant Name (A–Z)</option>
-                        <option value="hr" {% if request.args.get('sort_by') == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
-                    </select>
+                    <label for="sort_by" class="font-semibold mb-1">Sort By:</label>
+                    <div class="flex items-center gap-2">
+                        <select name="sort_by" id="sort_by" class="select select-bordered">
+                            <option value="date" {% if request.args.get('sort_by') == 'date' or not request.args.get('sort_by') %}selected{% endif %}>
+                                Application Date (Latest First)
+                            </option>
+                            <option value="name" {% if request.args.get('sort_by') == 'name' %}selected{% endif %}>
+                                Applicant Name (A–Z)
+                            </option>
+                            <option value="hr" {% if request.args.get('sort_by') == 'hr' %}selected{% endif %}>
+                                HR Name (A–Z)
+                            </option>
+                        </select>
+
+                        <button type="submit" class="btn btn-outline btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h6" />
+                            </svg>
+                            Sort
+                        </button>
+                    </div>
                 </div>
+            </form>
+
 
             <form method="GET" action="{{ url_for('hr.filter_applicants') }}" class="flex items-center gap-2">
                 <div class="dropdown dropdown-end">
@@ -105,7 +123,6 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Experience</th>
-                    <th>Notice Period</th>
                     <th>HR</th>
                     <th>Job Position</th>
                     <th>Current Stage</th>
@@ -126,7 +143,6 @@
                                 {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
                             {% endif %}
                         </td>
-                        <td>{{ applicant.notice_period if applicant.notice_period else ''}} {{'days' if applicant.notice_period else ''}}</td>
                         <td>{{ applicant.uploader.name }}</td>
                         <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
                         <td>

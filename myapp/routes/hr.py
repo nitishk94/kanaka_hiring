@@ -365,44 +365,48 @@ def view_applicant(id):
 @login_required
 @role_required(*HR_ROLES)
 def filter_applicants():
-    hr_id = request.args.get('hr_id')
-    job_id = request.args.get('job_id')
-    status = request.args.get('status')
-    sort_by = request.args.get('sort_by', 'date')  # Default is date (latest first)
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.order_by(JobRequirement.position).all()
 
-    query = Applicant.query.options(joinedload(Applicant.uploader), joinedload(Applicant.job))
+    hr_id = request.args.get('hr_id', '')
+    job_id = request.args.get('job_id', '')
+    status_id = request.args.get('status', '')
 
-    # Apply filters
+    query = Applicant.query
+
     if hr_id:
-        query = query.filter(Applicant.uploader_id == hr_id)
-    if job_id:
-        query = query.filter(Applicant.job_id == job_id)
-    if status:
-        if status == 'fresher':
-            query = query.filter(Applicant.is_fresher == True)
-        elif status == 'experienced':
-            query = query.filter(Applicant.is_fresher == False)
+        query = query.filter(Applicant.uploaded_by == int(hr_id))
 
-    # Apply sorting
+    if job_id:
+        query = query.filter(Applicant.job_id == int(job_id))
+
+    if status_id == 'fresher':
+        query = query.filter(Applicant.is_fresher == True)
+    elif status_id == 'experienced':
+        query = query.filter(Applicant.is_fresher == False)
+
+    applicants = query.order_by(Applicant.last_applied.desc()).all()
+
+    return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
+
+@bp.route('/sort_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def sort_applicants():
+    sort_by = request.args.get('sort_by', 'date')
+    query = Applicant.query.options(joinedload(Applicant.uploader))
+
     if sort_by == 'name':
         query = query.order_by(Applicant.name.asc())
     elif sort_by == 'hr':
         query = query.join(Applicant.uploader).order_by(User.name.asc())
-    else:  # default: sort by latest application date
+    else:  # default sort
         query = query.order_by(Applicant.last_applied.desc())
 
     applicants = query.all()
+    return render_template('hr/view_applicants.html', applicants=applicants)
 
-    # Get HR and job list for filters
-    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    jobs = JobRequirement.query.order_by(JobRequirement.position).all()
-
-    return render_template(
-        'hr/view_applicants.html',
-        applicants=applicants,
-        users=users,
-        jobs=jobs,
-    )
 
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
@@ -799,7 +803,7 @@ def upload_joblistings():
         skillset=job_skillset,
         clients=job_clients,
         budget=job_budget,
-        experience=job_experience
+        experience=job_experience,
         for_vendor=open_for_vendor
     )
 
