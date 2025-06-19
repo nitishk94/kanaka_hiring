@@ -397,12 +397,11 @@ def reschedule_test(id):
 def filter_applicants():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
-    applicants = query.order_by(Applicant.last_applied.desc()).all()
-    
+
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
     status_id = request.args.get('status', '')
-    
+
     query = Applicant.query
 
     if hr_id:
@@ -415,6 +414,8 @@ def filter_applicants():
         query = query.filter(Applicant.is_fresher == True)
     elif status_id == 'experienced':
         query = query.filter(Applicant.is_fresher == False)
+
+    applicants = query.order_by(Applicant.last_applied.desc()).all()
 
     return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
 
