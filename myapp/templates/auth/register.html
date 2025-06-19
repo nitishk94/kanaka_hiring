@@ -10,7 +10,7 @@
             <p class="py-6">Join Kanaka Application Tracking System to help streamline the hiring process and manage applicants effectively.</p>
         </div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            <form method="POST" class="card-body">
+            <form method="POST" action="{{ url_for('auth.handle_register') }}" class="card-body">
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Name <span class="text-error">*</span></span>
@@ -55,16 +55,16 @@
                             name="username"
                             required
                             placeholder="Enter username"
-                            pattern="[A-Za-z][A-Za-z0-9\-]*"
+                            pattern="[A-Za-z][A-Za-z0-9\-._]*"
                             minlength="3"
                             maxlength="30"
-                            title="Username must be 3-30 characters, start with a letter, and contain only letters, numbers, or dashes"
+                            title="Username must be 3-30 characters, start with a letter, and contain only letters, numbers, dots, underscores or dashes"
                             value="{{ form_data.username if form_data else '' }}"
                         />
                     </label>
                     <p class="validator-hint hidden">
                         Username: 3-50 characters, start with a letter
-                        <br />Only letters, numbers, underscores or dashes allowed
+                        <br />Only letters, numbers, dots, underscores or dashes allowed
                     </p>
                 </div>
 
@@ -115,7 +115,7 @@
                             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                             title="Must be more than 8 characters, including number, lowercase letter, uppercase letter"
                         />
-                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2">
+                        <button type="button" onclick="togglePassword1()" class="absolute right-3 top-1/2 -translate-y-1/2">
                             <svg id="eyeIcon1" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -148,7 +148,7 @@
                         </svg>
                         <input
                             type="password"
-                            name="password2"
+                            name="confirm_password"
                             id="myInput2"
                             required
                             placeholder="Confirm password"
@@ -177,10 +177,20 @@
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>
             </form>
-            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mx-4 mb-4">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
         </div>
     </div>
 </div>
+{% endblock %}
+
 {% block extra_js %}
 <script>
     function togglePassword1() {
@@ -240,9 +250,14 @@
             `;
         }
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                alert.style.transition = "opacity 0.5s";
+                alert.style.opacity = 0;
+                setTimeout(function() { alert.style.display = "none"; }, 500);
+            });
+        }, 10000);
+    });
 </script>
-
-
-
-{% endblock %}
 {% endblock %}

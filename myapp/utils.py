@@ -7,18 +7,7 @@ from myapp.models.testresult import TestResult
 import zipfile
 import requests
 import re
-
-from myapp.models.referrals import Referral
-
-def can_upload_applicant(email):
-    applicant = Applicant.query.filter_by(email=email).first()
-    if not applicant:
-        return True
-    
-    six_months = (datetime.now() - timedelta(days=180)).date()
-    if applicant.last_applied < six_months:
-        return True
-    return False
+import json
 
 def can_update_applicant(id, email):
     applicant = Applicant.query.filter_by(email=email).first()
@@ -29,8 +18,27 @@ def can_update_applicant(id, email):
         if applicant.last_applied < six_months:
             return True
         return False
-        
-        
+
+def can_upload_applicant_email(email):
+    applicant = Applicant.query.filter_by(email=email).first()
+    if not applicant:
+        return True
+    
+    six_months = (datetime.now() - timedelta(days=180)).date()
+    if applicant.last_applied < six_months:
+        return True
+    return False
+
+def can_upload_applicant_phone(number):
+    applicant = Applicant.query.filter_by(phone_number=number).first()
+    if not applicant:
+        return True
+    
+    six_months = (datetime.now() - timedelta(days=180)).date()
+    if applicant.last_applied < six_months:
+        return True
+    return False
+
 def validate_file(file):
     header = file.read(1024)
     file.seek(0)
@@ -129,8 +137,18 @@ def generate_timeline(id):
             timeline.append({'title': 'Hired', 'date': history.updated_at.date()})
     
     # Sort timeline by date
-    #timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
+    timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
     return timeline
+
+def is_future_or_today(date_obj):
+    if not date_obj:
+        return False
+    today = datetime.now().date()
+    return date_obj >= today
+
+def get_json_info():
+    with open('/app/myapp/config/config.json') as f:
+        return json.load(f)
 
 def store_result(id):
     applicant = Applicant.query.get_or_404(id)
@@ -164,5 +182,3 @@ def store_result(id):
             db.session.add(test_result)
             history.test_result = True
             db.session.commit()
-            
-    

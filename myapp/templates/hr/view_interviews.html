@@ -50,7 +50,9 @@
                     <td>{{ interview.interviewer.name }}</td>
                     <td>{{ interview.date.strftime('%Y-%m-%d') }}</td>
                     <td>Round {{ interview.round_number }}</td>
-                    <td>{{ interview.scheduler.name }}</td>
+                    <td>
+                        {{ interview.scheduler.name if interview.scheduler else 'No Scheduler' }}
+                    </td>
                     <td>
                         <!-- The button that opens modal -->
                         <label for="reschedule-modal-{{ interview.id }}" class="btn btn-info btn-sm">Reschedule</label>
@@ -75,7 +77,7 @@
     <div class="modal">
         <div class="modal-box w-11/12 max-w-2xl">
             <h3 class="font-bold text-lg mb-4">Reschedule Interview for {{ interview.applicant.name }}</h3>
-            <form action="{{ url_for('hr.reschedule_interview', id=interview.id) }}" method="POST">
+            <form action="{{ url_for('hr.reschedule_interview', id=interview.applicant_id) }}" method="POST">
                 <div class="form-control w-full">
                     <label class="label" for="interview_date">
                         <span class="label-text">Select Date</span>
@@ -109,3 +111,42 @@
     {% endfor %}
 </div>
 {% endblock %} 
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form[action*="schedule_interview"], form[action*="reschedule_interview"]').forEach(function(form) {
+        const dateInput = form.querySelector('input[name="interview_date"]');
+        const timeInput = form.querySelector('input[name="interview_time"]');
+        const interviewerSelect = form.querySelector('select[name="interviewer_id"]');
+
+        async function updateInterviewers() {
+            const date = dateInput.value;
+            const time = timeInput.value;
+            if (!date || !time) return;
+            const url = `/hr/available_interviewers?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                interviewerSelect.innerHTML = '<option value="">Select an interviewer</option>';
+                data.forEach(function(interviewer) {
+                    const option = document.createElement('option');
+                    option.value = interviewer.id;
+                    option.textContent = interviewer.name;
+                    interviewerSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error fetching available interviewers:', err);
+                interviewerSelect.innerHTML = '<option value="">Error loading interviewers</option>';
+            }
+        }
+
+        if (dateInput && timeInput && interviewerSelect) {
+            dateInput.addEventListener('change', updateInterviewers);
+            timeInput.addEventListener('change', updateInterviewers);
+        }
+    });
+});
+</script>
+{% endblock %}

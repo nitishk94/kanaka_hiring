@@ -32,9 +32,12 @@ dist/
 build/
 
 # Log files and databases
+logs/
+logs/
 *.log
 *.db
 *.sqlite
+uploads/
 uploads/
 
 # OS or Editor files
@@ -51,3 +54,4 @@ htmlcov/
 .coverage
 *.log
 *.DS_Store
+ssl/

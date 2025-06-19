@@ -36,7 +36,16 @@
             <p class="py-6">Access your Kanaka Application Tracking System account to manage applicants and streamline your hiring process.</p>
         </div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            <form method="POST" action="{{ url_for('auth.login') }}" class="card-body">
+            <div class="flex flex-col items-center w-full mt-6">
+                <a href="{{ url_for('auth.login_microsoft') }}"
+                class="mb-4 flex items-center justify-center gap-3 bg-black hover:bg-gray-800 text-white font-semibold py-3 px-14 rounded-md transition-colors duration-200">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+                        alt="Microsoft Logo"
+                        class="w-5 h-5"/>
+                    <span>Log in with Microsoft</span>
+                </a>
+            </div>
+            <form method="POST" action="{{ url_for('auth.login_external') }}" class="card-body">
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}

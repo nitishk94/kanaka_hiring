@@ -49,6 +49,7 @@ class Applicant(db.Model):
 
     history_entries = db.relationship("RecruitmentHistory", back_populates="applicant", cascade="all, delete-orphan")
     referred_candidate = db.relationship("Referral", back_populates="applicant")
+    interviews = db.relationship('Interview', back_populates='applicant')
     uploader = db.relationship("User", foreign_keys=[uploaded_by], back_populates="uploaded_applicants")
     referrer = db.relationship("User", foreign_keys=[referred_by], back_populates="referred_applicants")
     job = db.relationship("JobRequirement", foreign_keys=[job_id],backref="applicants")

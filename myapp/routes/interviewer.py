@@ -24,16 +24,17 @@ def dashboard():
 @login_required
 @role_required(*INTERVIEWER_ROLES, 'hr')
 def view_interviews():
-    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     if current_user.role == 'interviewer':
         interviews = Interview.query.filter_by(interviewer_id=current_user.id).filter_by(completed=False).all()
         applicant_ids = [interview.applicant_id for interview in interviews]
         applicants = Applicant.query.filter(Applicant.id.in_(applicant_ids)).all()
         return render_template('interviewer/interviews.html', interviews=interviews, applicants=applicants)
     else:
-        hr_users = User.query.filter_by(role='hr').all()
+        hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
         interviewers = User.query.filter_by(role='interviewer').all()
-        interviews = Interview.query\
+        
+        # Get interviews with relationships
+        interviews = db.session.query(Interview)\
             .filter_by(completed=False)\
             .options(
                 joinedload(Interview.applicant),
@@ -42,7 +43,7 @@ def view_interviews():
             )\
             .all()
 
-        return render_template('hr/view_interviews.html',jobs=jobs ,interviews=interviews, users=hr_users, interviewers=interviewers)
+        return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users, interviewers=interviewers)
 
 @bp.route('/view_interviewee/<int:id>')
 @no_cache

@@ -75,7 +75,7 @@ class RecruitmentHistory(db.Model):
         latest_round1 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=1).order_by(Interview.id.desc()).first()
 
         if self.rejected:
-            return "Rejected - Test Failed" if not self.test_result else "Rejected"
+            return "Rejected"
             
         interview_rounds = [
             (hr_date, hr_time, latest_hr, "HR round"),
@@ -85,21 +85,17 @@ class RecruitmentHistory(db.Model):
         
         for interview_date, interview_time, interview, round_name in interview_rounds:
             if interview_date:
-                if interview_date >= today and not interview.completed:
+                if interview and interview_date >= today and not interview.completed:
                     interviewer_name = self.get_interviewer_name(interview)
                     return self.format_scheduled_interview(interview_date, interview_time, round_name, interviewer_name)
                 else:
                     return f"{round_name} completed"
 
         if test_date:
-            if self.test_result is not None:
-                if not self.test_result:
-                    self.rejected = True
-                    return "Test Failed"
-                return "Test Passed"
-            elif test_date >= today or self.test_result is not None:
+            if test_date >= today:
                 return f"Test scheduled on {test_date.strftime('%Y-%m-%d')}"
-            return "Test completed"
+            elif test_date < today:
+                return "Test completed"
             
         return "Need to schedule test"
         

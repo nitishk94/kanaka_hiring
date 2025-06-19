@@ -10,7 +10,7 @@
         <p class="text-sm text-error mt-2">Fields marked with <span class="text-error">*</span> are required</p>
     </div>
 
-    <form method="POST" action="{{ url_for('hr.upload_applicants') }}" enctype="multipart/form-data" class="space-y-6">
+    <form method="POST" action="{{ url_for('hr.handle_upload_applicant') }}" enctype="multipart/form-data" class="space-y-6">
         <!-- Personal Information Card -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
@@ -701,22 +701,6 @@
             currentOffersToggle.dispatchEvent(new Event('change'));
         }
 
-        // File validation
-        if (fileInput) {
-            fileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const fileSizeMB = file.size / (1024 * 1024);
-                    if (fileSizeMB > 5) {
-                        errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
-                        this.value = '';
-                    } else {
-                        errorElement.textContent = '';
-                    }
-                }
-            });
-        }
-
         // Vue Multiselect for Referrer
         if (document.getElementById('vue-referrer-select')) {
             new Vue({
@@ -750,6 +734,19 @@
                 }
             });
         }
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate file size
+            const fileSizeMB = file.size / (1024 * 1024);
+            if (fileSizeMB > 5) {
+                errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
+                fileInput.value = '';
+                return;
+            }
+        });
     });
 </script>
 {% endblock %}

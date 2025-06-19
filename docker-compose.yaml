@@ -2,5 +2,15 @@ services:
   app:
     container_name: python-app
     build: .
-    ports:
+    ports: 
       -  5000:5000
+    volumes:
+      - migration-volume:/app/migrations
+
+volumes:
+  migration-volume:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ubuntu/application/data/migrations
+      o: bind
