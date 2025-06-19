@@ -109,6 +109,19 @@
                         />
                     </div>
 
+                    <div class="form-control md:col-span-1">
+                        <label class="label" for="open_for_vendor">
+                            <span class="label-text">Open for external vendors<span class="text-error">*</span></span>
+                        </label>
+                        <input
+                            id="open_for_vendor"
+                            type="checkbox"
+                            name="open_for_vendor"
+                            class="checkbox"
+                            {% if form_data and form_data.open_for_vendor %}checked{% endif %}
+                        />
+                    </div>
+
                 </div>
 
                 <!-- Submit button -->

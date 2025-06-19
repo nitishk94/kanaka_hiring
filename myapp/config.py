@@ -9,7 +9,7 @@ load_dotenv(dotenv_path=env_path, override=True)
 
 class Config:
     SECRET_KEY = secrets.token_hex(32)
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:151004@localhost:5432/kanaka_hiring'
+    SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
     SESSION_TYPE = 'filesystem'

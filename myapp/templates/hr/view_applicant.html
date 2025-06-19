@@ -274,11 +274,77 @@
                         {% if 'Rejected' not in applicant.current_stage %}
                             {% if applicant.current_stage == 'Need to schedule test' %}
                                 <div class="flex gap-2">
-                                <a href="{{ url_for('hr.schedule_test', id=applicant.id) }}" 
-                                   class="btn btn-warning btn-info">
-                                    
-                                    Schedule Test
-                                </a>
+                                <label tabindex="0" class="btn btn-primary">Schedule Test</label>
+                                <form method="GET" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="mb-8 space-y-4">
+                                    <div class="form-control">
+                                        <label class="label font-semibold text-lg text-black">Select Test ID:</label>
+                                        <select name="test_id" class="select select-bordered w-full" onchange="this.form.submit()">
+                                            <option value="">-- Select Test ID --</option>
+                                            {% for testId, testName in tests.items() %}
+                                                <option value="{{ testId }}" {% if selected_test_id == testId %}selected{% endif %}>
+                                                    {{ testId }} - {{ testName }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>    
+                                    </div>
+                                </form>
+                                {% if selected_test_id %}
+                                    <form method="POST" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="space-y-6">
+                                        <!-- Hidden field for selected test ID -->
+                                        <input type="hidden" name="test_id" value="{{ selected_test_id }}">
+
+                                        <div class="form-control">
+                                        <label class="label font-semibold text-lg text-black">Select Test Link:</label>
+                                        <select name="test_link" class="select select-bordered w-full">
+                                            <option value="">-- Select Test Link --</option>
+                                            {% if test_links %}
+                                                {% for linkId, linkName in test_links.items() %}
+                                                    <option value="{{ linkId }}">{{ linkId }} - {{ linkName }}</option>
+                                                {% endfor %}
+                                            {% else %}
+                                                <option disabled>No links available for this test</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="flex justify-center mt-4">
+                                        <button type="submit" class="btn btn-primary text-lg">Schedule Test</button>
+                                    </div>
+                                </form>
+                                {% endif %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+
                             </div>
                             {% endif %}
 

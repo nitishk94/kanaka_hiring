@@ -1,6 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
+from sqlalchemy import not_
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
@@ -37,13 +38,32 @@ def applicants():
     
     if search_query:
         return redirect(url_for('hr.search_applicants', query=search_query))
-        
-    applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    
+    excluded_stages = ['Rejected', 'On Hold', 'Offered', 'Joined']
+    applicants = Applicant.query.options(joinedload(Applicant.uploader)).filter(~Applicant.current_stage.in_(excluded_stages)).order_by(Applicant.last_applied.desc()).all()
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     for applicant in applicants:
         update_status(applicant.id)
     return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
+
+@bp.route('/all_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def all_applicants():
+    search_query = request.args.get('search', '').strip()
+    
+    if search_query:
+        return redirect(url_for('hr.search_applicants', query=search_query))
+    
+    applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    for applicant in applicants:
+        update_status(applicant.id)
+    return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs)
+
 
 @bp.route('/search_applicants')
 @no_cache
@@ -234,7 +254,7 @@ def show_update_form(id):
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def show_update_form(id):
+def update_applicant(id):
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
@@ -342,91 +362,49 @@ def view_applicant(id):
 
     return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
 
-@bp.route('/schedule_test/<int:id>', methods=['POST'])
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def schedule_test(id):
-    date = request.form.get('test_date')
-    time = request.form.get('test_time')
-
-    if isinstance(date, str):
-        try:
-            date = datetime.strptime(date, '%Y-%m-%d').date()
-        except ValueError:
-            date = None
-
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    history.test_date = date
-    history.test_time = time
-    db.session.commit()
-    flash('Test scheduled successfully', 'success')
-    current_app.logger.info(f"Test scheduled for applicant {id} on {date} by {current_user.username}")
-    return redirect(url_for('hr.view_applicant', id=id))
-
-@bp.route('/reschedule_test/<int:id>', methods=['POST'])
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def reschedule_test(id):
-    date = request.form.get('retest_date')
-    time = request.form.get('retest_time')
-    if isinstance(date, str):
-        try:
-            date = datetime.strptime(date, '%Y-%m-%d').date()
-        except ValueError:
-            date = None
-    
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    if history and history.test_result is None:
-        history.test_date = date
-        history.test_time = time
-        history.test_date = date
-        db.session.commit()
-        flash('Test rescheduled successfully', 'success')
-        current_app.logger.info(f"Test rescheduled for applicant {id} to {date} by {current_user.username}")
-    else:
-        flash('Cannot reschedule test - test result already exists', 'error')
-        
-    return redirect(url_for('hr.view_applicant', id=id))
-
 @bp.route('/filter_applicants')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def filter_applicants():
-    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    hr_id = request.args.get('hr_id')
+    job_id = request.args.get('job_id')
+    status = request.args.get('status')
+    sort_by = request.args.get('sort_by', 'date')  # Default is date (latest first)
+
+    query = Applicant.query.options(joinedload(Applicant.uploader), joinedload(Applicant.job))
+
+    # Apply filters
+    if hr_id:
+        query = query.filter(Applicant.uploader_id == hr_id)
+    if job_id:
+        query = query.filter(Applicant.job_id == job_id)
+    if status:
+        if status == 'fresher':
+            query = query.filter(Applicant.is_fresher == True)
+        elif status == 'experienced':
+            query = query.filter(Applicant.is_fresher == False)
+
+    # Apply sorting
+    if sort_by == 'name':
+        query = query.order_by(Applicant.name.asc())
+    elif sort_by == 'hr':
+        query = query.join(Applicant.uploader).order_by(User.name.asc())
+    else:  # default: sort by latest application date
+        query = query.order_by(Applicant.last_applied.desc())
+
+    applicants = query.all()
+
+    # Get HR and job list for filters
+    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
 
-    hr_id = request.args.get('hr_id', '')
-    job_id = request.args.get('job_id', '')
-    status_id = request.args.get('status', '')
-
-    query = Applicant.query
-
-    if hr_id:
-        query = query.filter(Applicant.uploaded_by == int(hr_id))
-
-    if job_id:
-        query = query.filter(Applicant.job_id == int(job_id))
-
-        query = query.filter(Applicant.job_id.isnot(None))
-
-    jobs = (
-        JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
-        if job_id else
-        JobRequirement.query.order_by(JobRequirement.position).all()
+    return render_template(
+        'hr/view_applicants.html',
+        applicants=applicants,
+        users=users,
+        jobs=jobs,
     )
-    
-
-    if status_id == 'fresher':
-        query = query.filter(Applicant.is_fresher == True)
-    elif status_id == 'experienced':
-        query = query.filter(Applicant.is_fresher == False)
-
-    applicants = query.order_by(Applicant.last_applied.desc()).all()
-
-    return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
 
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
@@ -598,11 +576,11 @@ def view_referrals():
 @bp.route('/filter_referrals')
 @no_cache
 @login_required
+@role_required(*HR_ROLES)
 def filter_referrals():
     referral_id = request.args.get('referral_id')
     job_id = request.args.get('job_id')
     referral_users = User.query.filter_by(role='referral').all()
-
 
     query = JobRequirement.query
 
@@ -610,7 +588,6 @@ def filter_referrals():
     if referral_id:
         query = query.filter(Referral.id == referral_id)
     
-
     # Apply Status filter if provided
     if job_id:
         jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
@@ -800,6 +777,7 @@ def upload_joblistings():
     job_clients = request.form.get('job_clients')
     job_budget = request.form.get('job_budget')
     job_experience = request.form.get('job_experience')  
+    open_for_vendor=request.form.get('open_for_vendor')
 
     if not job_position or not job_description:
         return render_template('hr/addjob.html', form_data=request.form)
@@ -812,6 +790,7 @@ def upload_joblistings():
         clients=job_clients,
         budget=job_budget,
         experience=job_experience
+        for_vendor=open_for_vendor
     )
 
     db.session.add(new_jobrequirement)
@@ -823,6 +802,7 @@ def upload_joblistings():
     return redirect(url_for('main.view_joblisting'))
 
 @bp.route('/update_joblisting/<int:id>', methods=['GET', 'POST'])
+@no_cache
 @login_required
 @role_required('hr', 'admin')
 def joblisting_update(id):
@@ -897,18 +877,24 @@ def schedule_test(id):
     applicant = Applicant.query.get_or_404(id)
 
     if request.method == 'POST':
-        start_date = request.form.get('start_test_date')
-        time = request.form.get('test_time')
-        end_date=request.form.get('end_test_date')
         test_id = request.form.get('test_id')
         test_link = request.form.get('test_link')
+        
+        today = datetime.today()
+        start_date = today.strftime('%Y-%m-%d')    
+        day_str = today.strftime('%A')    
+        time_str = today.strftime('%H:%M:%S')
+
+        if day_str=='Friday':
+            end_date=start_date + timedelta(days=2)
+        else:
+            end_date=start_date + timedelta(days=1)
 
         if not test_link:
-            return redirect(url_for('hr.schedule_default',id=id,testId=test_id,start_test_date=start_date,end_test_date=end_date,test_time=time))
+            return redirect(url_for('hr.schedule_default',id=id,testId=test_id,start_test_date=start_date,end_test_date=end_date,test_time=time_str))
         else:
-            return redirect(url_for('hr.schedule_linkid',id=id,testId=test_id,testLinkId=test_link,start_test_date=start_date,end_test_date=end_date,test_time=time))
+            return redirect(url_for('hr.schedule_linkid',id=id,testId=test_id,testLinkId=test_link,start_test_date=start_date,end_test_date=end_date,test_time=time_str))
 
-    
     url = "https://apiv3.imocha.io/v3/tests"
     headers = {
         "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
@@ -932,7 +918,7 @@ def schedule_test(id):
             }
 
     return render_template(
-        'hr/test_schedule.html',
+        'hr/view_applicant.html',
         tests=test_dict,
         applicant=applicant,
         selected_test_id=selected_test_id,
@@ -1063,7 +1049,7 @@ def test_result(id):
     
     result = response.json()
     #check pass/fail criteria based on test result.
-    if result['status'] == 'Complete' or result['status']=='TestLeft' or result['status']=='None':
+    if result['status'] == 'Complete' or result['status']=='TestLeft' or result['status']=='Expired' :
         return render_template('hr/test_result.html',id=id, result=result)
     
     else:

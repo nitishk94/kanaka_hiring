@@ -21,12 +21,12 @@
 
                         <!-- Referral Name Dropdown -->
                         <div class="flex flex-col">
-                            <label for="referral_name" class="font-semibold mb-1">Referral Name:</label>
-                            <select name="referral_name" id="referral_name" class="select select-bordered">
+                            <label for="referral_id" class="font-semibold mb-1">Referral Name:</label>
+                            <select name="referral_id" id="referral_id" class="select select-bordered">
                                 <option value="">-- All --</option>
-                                {% for name in users %}
-                                    <option value="{{ name }}" {% if request.args.get('referral_name') == name %}selected{% endif %}>
-                                        {{ name }}
+                                {% for user in users %}
+                                    <option value="{{ user.id }}" {% if request.args.get('referral_id') == user.id %}selected{% endif %}>
+                                        {{ user.name }}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -93,7 +93,7 @@
                                 Track Status
                             </a>
                             {% else %}
-                            <a href="{{ url_for('hr.upload_applicants') }}" class="btn btn-sm btn-info">
+                            <a href="{{ url_for('hr.show_upload_form') }}" class="btn btn-sm btn-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                     <polyline points="17 8 12 3 7 8" />
