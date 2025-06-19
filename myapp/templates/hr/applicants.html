@@ -106,7 +106,6 @@
                     <th>Phone</th>
                     <th>Experience</th>
                     <th>Notice Period</th>
-                    <th class="w-32">Comments</th>
                     <th>HR</th>
                     <th>Job Position</th>
                     <th>Current Stage</th>
@@ -128,7 +127,6 @@
                             {% endif %}
                         </td>
                         <td>{{ applicant.notice_period if applicant.notice_period else ''}} {{'days' if applicant.notice_period else ''}}</td>
-                        <td>{{ applicant.comments }}</td>
                         <td>{{ applicant.uploader.name }}</td>
                         <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
                         <td>

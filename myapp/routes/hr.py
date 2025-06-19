@@ -1,7 +1,5 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from sqlalchemy import and_
-from sqlalchemy import not_
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
@@ -549,6 +547,18 @@ def schedule_interview(id):
         current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
 
     return redirect(url_for('hr.view_applicant', id=id))
+
+@bp.route('/on_hold_application/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def put_on_hold_application(id):
+    applicant = Applicant.query.get_or_404(id)
+    applicant.current_stage = 'On Hold'
+    db.session.commit()
+    current_app.logger.info(f"Candidate {applicant.name} put on hold")
+    flash('Applicant has been put on hold.', 'warning')
+    return redirect(url_for('hr.all_applicants'))
 
 @bp.route('/reject_application/<int:id>', methods=['POST'])
 @no_cache

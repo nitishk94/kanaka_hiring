@@ -549,12 +549,44 @@
                                     </div>
                                 </div>
                             {% endif %}
+                            {% if applicant.history_entries[0].hr_round_comments %}
+                                <div class="modal">
+                                <div class="modal-box">
+                                    <h3 class="font-bold text-lg">Put Applicant on Hold</h3>
+                                    <p class="py-4">Are you sure you want to put {{ applicant.name }} on hold?</p>
+                                    <div class="modal-action">
+                                    <label for="hold-modal-{{ applicant.id }}" class="btn">Cancel</label>
+                                    <form method="POST" action="{{ url_for('hr.put_on_hold', id=applicant.id) }}">
+                                        <button type="submit" class="btn btn-warning">Confirm Hold</button>
+                                    </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('hr.put_on_hold_application', id=applicant.id) }}" class="inline">
+                                <label for="reject-modal" class="btn btn-error">Put Applicantion On-hold</label>
+                            </form>
                             <form method="POST" action="{{ url_for('hr.reject_application', id=applicant.id) }}" class="inline">
                                 <label for="reject-modal" class="btn btn-error">Reject Application</label>
                             </form>
                         {% endif %}
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="checkbox" id="hold-modal-{{ applicant.id }}" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Put Applicant on Hold</h3>
+            <p class="py-4">Are you sure you want to put {{ applicant.name }} on hold?</p>
+            <div class="modal-action">
+            <label for="hold-modal-{{ applicant.id }}" class="btn">Cancel</label>
+            <form method="POST" action="{{ url_for('hr.put_on_hold_application', id=applicant.id) }}">
+                <button type="submit" class="btn btn-warning">Confirm Hold</button>
+            </form>
             </div>
         </div>
     </div>

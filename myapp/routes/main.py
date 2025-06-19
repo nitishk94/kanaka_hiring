@@ -1,7 +1,6 @@
 from flask import Blueprint, flash, redirect, render_template, jsonify, request, url_for
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
-from myapp.extensions import db
 from myapp.models import User  
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.applicants import Applicant
