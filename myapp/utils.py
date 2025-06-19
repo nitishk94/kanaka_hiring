@@ -2,7 +2,7 @@ from flask import flash
 from myapp.extensions import db
 from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from myapp.models.testresult import TestResult
 import zipfile
 import requests
@@ -61,6 +61,17 @@ def update_status(id):
             history.current_stage = new_stage
             applicant.current_stage = new_stage
             db.session.commit()
+
+def button_status(id):
+    applicant = Applicant.query.get_or_404(id)
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    today = date.today()
+    
+    if(history.test_date + timedelta(days=1)) == today:
+        decision=1000
+        return decision
+    return 1
+
 
 def generate_timeline(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
@@ -153,7 +164,5 @@ def store_result(id):
             db.session.add(test_result)
             history.test_result = True
             db.session.commit()
-            return True
-    else:
-        return False
+            
     

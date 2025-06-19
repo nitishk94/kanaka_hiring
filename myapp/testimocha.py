@@ -54,11 +54,11 @@ def invite_candidate(testId):
     
     data = {
         "name": "Vatsa",
-        "email": "tarineepawar@gmail.com",
+        "email": "shrivatsa.pics25@gmail.com",
         "sendEmail" : "yes",
         "stakeholderEmails":"shrivatsa26@gmail.com",
-        "startDateTime": "2025-06-16T06:30:00Z",
-        "endDateTime": "2025-06-17T12:00:00Z",
+        "startDateTime": "2025-06-19T00:30:00Z",
+        "endDateTime": "2025-06-23T00:00:00Z",
         "timeZoneId": 1720,
         "ProctoringMode": "disabled"
     }
@@ -110,7 +110,7 @@ def main():
         #print(f"Invite Response: {invite_response}")
         #testInvitationId = invite_response.get('testInvitationId')
         #print(f"Test Invitation ID: {testInvitationId}")
-        print(get_test_links(testId))
+        print(test_result(11507415))
 
     else:
         print("No tests found.")

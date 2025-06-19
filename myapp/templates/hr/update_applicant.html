@@ -249,7 +249,7 @@
                             name="internship_duration"
                             placeholder="Enter duration in months"
                             class="input input-bordered w-full"
-                            min="0"
+                            min="1"
                             value="{{ applicant.internship_duration if applicant.internship_duration else '' }}"
                         />
                     </div>
@@ -281,7 +281,9 @@
                             required
                             placeholder="Enter years of experience"
                             class="input input-bordered w-full"
+                            min="1"
                             value="{{ applicant.experience if applicant.experience else '' }}"
+                            
                         />
                     </div>
 

@@ -23,12 +23,16 @@
                     <p class="font-semibold">{{ result.candidateEmail or 'N/A' }}</p>
                 </div>
                 <div>
+                    <p class="text-sm text-gray-500">Test Status:</p>
+                    <p class="font-semibold">{{ result.status or 'N/A' }}</p>
+                </div>
+                <div>
                     <p class="text-sm text-gray-500">Total Score:</p>
                     <p class="font-semibold">{{ result.score }}/{{ result.totalTestPoints }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500">Time Taken:</p>
-                    <p class="font-semibold">{{ result.timeTaken/60 }} minutes</p>
+                    <p class="font-semibold">{{ (result.timeTaken/60) | round(2) }} minutes</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500">Percentage:</p>

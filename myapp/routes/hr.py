@@ -184,7 +184,7 @@ def upload_applicants():
             uploaded_by=current_user.id,
             is_referred=is_referred,
             referred_by=referred_by,
-            job_id=job_id if job_id else 'None',
+            job_id=job_id if job_id else None ,
         )
         
         try:
@@ -246,7 +246,7 @@ def update_applicant(id):
         email = request.form.get('email')
 
         if not can_update_applicant(id,email):
-            flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+            flash('This candidate email already exists or is under a 6-month freeze period. Please try later.', 'error')
             return redirect(url_for('hr.upload_applicants'))
         
         applicant = Applicant.query.filter_by(email=email).first()
@@ -313,6 +313,9 @@ def update_applicant(id):
         current_offers_description = request.form.get('current_offers_description')
         reason_for_change = request.form.get('reason_for_change')
         comments = request.form.get('comments')
+
+        if int(experience)<1:
+            flash('Experience cannot be less than one','error')
 
         # Handle file upload
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
@@ -767,15 +770,16 @@ def schedule_test(id):
     applicant = Applicant.query.get_or_404(id)
 
     if request.method == 'POST':
-        date = request.form.get('test_date')
+        start_date = request.form.get('start_test_date')
         time = request.form.get('test_time')
+        end_date=request.form.get('end_test_date')
         test_id = request.form.get('test_id')
         test_link = request.form.get('test_link')
 
         if not test_link:
-            return redirect(url_for('hr.schedule_default',id=id,testId=test_id,test_date=date,test_time=time))
+            return redirect(url_for('hr.schedule_default',id=id,testId=test_id,start_test_date=start_date,end_test_date=end_date,test_time=time))
         else:
-            return redirect(url_for('hr.schedule_linkid',id=id,testId=test_id,testLinkId=test_link,test_date=date,test_time=time))
+            return redirect(url_for('hr.schedule_linkid',id=id,testId=test_id,testLinkId=test_link,start_test_date=start_date,end_test_date=end_date,test_time=time))
 
     
     url = "https://apiv3.imocha.io/v3/tests"
@@ -808,11 +812,11 @@ def schedule_test(id):
         test_links=test_links
     )
 
-@bp.route('/schedule_default/<int:id>/<int:testId>/<test_date>/<test_time>', methods=['GET', 'POST'])
+@bp.route('/schedule_default/<int:id>/<int:testId>/<start_test_date>/<test_time>/<end_test_date>', methods=['GET', 'POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def schedule_default(id,testId,test_date,test_time):
+def schedule_default(id,testId,start_test_date,end_test_date,test_time):
     api_url="https://apiv3.imocha.io/v3/tests/"+str(testId)+"/invite"
     headers = {
         "X-API-KEY": "MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
@@ -824,14 +828,14 @@ def schedule_default(id,testId,test_date,test_time):
     if history.test_id:
         flash('Test already scheduled for this applicant.', 'warning')
         return redirect(url_for('hr.view_applicant', id=applicant.id))
-    history.test_date = test_date
+    history.test_date = start_test_date
     history.test_time = test_time
     data = {
         "name": applicant.name,
         "email": applicant.email,
         "sendEmail" : "yes",
-        "startDateTime": start_date(test_date, test_time),
-        "endDateTime": end_date(test_date, test_time),
+        "startDateTime": format_date(start_test_date, test_time),
+        "endDateTime": format_date(end_test_date, test_time),
         "timeZoneId": 1720,
         "ProctoringMode": "image",
     }
@@ -849,24 +853,24 @@ def schedule_default(id,testId,test_date,test_time):
 
     return redirect(url_for('hr.view_applicant', id=applicant.id))
 
-@bp.route('/schedule_linkid/<int:id>/<int:testId>/<testLinkId>/<test_date>/<test_time>', methods=['GET', 'POST'])   
+@bp.route('/schedule_linkid/<int:id>/<int:testId>/<testLinkId>/<start_test_date>/<test_time>/<end_test_date>', methods=['GET', 'POST'])   
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def schedule_linkid(id, testId, testLinkId, test_date, test_time):
+def schedule_linkid(id, testId, testLinkId, start_test_date, end_test_date, test_time):
     applicant= Applicant.query.get_or_404(id)
     history= RecruitmentHistory.query.filter_by(applicant_id=applicant.id).first()
     if history.test_id:
         flash('Test already scheduled for this applicant.', 'warning')
         return redirect(url_for('hr.view_applicant', id=applicant.id))
-    history.test_date = test_date
+    history.test_date = start_test_date
     history.test_time = test_time
     data = {
         "name": applicant.name,
         "email": applicant.email,
         "sendEmail": "yes",
-        "startDateTime": start_date(test_date, test_time),
-        "endDateTime": end_date(test_date, test_time),
+        "startDateTime": format_date(start_test_date, test_time),
+        "endDateTime": format_date(end_test_date, test_time),
         "timeZoneId": 1720,
         "ProctoringMode": "image",
     }
@@ -894,29 +898,13 @@ def schedule_linkid(id, testId, testLinkId, test_date, test_time):
     return redirect(url_for('hr.view_applicant', id=applicant.id))
 
 #Convert to ISO Date format
-def start_date(date_input, time_input):
+def format_date(date_input, time_input):
     
     if isinstance(date_input, str):
         date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
     if isinstance(time_input, str):
         time_input = datetime.strptime(time_input, '%H:%M').time()
 
-    dt = datetime.combine(date_input, time_input)
-
-    local_tz = timezone('Asia/Kolkata')
-
-    local_dt = local_tz.localize(dt)
-    utc_dt = local_dt.astimezone(utc)
-
-    return utc_dt.isoformat().replace('+00:00', 'Z')
-
-def end_date(date_input, time_input):
-    if isinstance(date_input, str):
-        date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
-    if isinstance(time_input, str):
-        time_input = datetime.strptime(time_input, '%H:%M').time()
-    
-    date_input = date_input  + timedelta(days=1)
     dt = datetime.combine(date_input, time_input)
 
     local_tz = timezone('Asia/Kolkata')
@@ -948,8 +936,9 @@ def test_result(id):
     
     result = response.json()
     #check pass/fail criteria based on test result.
-    if result['status'] == 'Complete':
+    if result['status'] == 'Complete' or result['status']=='TestLeft' or result['status']=='None':
         return render_template('hr/test_result.html',id=id, result=result)
+    
     else:
         flash('Test still in progress. Please check back later.', 'warning')
         current_app.logger.info(f"Test result for applicant {id} is not complete.")
