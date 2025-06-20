@@ -20,6 +20,8 @@ import os
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
 
+excluded_stages = ['Rejected', 'On Hold', 'Offered', 'Joined']
+
 @bp.route('/dashboard')
 @no_cache
 @login_required
@@ -38,7 +40,7 @@ def applicants():
         return redirect(url_for('hr.search_applicants', query=search_query))
     
     excluded_stages = ['Rejected', 'On Hold', 'Offered', 'Joined']
-    applicants = Applicant.query.options(joinedload(Applicant.uploader)).filter(~Applicant.current_stage.in_(excluded_stages)).order_by(Applicant.last_applied.desc()).all()
+    applicants = Applicant.query.options(joinedload(Applicant.uploader)).filter(~Applicant.status.in_(excluded_stages)).order_by(Applicant.last_applied.desc()).all()
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     for applicant in applicants:
@@ -82,6 +84,8 @@ def search_applicants():
             Applicant.name.ilike(f'%{search_query}%'),
         ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
     
+    if excluded_stages:
+        applicants = applicants.filter(~Applicant.status.in_(excluded_stages))
     
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
@@ -185,11 +189,11 @@ def handle_upload_applicant():
         reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
         comments=request.form.get('comments') or 'No comments',
         last_applied=date.today(),
-        current_stage='Need to schedule test',
+        current_stage='Need to schedule test/interview',
         uploaded_by=current_user.id,
         is_referred=get_bool('is_referred'),
         referred_by=int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None,
-        job_id=request.form.get('position') if not get_bool('is_fresher') else None,
+        job_id=int_or_none(request.form.get('position')) if not get_bool('is_fresher') else None,
     )
 
     # Save file
@@ -319,7 +323,7 @@ def update_applicant(id):
     applicant.current_offers_description = request.form.get('current_offers_description') or None
     applicant.reason_for_change = request.form.get('reason_for_change') or 'Not Provided'
     applicant.comments = request.form.get('comments') or 'No comments'
-    applicant.job_id = request.form.get('position') if not get_bool('is_fresher') else None
+    applicant.job_id = int_or_none(request.form.get('position')) if not get_bool('is_fresher') else None
     applicant.is_referred = get_bool('is_referred')
     applicant.referred_by = int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None
 
@@ -384,6 +388,9 @@ def filter_applicants():
         query = query.filter(Applicant.is_fresher == True)
     elif status_id == 'experienced':
         query = query.filter(Applicant.is_fresher == False)
+    
+    if excluded_stages:
+        query = query.filter(~Applicant.status.in_(excluded_stages))
 
     applicants = query.order_by(Applicant.last_applied.desc()).all()
 
@@ -395,18 +402,35 @@ def filter_applicants():
 @role_required(*HR_ROLES)
 def sort_applicants():
     sort_by = request.args.get('sort_by', 'date')
-    query = Applicant.query.options(joinedload(Applicant.uploader))
+    
+    # Eager load uploader and job for display
+    query = Applicant.query.options(
+        joinedload(Applicant.uploader),
+        joinedload(Applicant.job)
+    )
 
     if sort_by == 'name':
         query = query.order_by(Applicant.name.asc())
     elif sort_by == 'hr':
+        # join uploader explicitly and order by User.name
         query = query.join(Applicant.uploader).order_by(User.name.asc())
-    else:  # default sort
+    else:  # Default to sorting by latest application
         query = query.order_by(Applicant.last_applied.desc())
 
-    applicants = query.all()
-    return render_template('hr/view_applicants.html', applicants=applicants)
+    if excluded_stages:
+        query = query.filter(~Applicant.status.in_(excluded_stages))
 
+    # For filter dropdowns
+    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.all()
+
+    return render_template(
+        'hr/applicants.html',
+        applicants=applicants,
+        users=users,
+        jobs=jobs,
+        search_query='' 
+    )
 
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
@@ -427,7 +451,7 @@ def schedule_interview(id):
     access_token = session["token"]["access_token"]
     date = request.form.get('interview_date')
     time = request.form.get('interview_time')
-    interviewer_id = request.form.get('interviewer_id')
+    interviewer_ids = [int(id) for id in request.form.getlist('interviewer_ids')]
 
     if isinstance(date, str):
         try:
@@ -452,61 +476,91 @@ def schedule_interview(id):
         flash('Interview date must be today or in the future.', 'error')
         return redirect(url_for('hr.view_applicant', id=id))
     
+    if not interviewer_ids:
+        flash('Please select at least one interviewer.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
+    
     applicant = Applicant.query.get_or_404(id)
-    interviewer = User.query.get_or_404(interviewer_id)
-    history = RecruitmentHistory.query.filter_by(applicant_id = id).first()
+    interviewers = User.query.filter(User.id.in_(interviewer_ids)).all()
+    if len(interviewers) != len(interviewer_ids):
+        flash('One or more selected interviewers could not be found.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
+        
+    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     start_datetime = datetime.combine(date, time)
     end_datetime = start_datetime + timedelta(hours=1)
 
-    if not history.interview_round_1_date:
-        round = 1
-        history.interview_round_1_date = date
-        history.interview_round_1_time = time
-    elif not history.interview_round_2_date:
-        round = 2
-        history.interview_round_2_date = date
-        history.interview_round_2_time = time
+    client = False
+    for interviewer in interviewers:
+        if interviewer.auth_type == 'local':
+            client = True
+
+    if client:
+        if not history.interview_round_1_date:
+            round = 'Client Round 1'            
+            history.interview_round_1_date = date
+            history.interview_round_1_time = time
+        elif not history.interview_round_2_date:
+            round = 'Client Round 2'
+            history.interview_round_2_date = date
+            history.interview_round_2_time = time
+        elif not history.hr_round_date:
+            round = 'HR Round'
+            history.hr_round_date = date
+            history.hr_round_time = time
     else:
-        round = 3
-        history.hr_round_date = date
-        history.hr_round_time = time
+        if not history.interview_round_1_date:
+            round = 1
+            history.interview_round_1_date = date
+            history.interview_round_1_time = time
+        elif not history.interview_round_2_date:
+            round = 2
+            history.interview_round_2_date = date
+            history.interview_round_2_time = time
+        else:
+            round = 'HR Round'
+            history.hr_round_date = date
+            history.hr_round_time = time
     
     existing = Interview.query.filter_by(applicant_id=id, round_number=round).first()
     if existing:
         flash("This interview round has already been scheduled.", "warning")
         return redirect(url_for('hr.view_applicant', id=id))
 
-    interview = Interview(
-        applicant_id=id,
-        date=date,
-        time=time,
-        round_number=round,
-        interviewer_id=interviewer_id,
-        scheduler_id=current_user.id
-    )
-    db.session.add(interview)
+    # Create interview records for each interviewer
+    for interviewer in interviewers:
+        interview = Interview(
+            applicant_id=id,
+            date=date,
+            time=time,
+            round_number=round,
+            interviewer_id=interviewer.id,
+            scheduler_id=current_user.id
+        )
+        db.session.add(interview)
     db.session.commit()
 
-    attendees = [
-        {
+    attendees = []
+
+    for interviewer in interviewers:
+        attendees.append({
             "emailAddress": {
                 "address": interviewer.email,
                 "name": interviewer.name
             },
             "type": "required"
-        },
-        {
+        })
+
+    attendees.append({
             "emailAddress": {
                 "address": applicant.email,
                 "name": applicant.name
             },
             "type": "required"
-        }
-    ]
+        })
 
-    hrs = User.query.filter_by(role='hr').all()
+    hrs = User.query.filter_by(role='hr').filter(User.id != current_user.id).all()
     for hr in hrs:
-        if hr.id != current_user.id:
             attendees.append({
                 "emailAddress": {
                     "address": hr.email,
@@ -524,7 +578,7 @@ def schedule_interview(id):
     }
 
     body = {
-        "subject": f"Interview Round {'HR' if round == 3 else round} with {applicant.name}",
+        "subject": f"Interview Round {round} with {applicant.name}",
         "start": {
             "dateTime": start_datetime.isoformat(),
             "timeZone": "Asia/Kolkata"
@@ -545,11 +599,35 @@ def schedule_interview(id):
 
     if response.status_code == 201:
         flash('Interview scheduled and calendar invite sent.', 'success')
-        current_app.logger.info(f"Meeting created for round {'HR' if round == 3 else round} for applicant {id}")
+        current_app.logger.info(f"Meeting created for round {round} for applicant {id}")
     else:
         flash('Interview saved, but failed to schedule calendar meeting.', 'warning')
         current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
 
+    return redirect(url_for('hr.view_applicant', id=id))
+
+@bp.route('/offered_application/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def offered_application(id):
+    applicant = Applicant.query.get_or_404(id)
+    applicant.status = 'Offered'
+    db.session.commit()
+    current_app.logger.info(f"Candidate {applicant.name} offered a job")
+    flash('Applicant has been offered a job.', 'success')
+    return redirect(url_for('hr.view_applicant', id=id))
+
+@bp.route('/joined_application/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def offered_application(id):
+    applicant = Applicant.query.get_or_404(id)
+    applicant.status = 'Joined'
+    db.session.commit()
+    current_app.logger.info(f"Candidate {applicant.name} has joined")
+    flash('Applicant has joined.', 'success')
     return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/on_hold_application/<int:id>', methods=['POST'])
@@ -558,11 +636,23 @@ def schedule_interview(id):
 @role_required(*HR_ROLES)
 def put_on_hold_application(id):
     applicant = Applicant.query.get_or_404(id)
-    applicant.current_stage = 'On Hold'
+    applicant.status = 'On Hold'
     db.session.commit()
     current_app.logger.info(f"Candidate {applicant.name} put on hold")
     flash('Applicant has been put on hold.', 'warning')
-    return redirect(url_for('hr.all_applicants'))
+    return redirect(url_for('hr.view_applicant', id=id))
+
+@bp.route('/on_hold_application/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def put_off_hold_application(id):
+    applicant = Applicant.query.get_or_404(id)
+    applicant.status = 'Applied'
+    db.session.commit()
+    current_app.logger.info(f"Candidate {applicant.name} is off on-hold")
+    flash('Applicant is now off on-hold.', 'success')
+    return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/reject_application/<int:id>', methods=['POST'])
 @no_cache
@@ -663,7 +753,7 @@ def reschedule_interview(id):
     access_token = session["token"]["access_token"]
     date = request.form.get('interview_date')
     time = request.form.get('interview_time')
-    interviewer_id = request.form.get('interviewer_id')
+    interviewer_ids = [int(id) for id in request.form.getlist('interviewer_ids')]
 
     if isinstance(date, str):
         try:
@@ -682,24 +772,52 @@ def reschedule_interview(id):
     
     if not is_future_or_today(date):
         flash("Choose a proper date", "error")
+        return redirect(url_for('hr.view_applicant', id=id))
+        
+    if not interviewer_ids:
+        flash('Please select at least one interviewer.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
 
     applicant = Applicant.query.get_or_404(id)
-    interview = Interview.query.filter_by(applicant_id=id, completed=False).first()
     
-    interview.date = date
-    interview.time = time
-    interview.interviewer_id = interviewer_id
-    interview.scheduler_id = current_user.id
-
-    interviewer = User.query.get_or_404(interviewer_id)
-    history = RecruitmentHistory.query.filter_by(applicant_id = applicant.id).first()
+    existing_interviews = Interview.query.filter_by(applicant_id=id, completed=False).all()
+    if not existing_interviews:
+        flash('No active interviews found to reschedule.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
+    
+    round_number = existing_interviews[0].round_number
+    
+    interviewers = User.query.filter(User.id.in_(interviewer_ids)).all()
+    if len(interviewers) != len(interviewer_ids):
+        flash('One or more selected interviewers could not be found.', 'error')
+        return redirect(url_for('hr.view_applicant', id=id))
+    
+    for i, interview in enumerate(existing_interviews):
+        if i < len(interviewers):
+            interview.date = date
+            interview.time = time
+            interview.interviewer_id = interviewers[i].id
+            interview.scheduler_id = current_user.id
+    
+    for i in range(len(existing_interviews), len(interviewers)):
+        new_interview = Interview(
+            applicant_id=id,
+            date=date,
+            time=time,
+            round_number=round_number,
+            interviewer_id=interviewers[i].id,
+            scheduler_id=current_user.id
+        )
+        db.session.add(new_interview)
+    
+    history = RecruitmentHistory.query.filter_by(applicant_id=applicant.id).first()
     start_datetime = datetime.combine(date, time)
     end_datetime = start_datetime + timedelta(hours=1)
 
-    if interview.round_number == 1:
+    if round_number == 1 or round_number == 'Client Round 1':
         history.interview_round_1_date = date
         history.interview_round_1_time = time
-    elif interview.round_number == 2:
+    elif round_number == 2 or round_number == 'Client Round 2':
         history.interview_round_2_date = date
         history.interview_round_2_time = time
     else:
@@ -708,33 +826,35 @@ def reschedule_interview(id):
 
     db.session.commit()
 
-    attendees = [
-        {
+    attendees = []
+
+    for interviewer in interviewers:
+        attendees.append({
             "emailAddress": {
                 "address": interviewer.email,
                 "name": interviewer.name
             },
             "type": "required"
-        },
-        {
-            "emailAddress": {
-                "address": applicant.email,
-                "name": applicant.name
-            },
-            "type": "required"
-        }
-    ]
+        })
 
-    hrs = User.query.filter_by(role='hr').all()
+    attendees.append({
+        "emailAddress": {
+            "address": applicant.email,
+            "name": applicant.name
+        },
+        "type": "required"
+    })
+
+
+    hrs = User.query.filter_by(role='hr').filter(User.id != current_user.id).all()
     for hr in hrs:
-        if hr.id != current_user.id:
-            attendees.append({
-                "emailAddress": {
-                    "address": hr.email,
-                    "name": hr.name
-                },
-                "type": "optional"
-            })
+        attendees.append({
+            "emailAddress": {
+                "address": hr.email,
+                "name": hr.name
+            },
+            "type": "optional"
+        })
     
     attendees.append(get_json_info())
 
@@ -744,8 +864,9 @@ def reschedule_interview(id):
         'Content-Type': 'application/json'
     }
 
+
     body = {
-        "subject": f"Rescheduled Interview Round {'HR' if interview.round_number == 3 else interview.round_number} with {applicant.name}",
+        "subject": f"Rescheduled {round} with {applicant.name}",
         "start": {
             "dateTime": start_datetime.isoformat(),
             "timeZone": "Asia/Kolkata"
@@ -765,8 +886,8 @@ def reschedule_interview(id):
     response = requests.post(graph_endpoint, headers=headers, json=body)
 
     if response.status_code == 201:
-        flash('Interview scheduled and calendar invite sent.', 'success')
-        current_app.logger.info(f"Meeting created for round {'HR' if round == 3 else round} for applicant {id}")
+        flash(f'Interview rescheduled with {len(interviewers)} interviewer(s) and calendar invite sent.', 'success')
+        current_app.logger.info(f"Meeting rescheduled for {round} for applicant {id} with {len(interviewers)} interviewers")
     else:
         flash('Interview rescheduling saved, but failed to schedule calendar meeting.', 'warning')
         current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
@@ -776,24 +897,34 @@ def reschedule_interview(id):
         return redirect(url_for('hr.view_interviews'))
     return redirect(url_for('hr.view_applicant', id=applicant.id))
 
-@bp.route('/upload_joblistings', methods=['GET', 'POST'])
+@bp.route('/upload_joblistings', methods=['GET'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def upload_joblistings():
+def show_job_form():
+    return render_template('hr/addjob.html')
+
+@bp.route('/upload_joblistings', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def submit_job_form():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
 
+    # Extract form data
     job_position = request.form.get('position_name') 
     job_description = request.form.get('job_description')
-    job_skillset= request.form.get('job_skillset')
+    job_skillset = request.form.get('job_skillset')
     job_clients = request.form.get('job_clients')
     job_budget = request.form.get('job_budget')
     job_experience = request.form.get('job_experience')  
-    open_for_vendor=request.form.get('open_for_vendor')
+    for_vendor = bool(request.form.get('open_for_vendor'))
 
+    # Validate required fields
     if not job_position or not job_description:
+        flash('Position name and description are required.', 'error')
         return render_template('hr/addjob.html', form_data=request.form)
 
     new_jobrequirement = JobRequirement(
@@ -801,10 +932,10 @@ def upload_joblistings():
         description=job_description,
         created_by=current_user,
         skillset=job_skillset,
-        clients=job_clients,
+        clients=job_clients or None ,
         budget=job_budget,
         experience=job_experience,
-        for_vendor=open_for_vendor
+        for_vendor=for_vendor
     )
 
     db.session.add(new_jobrequirement)
@@ -815,37 +946,50 @@ def upload_joblistings():
     
     return redirect(url_for('main.view_joblisting'))
 
-@bp.route('/update_joblisting/<int:id>', methods=['GET', 'POST'])
+# Show the job update form
+@bp.route('/update_joblisting/<int:id>', methods=['GET'])
 @no_cache
 @login_required
 @role_required('hr', 'admin')
-def joblisting_update(id):
+def show_joblisting_update(id):
+    job = JobRequirement.query.get_or_404(id)
+    return render_template('hr/detailsjob.html', joblisting=job)
+
+
+# Handle the form submission to update job details
+@bp.route('/update_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required('hr', 'admin')
+def submit_joblisting_update(id):
     job = JobRequirement.query.get_or_404(id)
 
-    if request.method == 'POST':
-        position = request.form.get('job_position')
-        description = request.form.get('job_description')
-        skillset= request.form.get('job_skillset')
-        clients = request.form.get('job_clients')
-        budget = request.form.get('job_budget')
-        experience = request.form.get('job_experience')  
+    position = request.form.get('job_position')
+    description = request.form.get('job_description')
+    skillset = request.form.get('job_skillset')
+    clients = request.form.get('job_clients')
+    budget = request.form.get('job_budget')
+    experience = request.form.get('job_experience')
+    for_vendor = bool(request.form.get('open_for_vendor'))
 
-        if not position or not description:
-            flash('Job position and description cannot be empty!', 'error')
-            return redirect(url_for('hr.joblisting_update', id=id))
 
-        job.position = position
-        job.description = description
-        job.skillset = skillset
-        job.clients = clients       
-        job.budget = budget
-        job.experience = experience
+    if not position or not description:
+        flash('Job position and description cannot be empty!', 'error')
+        return redirect(url_for('hr.show_joblisting_update', id=id))
 
-        db.session.commit()
-        flash('Job listing updated successfully!', 'success')
-        return redirect(url_for('main.view_details_joblisting', id=id ))
+    job.position = position
+    job.description = description
+    job.skillset = skillset
+    job.clients = clients or None
+    job.budget = budget
+    job.experience = experience
+    job.for_vendor = for_vendor
 
-    return render_template('hr/detailsjob.html', joblisting=job)
+    db.session.commit()
+
+    flash('Job listing updated successfully!', 'success')
+    return redirect(url_for('main.view_details_joblisting', id=id))
+
 
 @bp.route('/close_joblisting/<int:id>', methods=['POST'])
 @no_cache
@@ -1115,3 +1259,100 @@ def available_interviewers():
 
     except ValueError:
         return jsonify([])
+    
+
+#View all applicants
+
+@bp.route('/filter_all_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def filter_all_applicants():
+    hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+    stages = db.session.query(Applicant.status).distinct().all()
+
+    hr_id = request.args.get('hr_id', '')
+    job_id = request.args.get('job_id', '')
+    status_id = request.args.get('status', '')
+    status = request.args.get('current_stage',' ')
+
+    query = Applicant.query
+
+    if hr_id:
+        query = query.filter(Applicant.uploaded_by == int(hr_id))
+
+    if job_id:
+        query = query.filter(Applicant.job_id == int(job_id))
+
+    if status_id == 'fresher':
+        query = query.filter(Applicant.is_fresher == True)
+    elif status_id == 'experienced':
+        query = query.filter(Applicant.is_fresher == False)
+
+    if status:
+        query = query.filter(Applicant.status==status)
+
+    applicants = query.order_by(Applicant.last_applied.desc()).all()
+
+    return render_template('hr/applicants_all.html', applicants=applicants, users=hr_users, jobs=jobs, stages=stages)
+
+@bp.route('/sort_all_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def sort_all_applicants():
+    sort_by = request.args.get('sort_by', 'date')
+    
+    # Eager load uploader and job for display
+    query = Applicant.query.options(
+        joinedload(Applicant.uploader),
+        joinedload(Applicant.job)
+    )
+
+    if sort_by == 'name':
+        query = query.order_by(Applicant.name.asc())
+    elif sort_by == 'hr':
+        # join uploader explicitly and order by User.name
+        query = query.join(Applicant.uploader).order_by(User.name.asc())
+    else:  # Default to sorting by latest application
+        query = query.order_by(Applicant.last_applied.desc())
+
+    applicants = query.all()
+
+    # For filter dropdowns
+    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.all()
+
+    return render_template(
+        'hr/applicants_all.html',
+        applicants=applicants,
+        users=users,
+        jobs=jobs,
+        search_query='' 
+    )
+
+@bp.route('/search_all_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def search_all_applicants():
+    search_query = request.args.get('query', '').strip()
+    
+    if not search_query:
+        return redirect(url_for('hr.applicants'))
+    
+    if '@' in search_query:
+        applicants = Applicant.query.filter(
+            Applicant.email.ilike(f'%{search_query}%')
+        ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    else:
+        applicants = Applicant.query.filter(
+            Applicant.name.ilike(f'%{search_query}%'),
+        ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
+    
+    
+    jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    
+    return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs, search_query=search_query)

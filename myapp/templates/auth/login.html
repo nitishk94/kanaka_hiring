@@ -35,10 +35,11 @@
             <h1 class="text-5xl font-bold">Login now!</h1>
             <p class="py-6">Access your Kanaka Application Tracking System account to manage applicants and streamline your hiring process.</p>
         </div>
+        <div class = "font-bold">For Kanaka Employees</div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
             <div class="flex flex-col items-center w-full mt-6">
                 <a href="{{ url_for('auth.login_microsoft') }}"
-                class="mb-4 flex items-center justify-center gap-3 bg-black hover:bg-gray-800 text-white font-semibold py-3 px-14 rounded-md transition-colors duration-200">
+                class="mb-4 flex items-center justify-center gap-3 bg-black hover:bg-gray-800 text-white font-semibold py-3 px-16 rounded-md transition-colors duration-200">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
                         alt="Microsoft Logo"
                         class="w-5 h-5"/>
@@ -60,6 +61,8 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
+
+                <div class = "font-bold">OR</div>
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Username or Email</span>

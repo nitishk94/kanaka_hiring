@@ -10,7 +10,7 @@
         <p class="text-sm text-error mt-2">Fields marked with <span class="text-error">*</span> are required</p>
     </div>
 
-    <form method="POST" action="{{ url_for('hr.upload_joblistings') }}" class="space-y-6">
+    <form method="POST" action="{{ url_for('hr.submit_job_form') }}" class="space-y-6">
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
                 <h2 class="card-title mb-4">Job Details</h2>
@@ -109,17 +109,11 @@
                         />
                     </div>
 
-                    <div class="form-control md:col-span-1">
-                        <label class="label" for="open_for_vendor">
-                            <span class="label-text">Open for external vendors<span class="text-error">*</span></span>
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="for_vendor" name="for_vendor" class="checkbox checkbox-primary" {% if form_data and form_data.for_vendor %}checked{% endif %} />
+                            <span class="label-text">Open for external vendors</span>
                         </label>
-                        <input
-                            id="open_for_vendor"
-                            type="checkbox"
-                            name="open_for_vendor"
-                            class="checkbox"
-                            {% if form_data and form_data.open_for_vendor %}checked{% endif %}
-                        />
                     </div>
 
                 </div>

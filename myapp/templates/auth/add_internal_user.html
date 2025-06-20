@@ -68,60 +68,11 @@
                     </p>
                 </div>
 
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text">Email <span class="text-error">*</span></span>
-                    </label>
-                    <label class="input validator">
-                        <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                                <polyline points="22,6 12,13 2,6"></polyline>
-                            </g>
-                        </svg>
-                        <input
-                            type="email"
-                            name="email"
-                            required
-                            placeholder="Enter email"
-                            pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-                            title="Please enter a valid email address"
-                            value="{{ form_data.email if form_data else '' }}"
-                        />
-                    </label>
-                    <p class="validator-hint hidden">
-                        Enter a valid email address
-                    </p>
-                </div>
-
                 <div class="form-control mt-6">
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>
             </form>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} mx-4 mb-4">
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        document.querySelectorAll('.alert').forEach(function(alert) {
-            alert.style.transition = "opacity 0.5s";
-            alert.style.opacity = 0;
-            setTimeout(function() { alert.style.display = "none"; }, 500);
-        });
-    }, 10000);
-});
-</script>
 {% endblock %}

@@ -8,50 +8,55 @@
         <h1 class="text-3xl font-bold">All Applicants List</h1>
         <div class="flex items-center gap-4">
             <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_applicants') }}" class="form-control">
-                <div class="input-group">
-                    <input type="text" 
-                           name="query" 
-                           placeholder="Search by name or email..." 
-                           class="input input-bordered w-full md:w-auto"
-                           value="{{ search_query or '' }}"
-                           required>
-                    <button type="submit" class="btn btn-square">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <form method="GET" action="{{ url_for('hr.search_all_applicant') }}" class="flex gap-2 min-w-[250px]">
+            <input
+                type="text"
+                name="q"
+                placeholder="Search by name or email"
+                class="input input-bordered flex-grow"
+                value="{{ search_query or '' }}"
+            />
+                <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
+            </form>
+
+            <form method="GET" action="{{ url_for('hr.sort_all_applicants') }}" id="sortForm">
+                <div class="dropdown dropdown-end">
+                    <!-- Button trigger -->
+                    <div tabindex="0" role="button" class="btn btn-outline btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
-                    </button>
-                </div>
-            </form>
-            <!-- Sort By Dropdown -->
-            <form method="GET" action="{{ url_for('hr.sort_applicants') }}" class="flex items-center gap-4">
-                <div class="flex flex-col">
-                    <label for="sort_by" class="font-semibold mb-1">Sort By:</label>
-                    <div class="flex items-center gap-2">
-                        <select name="sort_by" id="sort_by" class="select select-bordered">
-                            <option value="date" {% if request.args.get('sort_by') == 'date' or not request.args.get('sort_by') %}selected{% endif %}>
-                                Application Date (Latest First)
-                            </option>
-                            <option value="name" {% if request.args.get('sort_by') == 'name' %}selected{% endif %}>
-                                Applicant Name (A–Z)
-                            </option>
-                            <option value="hr" {% if request.args.get('sort_by') == 'hr' %}selected{% endif %}>
-                                HR Name (A–Z)
-                            </option>
-                        </select>
-
-                        <button type="submit" class="btn btn-outline btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h6" />
-                            </svg>
-                            Sort
-                        </button>
+                        Sort by
                     </div>
+
+                    <!-- Dropdown content -->
+                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-72">
+                        <div class="flex flex-col">
+                            <label for="sort_by" class="font-semibold mb-1">Sort By:</label>
+                            <select name="sort_by"
+                                    id="sort_by"
+                                    class="select select-bordered w-64"
+                                    onchange="document.getElementById('sortForm').submit()">
+                                <option value="date" {% if request.args.get('sort_by') == 'date' or not request.args.get('sort_by') %}selected{% endif %}>
+                                    Application Date (Latest First)
+                                </option>
+                                <option value="name" {% if request.args.get('sort_by') == 'name' %}selected{% endif %}>
+                                    Applicant Name (A–Z)
+                                </option>
+                                <option value="hr" {% if request.args.get('sort_by') == 'hr' %}selected{% endif %}>
+                                    HR Name (A–Z)
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
                 </div>
             </form>
 
 
-            <form method="GET" action="{{ url_for('hr.filter_applicants') }}" class="flex items-center gap-2">
+            <!-- Filter Dropdown -->
+            <form method="GET" action="{{ url_for('hr.filter_all_applicants') }}" class="flex items-center gap-2">
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-outline btn-primary">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,51 +64,62 @@
                         </svg>
                         Filter
                     </div>
-            <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-                    <!-- HR Dropdown -->
-                    <div class="flex flex-col">
-                        <label for="hr_id" class="font-semibold mb-1">HR:</label><br>
-                        <select name="hr_id" id="hr_id" class="select select-bordered">
-                            <option value="">-- All HR --</option>
-                            {% for hr in users %}
-                                <option value="{{ hr.id }}"
-                                    {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
-                                    {{ hr.name if hr.name else hr.username }}
-                                </option>
-                            {% endfor %}
-                        </select>
+                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
+                        <!-- HR Filter -->
+                        <div class="flex flex-col">
+                            <label for="hr_id" class="font-semibold mb-1">HR:</label>
+                            <select name="hr_id" id="hr_id" class="select select-bordered">
+                                <option value="">-- All HR --</option>
+                                {% for hr in users %}
+                                    <option value="{{ hr.id }}"
+                                        {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
+                                        {{ hr.name if hr.name else hr.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <br>
+                        <!-- Job Filter -->
+                        <div class="flex flex-col">
+                            <label for="job_id" class="font-semibold mb-1">Job Position:</label>
+                            <select name="job_id" id="job_id" class="select select-bordered">
+                                <option value="">-- All Jobs --</option>
+                                {% for job in jobs %}
+                                    <option value="{{ job.id }}"
+                                        {% if request.args.get('job_id')|string == job.id|string %}selected{% endif %}>
+                                        {{ job.position }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <br>
+                        <!-- Status Filter -->
+                        <div class="flex flex-col">
+                            <label for="status" class="font-semibold mb-1">Applicants:</label>
+                            <select name="status" id="status" class="select select-bordered">
+                                <option value="">-- All Applicants --</option>
+                                <option value="fresher" {% if request.args.get('status') == 'fresher' %}selected{% endif %}>Fresher</option>
+                                <option value="experienced" {% if request.args.get('status') == 'experienced' %}selected{% endif %}>Experienced</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="stages" class="font-semibold mb-1">Current Stage:</label>
+                            <select name="stages" id="stages" class="select select-bordered">
+                                <option value="">-- All Stages --</option>
+                                {% for stage in stages %}
+                                    <option value="{{ stage }}"
+                                        {% if request.args.get('stages')|string == stage|string %}selected{% endif %}>
+                                        {{ stage }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <br>
+                        <!-- Filter Buttons -->
+                        <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+                        <a href="{{ url_for('hr.filter_all_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
                     </div>
-                    <br>
-                    <!-- Status Dropdown -->
-                    <div class="flex flex-col">
-                        <label for="job_id" class="font-semibold mb-1">Job Position:</label><br>
-                        <select name="job_id" id="job_id" class="select select-bordered">
-                            <option value="">-- All Jobs --</option>
-                            {% for job in jobs %}
-                                <option value="{{ job.id }}"
-                                    {% if request.args.get('job_id')|string == job.id|string %}selected{% endif %}>
-                                    {{ job.position }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <br>
-
-                    <div class="flex flex-col">
-                        <label for="status" class="font-semibold mb-1">Applicants:</label><br>
-                        <select name="status" id="status" class="select select-bordered">
-                            <option value="">-- All Applicants --</option>
-                            <option value="fresher" {% if request.args.get('status') == 'fresher' %}selected{% endif %}>Fresher</option>
-                            <option value="experienced" {% if request.args.get('status') == 'experienced' %}selected{% endif %}>Experienced</option>
-
-                        </select>
-                    </div>
-                    <!-- Submit button -->
-                    <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-                    <a href="{{ url_for('hr.filter_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
                 </div>
-            </div>
-
             </form>
             <div class="stats shadow">
                 <div class="stat">

@@ -62,9 +62,10 @@
                 name="open_for_vendor"
                 class="checkbox"
                 value="1"
-                {% if joblisting and joblisting.for_vendor %}checked{% endif %}
+                {% if joblisting and joblisting.for_vendor == True %}checked{% endif %}
             />
         </div>
+
 
 
         <!-- Buttons -->

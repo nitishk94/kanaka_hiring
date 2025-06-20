@@ -8,9 +8,10 @@ class Interview(db.Model):
     applicant_id = db.Column(db.Integer, db.ForeignKey('applicants.id'))
     interviewer_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     scheduler_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    round_number = db.Column(db.Integer)
+    round_number = db.Column(db.Text)
     date = db.Column(db.Date)
     time = db.Column(Time)
+    feedback = db.Column(db.Text)
     completed = db.Column(db.Boolean, default=False)
     job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.id'))
     
