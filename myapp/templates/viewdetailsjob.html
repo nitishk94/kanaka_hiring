@@ -72,7 +72,25 @@
                        class="btn btn-warning w-auto px-8 text-lg">
                         Edit
                     </a>
+                    
                     {% if job.is_open %}
+                        {% if job.for_vendor %}
+                            <form action="{{ url_for('hr.not_for_vendor_joblisting', id=job.id) }}" 
+                                method="POST" 
+                                onsubmit="return confirm('Are you sure you want to close this joblisting for external vendors?');">
+                                <button type="submit" class="btn bg-warning w-auto px-8 text-lg">
+                                    Close for external vendor
+                                </button>
+                            </form>
+                        {% else %}
+                            <form action="{{ url_for('hr.for_vendor_joblisting', id=job.id) }}" 
+                                method="POST" 
+                                onsubmit="return confirm('Are you sure you want to open this joblisting for external vendors?');">
+                                <button type="submit" class="btn bg-warning w-auto px-8 text-lg">
+                                    Open for external vendor
+                                </button>
+                            </form>
+                        {% endif %}
                         <!-- Reopen Button -->
                         <form action="{{ url_for('hr.close_joblisting', id=job.id) }}" 
                               method="POST" 

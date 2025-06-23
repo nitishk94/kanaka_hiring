@@ -134,7 +134,7 @@
                         <td>{{ applicant.uploader.name }}</td>
                         <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
                         <td>
-                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[120px] text-xs badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
+                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[120px] text-xs badge-{{ 'success' if applicant.current_stage in ['Offered', 'Joined'] else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                                 {{ applicant.current_stage.split(' on')[0] }}
                             </div>
                         </td>

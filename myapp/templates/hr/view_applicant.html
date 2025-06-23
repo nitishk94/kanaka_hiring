@@ -11,7 +11,7 @@
                 <div class="badge badge-lg badge-info">Referral</div>
             {% endif %}
             <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
-                {{ applicant.current_stage }}
+                {{ applicant.status }}
             </div>
         </div>  
     </div>
@@ -251,232 +251,294 @@
         <div class="card bg-base-100 shadow-xl lg:col-span-4">
             <div class="card-body">
                 <h2 class="card-title mb-4">Application Status</h2>
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                    {% if applicant.job_id %}
+                <div class="flex justify-between items-center">
+                    
+                {% if applicant.job_id %}
                         <div>
                             <p class="text-sm text-gray-500">Applying for</p>
-                            <p class="font-semibold whitespace-pre-line">{{ applicant.job.position if applicant.job_id else 'N/A' }}</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.job.position if applicant.job_id else 'N/A'  }}</p>
                         </div>
                     {% endif %}
-                    
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm 
-                            badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
+                    <div class="flex items-center gap-4">
+                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                             {{ applicant.current_stage }}
                         </div>
                         <p class="text-gray-600">Last updated: {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
                     </div>
-                    
-                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto mt-4 lg:mt-0">
-                        <form method="POST" action="{{ url_for('main.track_status', id=applicant.id) }}" class="inline-flex items-center">
-                            <button class="btn btn-info whitespace-nowrap">Track Status</button>
+                    <div class="flex items-center gap-2">
+                        <!-- Logic to render buttons -->
+                        <form method="POST" action="{{ url_for('main.track_status', id=applicant.id) }}" class="inline">
+                            <button class="btn btn-info">Track Status</button>
                         </form>
 
                         {% if 'Rejected' not in applicant.current_stage %}
+                            {% if applicant.current_stage == 'Need to schedule test' %}
+                                <div class="flex gap-2">
+                                <a href="{{ url_for('hr.schedule_test', id=applicant.id) }}" 
+                                   class="btn btn-warning btn-info">
+                                    
+                                    Schedule Test
+                                </a>
+                            </div>
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            
+
+                            {% endif %}
+
+                            {% if applicant.current_stage != 'Need to schedule test' and applicant.history_entries[0].test_date %}
+                                <div class="flex gap-2">
+                                <a href="{{ url_for('hr.test_result', id=applicant.id) }}" 
+                                   class="btn btn-warning btn-info">
+                                    View Test Result
+                                </a>
+                            </div>
+                            {% endif %}
+                            
+                            {% if applicant.history_entries[0].test_result and applicant.current_stage != 'Need to schedule test' and not applicant.history_entries[0].interview_round_2_date %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview Round 1</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                            <div class=
+                                            "form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].interview_round_1_date and not applicant.history_entries[0].interview_round_1_comments  %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Reschedule Round 1</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select New Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select New Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select New Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-full mt-4">Reschedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].interview_round_1_comments and not applicant.history_entries[0].interview_round_2_date %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview Round 2</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+
+                            {% if applicant.history_entries[0].interview_round_2_date and not applicant.history_entries[0].interview_round_2_comments %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Reschedule Round 2</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select New Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select New Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select New Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-full mt-4">Reschedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].interview_round_2_comments and not applicant.history_entries[0].hr_round_comments %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Schedule HR Interview</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select HR Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an HR interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-full mt-4">Schedule HR Round</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].hr_round_date and not applicant.history_entries[0].hr_round_comments %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Reschedule HR Round</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select New Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select New Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select New HR Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an HR interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-secondary w-full mt-4">Reschedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}                                
                             <div class="flex flex-wrap items-center gap-2">
-                                <!-- Test Scheduling Section -->
-                                {% if not applicant.history_entries[0].test_scheduled or applicant.history_entries[0].test_result is none %}
-                                    {% if not applicant.history_entries[0].test_scheduled %}
-                                        {% if not (applicant.history_entries[0].interview_round_1_date or 
-                                                applicant.history_entries[0].interview_round_2_date or 
-                                                applicant.history_entries[0].hr_round_date) %}
-                                            <!-- Schedule Test Button -->
-                                            <a href="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="btn btn-primary whitespace-nowrap">
-                                                Schedule Test
-                                            </a>
-                                        {% endif %}
-                                    {% else %}
-                                        <!-- View Test Results and Schedule Interview -->
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <a href="{{ url_for('hr.test_result', id=applicant.id) }}" class="btn btn-warning whitespace-nowrap">
-                                                View Test Result
-                                            </a>
-                                            
-                                            {% if not applicant.history_entries[0].hr_round_date %}
-                                                {% if not applicant.history_entries[0].interview_round_1_date or 
-                                                      not applicant.history_entries[0].interview_round_2_date %}
-                                                    <div class="dropdown dropdown-top">
-                                                        <button type="button" class="btn btn-primary">
-                                                            {% if applicant.history_entries[0].interview_round_1_date %}
-                                                                Schedule Next Interview
-                                                            {% else %}
-                                                                Schedule Interview
-                                                            {% endif %}
-                                                        </button>
-                                                        <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                                            <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
-                                                                <div class="space-y-4">
-                                                                    <div class="form-control w-full">
-                                                                        <label class="label" for="interview_date">
-                                                                            <span class="label-text">Select Date</span>
-                                                                        </label>
-                                                                        <input type="date" name="interview_date" class="input input-bordered w-full" required />
-                                                                    </div>
-                                                                    <div class="form-control w-full">
-                                                                        <label class="label" for="interview_time">
-                                                                            <span class="label-text">Select Time</span>
-                                                                        </label>
-                                                                        <input type="time" name="interview_time" class="input input-bordered w-full" required />
-                                                                    </div>
-                                                                    <div class="form-control w-full">
-                                                                        <label class="label">
-                                                                            <span class="label-text">Select Interviewer(s)</span>
-                                                                        </label>
-                                                                        <div class="interviewer-multiselect">
-                                                                            <div class="dropdown-toggle w-full p-2 border rounded-lg cursor-pointer bg-white flex justify-between items-center">
-                                                                                <span class="text-gray-500">Select interviewers...</span>
-                                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                                                </svg>
-                                                                            </div>
-                                                                            <div class="dropdown-menu hidden absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
-                                                                                {% for interviewer in interviewers %}
-                                                                                <label class="flex items-center p-2 hover:bg-gray-100 cursor-pointer">
-                                                                                    <input type="checkbox" name="interviewer_ids" value="{{ interviewer.id }}" class="checkbox checkbox-sm mr-2">
-                                                                                    <span>{{ interviewer.username }}</span>
-                                                                                </label>
-                                                                                {% endfor %}
-                                                                            </div>
-                                                                            <div class="selected-interviewers mt-2 flex flex-wrap gap-2">
-                                                                                <!-- Selected interviewers will be shown here -->
-                                                                            </div>
-                                                                            <input type="hidden" name="interviewer_ids" value="" class="interviewer-ids">
-                                                                        </div>
-                                                                    </div>
-                                                                    <button type="submit" class="btn btn-primary w-full mt-2">
-                                                                        Schedule Interview
-                                                                    </button>
-                                                                </div>
-                                                            </form>
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-
-                                <!-- Reschedule Options -->
-                                {% if applicant.history_entries[0].interview_round_1_date and not applicant.history_entries[0].interview_round_1_comments and 
-                                      (not applicant.history_entries[0].interview_round_2_date or applicant.history_entries[0].interview_round_2_comments) %}
-                                    <div class="dropdown dropdown-top">
-                                        <button type="button" class="btn btn-warning whitespace-nowrap">Reschedule Round 1</button>
-                                        <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96 overflow-visible">
-                                            <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
-                                                <input type="hidden" name="round" value="1">
-                                                <div class="space-y-4">
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interview_date">
-                                                            <span class="label-text">Select New Date</span>
-                                                        </label>
-                                                        <input type="date" name="interview_date" class="input input-bordered w-full" required />
-                                                    </div>
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interview_time">
-                                                            <span class="label-text">Select New Time</span>
-                                                        </label>
-                                                        <input type="time" name="interview_time" class="input input-bordered w-full" required />
-                                                    </div>
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interviewer_id">
-                                                            <span class="label-text">Select New Interviewer</span>
-                                                        </label>
-                                                        <select name="interviewer_id" class="select select-bordered w-full" required>
-                                                            <option value="">Select an interviewer</option>
-                                                            {% for interviewer in interviewers %}
-                                                                <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-warning w-full">Reschedule</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                {% elif applicant.history_entries[0].interview_round_2_date and not applicant.history_entries[0].interview_round_2_comments and 
-                                      (not applicant.history_entries[0].hr_round_date or applicant.history_entries[0].hr_round_comments) %}
-                                    <div class="dropdown dropdown-top">
-                                        <button type="button" class="btn btn-warning whitespace-nowrap">Reschedule Round 2</button>
-                                        <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96 overflow-visible">
-                                            <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
-                                                <input type="hidden" name="round" value="2">
-                                                <div class="space-y-4">
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interview_date">
-                                                            <span class="label-text">Select New Date</span>
-                                                        </label>
-                                                        <input type="date" name="interview_date" class="input input-bordered w-full" required />
-                                                    </div>
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interview_time">
-                                                            <span class="label-text">Select New Time</span>
-                                                        </label>
-                                                        <input type="time" name="interview_time" class="input input-bordered w-full" required />
-                                                    </div>
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interviewer_id">
-                                                            <span class="label-text">Select New Interviewer</span>
-                                                        </label>
-                                                        <select name="interviewer_id" class="select select-bordered w-full" required>
-                                                            <option value="">Select an interviewer</option>
-                                                            {% for interviewer in interviewers %}
-                                                                <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-warning w-full">Reschedule</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                {% elif applicant.history_entries[0].hr_round_date and not applicant.history_entries[0].hr_round_comments %}
-                                    <div class="dropdown dropdown-top">
-                                        <button type="button" class="btn btn-warning whitespace-nowrap">Reschedule HR Round</button>
-                                        <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96 overflow-visible">
-                                            <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
-                                                <input type="hidden" name="round" value="hr">
-                                                <div class="space-y-4">
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interview_date">
-                                                            <span class="label-text">Select New Date</span>
-                                                        </label>
-                                                        <input type="date" name="interview_date" class="input input-bordered w-full" required />
-                                                    </div>
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interview_time">
-                                                            <span class="label-text">Select New Time</span>
-                                                        </label>
-                                                        <input type="time" name="interview_time" class="input input-bordered w-full" required />
-                                                    </div>
-                                                    <div class="form-control w-full">
-                                                        <label class="label" for="interviewer_id">
-                                                            <span class="label-text">Select New HR Interviewer</span>
-                                                        </label>
-                                                        <select name="interviewer_id" class="select select-bordered w-full" required>
-                                                            <option value="">Select an HR interviewer</option>
-                                                            {% for interviewer in interviewers %}
-                                                                <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-secondary w-full">Reschedule</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                {% endif %}
-
-                                <!-- Job Offer and Application Status Buttons -->
-                                <div class="flex flex-wrap items-center gap-2">
-                                    {% if applicant.history_entries[0].hr_round_comments %}
+                                    {% if applicant.history_entries[0].hr_round_comments and applicant.status=='Applied' %}
                                         <form method="POST" action="{{ url_for('hr.offered_application', id=applicant.id) }}" class="inline-flex">
-                                            <button type="submit" class="btn btn-error whitespace-nowrap">Offer job</button>
+                                            <button type="submit" class="btn btn-success whitespace-nowrap">Offer job</button>
                                         </form>
                                     {% endif %}
 
-                                    {% if applicant.status ==  %}
+                                    {% if applicant.status == "Offered" %}
                                         <form method="POST" action="{{ url_for('hr.joined_application', id=applicant.id) }}" class="inline-flex">
-                                            <button type="submit" class="btn btn-error whitespace-nowrap">Joined job</button>
+                                            <button type="submit" class="btn btn-success whitespace-nowrap">Joined job</button>
                                         </form>
                                     {% endif %}
 
@@ -541,220 +603,37 @@
 
 {% block extra_js %}
 <script>
-// Handle multi-select interviewers
 document.addEventListener('DOMContentLoaded', function() {
-    // Function to update selected interviewers display
-    function updateSelectedInterviewers(container) {
-        const form = container.closest('form');
-        const checkboxes = form.querySelectorAll('input[name="interviewer_id"]:checked');
-        const selectedContainer = form.querySelector('.selected-interviewers');
-        const hiddenInput = form.querySelector('input[name="selected_interviewers"]');
-        
-        // Clear current display
-        selectedContainer.innerHTML = '';
-        
-        // Update hidden input with comma-separated values
-        const selectedValues = Array.from(checkboxes).map(cb => cb.value);
-        hiddenInput.value = selectedValues.join(',');
-        
-        // Add badges for selected interviewers
-        checkboxes.forEach(checkbox => {
-            const name = checkbox.nextElementSibling.textContent;
-            const badge = document.createElement('div');
-            badge.className = 'badge badge-primary badge-lg gap-2';
-            badge.innerHTML = `
-                ${name}
-                <button type="button" class="btn btn-xs btn-circle btn-ghost" data-value="${checkbox.value}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            `;
-            selectedContainer.appendChild(badge);
-        });
-    }
-    
-    // Initialize all dropdowns
-    document.querySelectorAll('.dropdown').forEach(dropdown => {
-        const toggle = dropdown.querySelector('[tabindex="0"]');
-        const menu = dropdown.querySelector('.dropdown-content');
-        
-        // Toggle dropdown
-        toggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menu.classList.toggle('hidden');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!dropdown.contains(e.target)) {
-                menu.classList.add('hidden');
-            }
-        });
-        
-        // Handle checkbox changes
-        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                updateSelectedInterviewers(dropdown);
-            });
-        });
-        
-        // Handle remove button clicks
-        dropdown.addEventListener('click', (e) => {
-            if (e.target.closest('[data-value]')) {
-                const value = e.target.closest('[data-value]').dataset.value;
-                const checkbox = dropdown.querySelector(`input[value="${value}"]`);
-                if (checkbox) {
-                    checkbox.checked = false;
-                    updateSelectedInterviewers(dropdown);
-                }
-            }
-        });
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to handle multi-select dropdown for interviewers
-    function initMultiSelect(container) {
-        const dropdownToggle = container.querySelector('.dropdown-toggle');
-        const dropdownMenu = container.querySelector('.dropdown-menu');
-        const selectedContainer = container.querySelector('.selected-interviewers');
-        const hiddenInput = container.querySelector('input[type="hidden"][name$="interviewer_ids"]');
-        const checkboxes = container.querySelectorAll('input[type="checkbox"][name="interviewer_ids"]');
-        
-        // Toggle dropdown
-        dropdownToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdownMenu.classList.toggle('hidden');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!container.contains(e.target)) {
-                dropdownMenu.classList.add('hidden');
-            }
-        });
-        
-        // Update selected interviewers when checkboxes change
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateSelectedInterviewers);
-        });
-        
-        function updateSelectedInterviewers() {
-            const selected = [];
-            const selectedNames = [];
-            
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selected.push(checkbox.value);
-                    selectedNames.push(checkbox.nextElementSibling.textContent.trim());
-                }
-            });
-            
-            // Update hidden input with comma-separated values
-            hiddenInput.value = selected.join(',');
-            
-            // Update selected items display
-            selectedContainer.innerHTML = '';
-            selected.forEach((id, index) => {
-            const name = selectedNames[index];
-            const badge = document.createElement('span');
-            badge.className = 'badge badge-primary mr-1 mb-1 flex items-center';
-            badge.innerHTML = `
-                ${name}
-                <button type="button" class="ml-1 text-xs text-white bg-red-500 rounded-full px-1 remove-interviewer" data-id="${id}">&times;</button>
-                `;
-                selectedContainer.appendChild(badge);
-            });
-            selectedContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('remove-interviewer')) {
-                    const id = e.target.getAttribute('data-id');
-                    const cb = dropdownMenu.querySelector('input[type="checkbox"][value="' + id + '"]');
-                    if (cb) {
-                        cb.checked = false;
-                        updateSelectedInterviewers();
-                    }
-                }
-            });
-            
-            // Update dropdown toggle text
-            const toggleText = dropdownToggle.querySelector('span:not(.caret)');
-            if (selected.length > 0) {
-                toggleText.textContent = `${selected.length} selected`;
-                toggleText.classList.remove('text-gray-500');
-            } else {
-                toggleText.textContent = 'Select interviewers...';
-                toggleText.classList.add('text-gray-500');
-            }
-        }
-        
-        // Initialize
-        updateSelectedInterviewers();
-    }
-
-    // Initialize all multi-select dropdowns
-    document.querySelectorAll('.interviewer-multiselect').forEach(initMultiSelect);
-
-    // Update available interviewers based on date/time
     document.querySelectorAll('form[action*="schedule_interview"], form[action*="reschedule_interview"]').forEach(function(form) {
         const dateInput = form.querySelector('input[name="interview_date"]');
         const timeInput = form.querySelector('input[name="interview_time"]');
-        const interviewerContainer = form.querySelector('.interviewer-multiselect');
+        const interviewerSelect = form.querySelector('select[name="interviewer_id"]');
 
-        async function updateAvailableInterviewers() {
+        async function updateInterviewers() {
             const date = dateInput.value;
             const time = timeInput.value;
-            if (!date || !time || !interviewerContainer) return;
-            
+            if (!date || !time) return;
             const url = `/hr/available_interviewers?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok');
-                const availableInterviewers = await response.json();
-                
-                // Update the checkboxes in the dropdown
-                const dropdownMenu = interviewerContainer.querySelector('.dropdown-menu');
-                dropdownMenu.innerHTML = '';
-                
-                if (availableInterviewers.length === 0) {
-                    const item = document.createElement('div');
-                    item.className = 'p-2 text-gray-500';
-                    item.textContent = 'No interviewers available';
-                    dropdownMenu.appendChild(item);
-                } else {
-                    availableInterviewers.forEach(interviewer => {
-                        const item = document.createElement('label');
-                        item.className = 'flex items-center p-2 hover:bg-gray-100 cursor-pointer';
-                        item.innerHTML = `
-                            <input type="checkbox" name="interviewer_ids" value="${interviewer.id}" 
-                                   class="checkbox checkbox-sm mr-2">
-                            <span>${interviewer.name}</span>
-                        `;
-                        dropdownMenu.appendChild(item);
-                        
-                        // Add event listener to the new checkbox
-                        const checkbox = item.querySelector('input[type="checkbox"]');
-                        checkbox.addEventListener('change', () => {
-                            const event = new Event('change');
-                            checkbox.dispatchEvent(event);
-                        });
-                    });
-                }
-                
-                // Re-initialize the multi-select with the new checkboxes
-                initMultiSelect(interviewerContainer);
-                
+                const data = await response.json();
+                interviewerSelect.innerHTML = '<option value="">Select an interviewer</option>';
+                data.forEach(function(interviewer) {
+                    const option = document.createElement('option');
+                    option.value = interviewer.id;
+                    option.textContent = interviewer.name;
+                    interviewerSelect.appendChild(option);
+                });
             } catch (err) {
                 console.error('Error fetching available interviewers:', err);
-                const dropdownMenu = interviewerContainer.querySelector('.dropdown-menu');
-                dropdownMenu.innerHTML = '<div class="p-2 text-error">Error loading interviewers</div>';
+                interviewerSelect.innerHTML = '<option value="">Error loading interviewers</option>';
             }
         }
 
-        if (dateInput && timeInput && interviewerContainer) {
-            dateInput.addEventListener('change', updateAvailableInterviewers);
-            timeInput.addEventListener('change', updateAvailableInterviewers);
+        if (dateInput && timeInput && interviewerSelect) {
+            dateInput.addEventListener('change', updateInterviewers);
+            timeInput.addEventListener('change', updateInterviewers);
         }
     });
 });

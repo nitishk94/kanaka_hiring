@@ -50,22 +50,6 @@
                    class="input input-bordered w-full" />
         </div>
 
-        <div class="form-control md:col-span-1">
-            <label class="label" for="open_for_vendor">
-                <span class="label-text">
-                    Open for external vendors<span class="text-error">*</span>
-                </span>
-            </label>
-            <input
-                id="open_for_vendor"
-                type="checkbox"
-                name="open_for_vendor"
-                class="checkbox"
-                value="1"
-                {% if joblisting and joblisting.for_vendor %}checked{% endif %}
-            />
-        </div>
-
         <!-- Buttons -->
         <div class="flex gap-4 justify-center mt-6">
             <button type="submit" class="btn btn-primary px-8">

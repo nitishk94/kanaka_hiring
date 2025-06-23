@@ -21,10 +21,11 @@
 
                         <!-- Referral Name Dropdown -->
                         <div class="flex flex-col">
-                            <label for="referral_id" class="font-semibold mb-1">Referral Name:</label>
+                            <label for="referrals" class="font-semibold mb-1">Referral Name:</label>
                             <select name="referral_id" id="referral_id" class="select select-bordered">
+
                                 <option value="">-- All --</option>
-                                {% for user in users %}
+                                {% for user in referrals %}
                                     <option value="{{ user.id }}" {% if request.args.get('referral_id') == user.id %}selected{% endif %}>
                                         {{ user.name }}
                                     </option>

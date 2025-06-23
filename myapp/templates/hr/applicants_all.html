@@ -82,17 +82,20 @@
                         </div>
                         <br>
                         <div class="flex flex-col">
-                            <label for="stages" class="font-semibold mb-1">Current Stage:</label>
-                            <select name="stages" id="stages" class="select select-bordered">
+                            <label for="all_stages" class="font-semibold mb-1">Current Stage:</label>
+                            <select name="all_stages" id="all_stages" class="select select-bordered">
                                 <option value="">-- All Stages --</option>
-                                {% for stage in stages %}
+                                
+
+                                {% for stage in all_stages %}
                                     <option value="{{ stage }}"
-                                        {% if request.args.get('stages')|string == stage|string %}selected{% endif %}>
+                                        {% if selected_stage == stage %}selected{% endif %}>
                                         {{ stage }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
+
                         <br>
                         <!-- Filter Buttons -->
                         <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
@@ -122,7 +125,7 @@
                     <th>Experience</th>
                     <th>HR</th>
                     <th>Job Position</th>
-                    <th>Current Stage</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -142,11 +145,7 @@
                         </td>
                         <td>{{ applicant.uploader.name }}</td>
                         <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
-                        <td>
-                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[120px] text-xs badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
-                                {{ applicant.current_stage.split(' on')[0] }}
-                            </div>
-                        </td>
+                        <td>{{ applicant.status }}</td>
                         <td>
                             <div class="flex gap-2">
                                 <a href="{{ url_for('hr.view_applicant', id=applicant.id) }}" 

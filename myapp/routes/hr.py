@@ -20,7 +20,7 @@ import os
 bp = Blueprint('hr', __name__, url_prefix='/hr')
 HR_ROLES = ('hr', 'admin')
 
-excluded_stages = ['Rejected', 'On Hold', 'Offered', 'Joined']
+excluded_stages = ['Rejected', 'On Hold', 'Joined']
 
 @bp.route('/dashboard')
 @no_cache
@@ -39,7 +39,7 @@ def applicants():
     if search_query:
         return redirect(url_for('hr.search_applicants', query=search_query))
     
-    excluded_stages = ['Rejected', 'On Hold', 'Offered', 'Joined']
+    excluded_stages = ['Rejected', 'On Hold', 'Joined']
     applicants = Applicant.query.options(joinedload(Applicant.uploader)).filter(~Applicant.status.in_(excluded_stages)).order_by(Applicant.last_applied.desc()).all()
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
@@ -53,6 +53,8 @@ def applicants():
 @role_required(*HR_ROLES)
 def all_applicants():
     search_query = request.args.get('search', '').strip()
+    stages = ['Applied','On Hold','Offered','Joined','Rejected']
+
     
     
     if search_query:
@@ -63,7 +65,7 @@ def all_applicants():
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     for applicant in applicants:
         update_status(applicant.id)
-    return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs)
+    return render_template('hr/applicants_all.html', users=hrs, jobs=jobs, all_stages=stages)
 
 @bp.route('/upload_applicants', methods=['GET'])
 @no_cache
@@ -243,7 +245,7 @@ def update_applicant(id):
         return redirect(url_for('show_update_form'), id=id)
 
     email = request.form.get('email').lower()
-    if not can_update_applicant(email):
+    if not can_update_applicant(id,email):
         flash('The entered email already exists. Please enter a different email.', 'error')
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('show_update_form'), id=id)
@@ -589,11 +591,13 @@ def schedule_interview(id):
     response = requests.post(graph_endpoint, headers=headers, json=body)
 
     if response.status_code == 201:
-        flash('Interview scheduled and calendar invite sent.', 'success')
+        flash('Interview round {round} scheduled and calendar invite sent.', 'success')
         current_app.logger.info(f"Meeting created for round {round} for applicant {id}")
     else:
         flash('Interview saved, but failed to schedule calendar meeting.', 'warning')
         current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
+    
+
 
     return redirect(url_for('hr.view_applicant', id=id))
 
@@ -665,7 +669,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs)
 
 @bp.route('/filter_referrals')
@@ -679,19 +683,17 @@ def filter_referrals():
 
     query = JobRequirement.query
 
-    # Apply HR filter if provided
-    if referral_id:
-        query = query.filter(Referral.id == referral_id)
-    
-    # Apply Status filter if provided
+    # Apply Job ID filter
     if job_id:
-        jobs = JobRequirement.query.filter_by(id=job_id).order_by(JobRequirement.position).all()
-    else:
-        jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+        query = query.filter_by(id=job_id)
 
-    # Fetch results
+    # Optional: Apply Referral filter only if JobRequirement has a relationship with Referral
+    if referral_id:
+        query = query.join(JobRequirement.referrals).filter(Referral.id == referral_id)
+        # NOTE: You must define this relationship in your model first!
+
     jobs = query.order_by(JobRequirement.id.desc()).all()
-   
+
     return render_template('hr/view_referrals.html', jobs=jobs, users=referral_users)
 
 @bp.route('/onboarding')
@@ -1010,6 +1012,30 @@ def open_joblisting(id):
     flash('Job listing reopened successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
 
+@bp.route('/for_vendor_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def for_vendor_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    joblisting.for_vendor = True
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} opened for external vendors by {current_user.username}")
+    flash('Job listing opened for external vendors successfully', 'success')
+    return redirect(url_for('main.view_joblisting'))
+
+@bp.route('/not_for_vendor_joblisting/<int:id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def not_for_vendor_joblisting(id):
+    joblisting = JobRequirement.query.get_or_404(id)
+    joblisting.for_vendor = False
+    db.session.commit()
+    current_app.logger.info(f"Job listing {joblisting.position} closed for external vendors by {current_user.username}")
+    flash('Job listing closed for external vendors successfully', 'error')
+    return redirect(url_for('main.view_joblisting'))
+
 @bp.route('/delete_joblisting/<int:id>', methods=['POST'])
 @no_cache
 @login_required
@@ -1124,6 +1150,7 @@ def schedule_default(id,testId,start_test_date,end_test_date,test_time):
     try:
         response_data = response.json()
         history.test_id = response_data['testInvitationId']
+
         db.session.commit()
         flash('Test scheduled successfully.', 'success')
 
@@ -1216,13 +1243,15 @@ def test_result(id):
     
     result = response.json()
     #check pass/fail criteria based on test result.
-    if result['status'] == 'Complete' or result['status']=='TestLeft' or result['status']=='Expired' :
-        return render_template('hr/test_result.html',id=id, result=result)
-    
-    else:
+    if result['status'] == None:
         flash('Test still in progress. Please check back later.', 'warning')
         current_app.logger.info(f"Test result for applicant {id} is not complete.")
         return redirect(url_for('hr.view_applicant', id=id))
+    
+    else:
+        history.test_result=True
+        db.session.commit()
+        return render_template('hr/test_result.html',id=id, result=result)
 
 @bp.route('/available_interviewers', methods=['GET'])
 @no_cache
@@ -1277,12 +1306,12 @@ def available_interviewers():
 def filter_all_applicants():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
-    stages = [s[0] for s in db.session.query(Applicant.status).distinct().order_by(Applicant.status).all()]
+    stages = ['Applied','On Hold','Offered','Joined','Rejected']
 
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
     status_id = request.args.get('status', '')
-    stage = request.args.get('stages',' ')
+    stage = request.args.get('all_stages','').strip()
 
     query = Applicant.query
 
@@ -1302,7 +1331,7 @@ def filter_all_applicants():
 
     applicants = query.order_by(Applicant.last_applied.desc()).all()
 
-    return render_template('hr/applicants_all.html', applicants=applicants, users=hr_users, jobs=jobs, stages=stages)
+    return render_template('hr/applicants_all.html', applicants=applicants, users=hr_users, jobs=jobs, all_stages=stages, selected_stage=stage )
 
 @bp.route('/sort_all_applicants')
 @no_cache

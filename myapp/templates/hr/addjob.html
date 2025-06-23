@@ -93,28 +93,29 @@
                         />
                     </div>
 
-                    <!-- Job Experience -->
-                    <div class="form-control md:col-span-1">
-                        <label class="label" for="job_experience">
-                            <span class="label-text">Experience Required(in years)<span class="text-error">*</span></span>
-                        </label>
-                        <input
-                            id="job_experience"
-                            type="text"
-                            name="job_experience"
-                            required
-                            placeholder="Enter experience required"
-                            class="input input-bordered"
-                            value="{{ form_data.job_experience if form_data else '' }}"
-                        />
+                    <!-- Job Experience and Vendor Checkbox in a single row (improved alignment) -->
+                    <div class="col-span-2 flex flex-col md:flex-row gap-6 items-end">
+                        <!-- Job Experience -->
+                        <div class="form-control flex-1">
+                            <label class="label" for="job_experience">
+                                <span class="label-text">Experience Required (in years) <span class="text-error">*</span></span>
+                            </label>
+                            <input
+                                id="job_experience"
+                                type="text"
+                                name="job_experience"
+                                required
+                                placeholder="Enter experience required"
+                                class="input input-bordered"
+                                value="{{ form_data.job_experience if form_data else '' }}"
+                            />
+                        </div>   
                     </div>
 
-                    <div class="form-control md:col-span-1">
-                        <label class="label cursor-pointer justify-start gap-4">
-                            <input type="checkbox" id="for_vendor" name="for_vendor" class="checkbox checkbox-primary" {% if form_data and form_data.for_vendor %}checked{% endif %} />
-                            <span class="label-text">Open for external vendors</span>
-                        </label>
-                    </div>
+                    <div class="form-control flex flex-row items-center h-full md:mb-0 mb-4 md:ml-4">
+                            <input type="checkbox" id="for_vendor" name="for_vendor" class="checkbox checkbox-primary mr-2" {% if form_data and form_data.for_vendor %}checked{% endif %} />
+                            <label for="for_vendor" class="label-text cursor-pointer">Open for external vendors</label>
+                        </div>
 
                 </div>
 

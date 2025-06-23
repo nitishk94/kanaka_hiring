@@ -70,17 +70,6 @@ def update_status(id):
             applicant.current_stage = new_stage
             db.session.commit()
 
-def button_status(id):
-    applicant = Applicant.query.get_or_404(id)
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    today = date.today()
-    
-    if(history.test_date + timedelta(days=1)) == today:
-        decision=1000
-        return decision
-    return 1
-
-
 def generate_timeline(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     
@@ -134,7 +123,7 @@ def generate_timeline(id):
         if not history.hr_round_date:
             timeline.append({'title': 'Pending HR Round'})
         elif history.hr_round_comments and not history.rejected:
-            timeline.append({'title': 'Hired', 'date': history.updated_at.date()})
+            timeline.append({'title': 'Offered', 'date': history.updated_at.date()})
     
     # Sort timeline by date
     timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))

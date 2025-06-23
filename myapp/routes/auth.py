@@ -236,7 +236,7 @@ def add_new_user():
         return redirect(url_for('auth.show_add_new_user'))
 
     user = User(name=name, username=username, email=email, auth_type='microsoft')
-    db.session.execute(text("SET app.current_user_id = 'system'"))
+    db.session.execute(text("SET app.current_user_id = '{current_user.id}'"))
 
     db.session.add(user)
     db.session.commit()
