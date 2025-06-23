@@ -35,9 +35,13 @@
             <h1 class="text-5xl font-bold">Login now!</h1>
             <p class="py-6">Access your Kanaka Application Tracking System account to manage applicants and streamline your hiring process.</p>
         </div>
-        <div class = "font-bold">For Kanaka Employees</div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
             <div class="flex flex-col items-center w-full mt-6">
+                <div class="w-full flex justify-center mb-2">
+                    <div class="w-[352px] text-center px-4">
+                        <span class="text-gray-500 text-sm font-medium">Login with your Kanaka Software account to access the system.</span>
+                    </div>
+                </div>
                 <a href="{{ url_for('auth.login_microsoft') }}"
                 class="mb-4 flex items-center justify-center gap-3 bg-black hover:bg-gray-800 text-white font-semibold py-3 px-16 rounded-md transition-colors duration-200">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
@@ -62,7 +66,11 @@
                     {% endif %}
                 {% endwith %}
 
-                <div class = "font-bold">OR</div>
+                <div class="flex items-center my-2">
+                    <hr class="flex-grow border-t border-gray-300">
+                    <span class="px-3 text-gray-500 text-sm font-medium">or login with</span>
+                    <hr class="flex-grow border-t border-gray-300">
+                </div>
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Username or Email</span>
@@ -146,7 +154,7 @@
         </div>
     </div>
 </div>
-
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -178,10 +186,15 @@
             `;
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                alert.style.transition = "opacity 0.5s";
+                alert.style.opacity = 0;
+                setTimeout(function() { alert.style.display = "none"; }, 500);
+            });
+        }, 10000);
+    });
 </script>
-
-
-{% endblock %}
-
-
 {% endblock %}

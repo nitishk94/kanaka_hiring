@@ -61,6 +61,7 @@ def submit_feedback(id):
     feedback = request.form.get('feedback')
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
     interview = Interview.query.filter_by(applicant_id=id).filter_by(interviewer_id=current_user.id).filter_by(completed=False).first()
+    interview.feedback = feedback
 
     if history.interview_round_1_comments is None:
         history.interview_round_1_comments = feedback

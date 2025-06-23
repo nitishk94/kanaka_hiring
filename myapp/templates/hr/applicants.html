@@ -7,54 +7,33 @@
     <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h1 class="text-3xl font-bold">Active Applicants List</h1>
         <div class="flex items-center gap-4 flex-wrap">
-
-            <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_applicant') }}" class="flex gap-2 min-w-[250px]">
-            <input
-                type="text"
-                name="q"
-                placeholder="Search by name or email"
-                class="input input-bordered flex-grow"
-                value="{{ search_query or '' }}"
-            />
+            <form method="GET" action="{{ url_for('hr.search_sort_applicants') }}" class="flex gap-2 min-w-[250px]">
+                <input
+                    type="text"
+                    name="query"
+                    placeholder="Search by name or email..."
+                    class="input input-bordered flex-grow"
+                    value="{{ search_query or '' }}"
+                />
+                <input type="hidden" name="sort_by" value="{{ sort_by or 'date' }}">
                 <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
             </form>
-
-            <form method="GET" action="{{ url_for('hr.sort_applicants') }}" id="sortForm">
-                <div class="dropdown dropdown-end">
-                    <!-- Button trigger -->
-                    <div tabindex="0" role="button" class="btn btn-outline btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                        Sort by
-                    </div>
-
-                    <!-- Dropdown content -->
-                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-72">
-                        <div class="flex flex-col">
-                            <label for="sort_by" class="font-semibold mb-1">Sort By:</label>
-                            <select name="sort_by"
-                                    id="sort_by"
-                                    class="select select-bordered w-64"
-                                    onchange="document.getElementById('sortForm').submit()">
-                                <option value="date" {% if request.args.get('sort_by') == 'date' or not request.args.get('sort_by') %}selected{% endif %}>
-                                    Application Date (Latest First)
-                                </option>
-                                <option value="name" {% if request.args.get('sort_by') == 'name' %}selected{% endif %}>
-                                    Applicant Name (A–Z)
-                                </option>
-                                <option value="hr" {% if request.args.get('sort_by') == 'hr' %}selected{% endif %}>
-                                    HR Name (A–Z)
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-
+            <!-- Sort By Dropdown (identical to Filter) -->
+            <div class="dropdown dropdown-end ">
+                <div tabindex="0" role="button" class="btn btn-outline btn-primary w-48">
+                    Sort By
                 </div>
-            </form>
-
+                <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
+                    <form method="GET" action="{{ url_for('hr.search_sort_applicants') }}" id="sortForm" class="flex flex-col gap-2">
+                        <input type="hidden" name="query" value="{{ search_query or '' }}">
+                        <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
+                            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
+                            <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
 
             <!-- Filter Dropdown -->
             <form method="GET" action="{{ url_for('hr.filter_applicants') }}" class="flex items-center gap-2">

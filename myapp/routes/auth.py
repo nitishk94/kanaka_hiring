@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy import text
 from myapp.models.users import User
 from myapp.extensions import db
 from myapp.utils import is_valid_email
@@ -235,6 +236,8 @@ def add_new_user():
         return redirect(url_for('auth.show_add_new_user'))
 
     user = User(name=name, username=username, email=email, auth_type='microsoft')
+    db.session.execute(text("SET app.current_user_id = 'system'"))
+
     db.session.add(user)
     db.session.commit()
     

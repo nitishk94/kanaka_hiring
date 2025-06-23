@@ -68,7 +68,7 @@
                 <!-- If user is HR or Admin, show Edit and Delete buttons -->
                 {% if current_user.role in ['hr', 'admin'] %}
                     <!-- Edit Button -->
-                    <a href="{{ url_for('hr.joblisting_update', id=job.id) }}" 
+                    <a href="{{ url_for('hr.show_joblisting_update', id=job.id) }}" 
                        class="btn btn-warning w-auto px-8 text-lg">
                         Edit
                     </a>

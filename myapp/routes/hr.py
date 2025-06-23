@@ -54,6 +54,7 @@ def applicants():
 def all_applicants():
     search_query = request.args.get('search', '').strip()
     
+    
     if search_query:
         return redirect(url_for('hr.search_applicants', query=search_query))
     
@@ -64,34 +65,6 @@ def all_applicants():
         update_status(applicant.id)
     return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs)
 
-
-@bp.route('/search_applicants')
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def search_applicants():
-    search_query = request.args.get('query', '').strip()
-    
-    if not search_query:
-        return redirect(url_for('hr.applicants'))
-    
-    if '@' in search_query:
-        applicants = Applicant.query.filter(
-            Applicant.email.ilike(f'%{search_query}%')
-        ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
-    else:
-        applicants = Applicant.query.filter(
-            Applicant.name.ilike(f'%{search_query}%'),
-        ).options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
-    
-    if excluded_stages:
-        applicants = applicants.filter(~Applicant.status.in_(excluded_stages))
-    
-    jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
-    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    
-    return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs, search_query=search_query)
-        
 @bp.route('/upload_applicants', methods=['GET'])
 @no_cache
 @login_required
@@ -417,19 +390,53 @@ def sort_applicants():
     else:  # Default to sorting by latest application
         query = query.order_by(Applicant.last_applied.desc())
 
-    if excluded_stages:
-        query = query.filter(~Applicant.status.in_(excluded_stages))
+    applicants = query.all()
 
     # For filter dropdowns
     users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.all()
 
     return render_template(
-        'hr/applicants.html',
+        'hr/applicants_all.html',
         applicants=applicants,
         users=users,
         jobs=jobs,
-        search_query='' 
+        search_query='' )
+
+
+@bp.route('/search_applicants')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def search_applicants():
+    search_query = request.args.get('query', '').strip()
+    sort_by = request.args.get('sort_by', 'date')
+
+    if not search_query:
+        return redirect(url_for('hr.applicants'))
+
+    base_query = Applicant.query.options(joinedload(Applicant.uploader))
+
+    if '@' in search_query:
+        base_query = base_query.filter(Applicant.email.ilike(f'%{search_query}%'))
+    else:
+        base_query = base_query.filter(Applicant.name.ilike(f'%{search_query}%'))
+
+    if excluded_stages:
+        base_query = base_query.filter(~Applicant.status.in_(excluded_stages))
+
+    applicants = base_query.order_by(Applicant.last_applied.desc()).all()
+
+    jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
+    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+
+    return render_template(
+        'hr/applicants.html',
+        applicants=applicants,
+        users=hrs,
+        jobs=jobs,
+        search_query=search_query,
+        sort_by=sort_by
     )
 
 @bp.route('/applicants/<int:id>/download_cv')
@@ -451,7 +458,7 @@ def schedule_interview(id):
     access_token = session["token"]["access_token"]
     date = request.form.get('interview_date')
     time = request.form.get('interview_time')
-    interviewer_ids = [int(id) for id in request.form.getlist('interviewer_ids')]
+    interviewer_id = request.form.get('interviewer_id')
 
     if isinstance(date, str):
         try:
@@ -476,26 +483,13 @@ def schedule_interview(id):
         flash('Interview date must be today or in the future.', 'error')
         return redirect(url_for('hr.view_applicant', id=id))
     
-    if not interviewer_ids:
-        flash('Please select at least one interviewer.', 'error')
-        return redirect(url_for('hr.view_applicant', id=id))
-    
     applicant = Applicant.query.get_or_404(id)
-    interviewers = User.query.filter(User.id.in_(interviewer_ids)).all()
-    if len(interviewers) != len(interviewer_ids):
-        flash('One or more selected interviewers could not be found.', 'error')
-        return redirect(url_for('hr.view_applicant', id=id))
-        
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
+    interviewer = User.query.get_or_404(interviewer_id)
+    history = RecruitmentHistory.query.filter_by(applicant_id = id).first()
     start_datetime = datetime.combine(date, time)
     end_datetime = start_datetime + timedelta(hours=1)
 
-    client = False
-    for interviewer in interviewers:
-        if interviewer.auth_type == 'local':
-            client = True
-
-    if client:
+    if interviewer.auth_type == 'local':
         if not history.interview_round_1_date:
             round = 'Client Round 1'            
             history.interview_round_1_date = date
@@ -527,40 +521,37 @@ def schedule_interview(id):
         flash("This interview round has already been scheduled.", "warning")
         return redirect(url_for('hr.view_applicant', id=id))
 
-    # Create interview records for each interviewer
-    for interviewer in interviewers:
-        interview = Interview(
-            applicant_id=id,
-            date=date,
-            time=time,
-            round_number=round,
-            interviewer_id=interviewer.id,
-            scheduler_id=current_user.id
-        )
-        db.session.add(interview)
+    interview = Interview(
+        applicant_id=id,
+        date=date,
+        time=time,
+        round_number=round,
+        interviewer_id=interviewer_id,
+        scheduler_id=current_user.id
+    )
+    db.session.add(interview)
     db.session.commit()
 
-    attendees = []
-
-    for interviewer in interviewers:
-        attendees.append({
+    attendees = [
+        {
             "emailAddress": {
                 "address": interviewer.email,
                 "name": interviewer.name
             },
             "type": "required"
-        })
-
-    attendees.append({
+        },
+        {
             "emailAddress": {
                 "address": applicant.email,
                 "name": applicant.name
             },
             "type": "required"
-        })
+        }
+    ]
 
-    hrs = User.query.filter_by(role='hr').filter(User.id != current_user.id).all()
+    hrs = User.query.filter_by(role='hr').all()
     for hr in hrs:
+        if hr.id != current_user.id:
             attendees.append({
                 "emailAddress": {
                     "address": hr.email,
@@ -622,7 +613,7 @@ def offered_application(id):
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def offered_application(id):
+def joined_application(id):
     applicant = Applicant.query.get_or_404(id)
     applicant.status = 'Joined'
     db.session.commit()
@@ -642,7 +633,7 @@ def put_on_hold_application(id):
     flash('Applicant has been put on hold.', 'warning')
     return redirect(url_for('hr.view_applicant', id=id))
 
-@bp.route('/on_hold_application/<int:id>', methods=['POST'])
+@bp.route('/off_hold_application/<int:id>', methods=['POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
@@ -772,10 +763,16 @@ def reschedule_interview(id):
     
     if not is_future_or_today(date):
         flash("Choose a proper date", "error")
+        referrer = request.referrer
+        if referrer and 'view_interviews' in referrer:
+            return redirect(url_for('hr.view_interviews'))
         return redirect(url_for('hr.view_applicant', id=id))
         
     if not interviewer_ids:
         flash('Please select at least one interviewer.', 'error')
+        referrer = request.referrer
+        if referrer and 'view_interviews' in referrer:
+            return redirect(url_for('hr.view_interviews'))
         return redirect(url_for('hr.view_applicant', id=id))
 
     applicant = Applicant.query.get_or_404(id)
@@ -895,7 +892,7 @@ def reschedule_interview(id):
     referrer = request.referrer
     if referrer and 'view_interviews' in referrer:
         return redirect(url_for('hr.view_interviews'))
-    return redirect(url_for('hr.view_applicant', id=applicant.id))
+    return redirect(url_for('hr.view_applicant', id=id))
 
 @bp.route('/upload_joblistings', methods=['GET'])
 @no_cache
@@ -955,7 +952,6 @@ def show_joblisting_update(id):
     job = JobRequirement.query.get_or_404(id)
     return render_template('hr/detailsjob.html', joblisting=job)
 
-
 # Handle the form submission to update job details
 @bp.route('/update_joblisting/<int:id>', methods=['POST'])
 @no_cache
@@ -989,7 +985,6 @@ def submit_joblisting_update(id):
 
     flash('Job listing updated successfully!', 'success')
     return redirect(url_for('main.view_details_joblisting', id=id))
-
 
 @bp.route('/close_joblisting/<int:id>', methods=['POST'])
 @no_cache
@@ -1027,6 +1022,17 @@ def delete_joblisting(id):
     flash('Job listing deleted successfully', 'success')
     return redirect(url_for('main.view_joblisting'))
 
+def get_test_ids():
+    url_for="https://apiv3.imocha.io/v3/tests"
+    headers = {
+        "X-API-KEY":"MLgDuuMLvhyRcoHxmaGBBHxBItiKrb",
+        "Content-Type":"application/json"
+    }
+    response = requests.get(url_for, headers=headers)
+    result=response.json()
+    test_dict = {test["testId"]: test["testName"] for test in result["tests"]}
+    return test_dict
+
 @bp.route('/schedule_test/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -1039,14 +1045,17 @@ def schedule_test(id):
         test_link = request.form.get('test_link')
         
         today = datetime.today()
-        start_date = today.strftime('%Y-%m-%d')    
-        day_str = today.strftime('%A')    
-        time_str = today.strftime('%H:%M:%S')
+        day_str = today.strftime('%A')           
+        time_str = today.strftime('%H:%M:%S')   
 
-        if day_str=='Friday':
-            end_date=start_date + timedelta(days=2)
+        if day_str == 'Friday':
+            end_datetime = today + timedelta(days=2)
         else:
-            end_date=start_date + timedelta(days=1)
+            end_datetime = today + timedelta(days=1)
+
+        start_date = today.strftime('%Y-%m-%d')      
+        end_date = end_datetime.strftime('%Y-%m-%d')
+
 
         if not test_link:
             return redirect(url_for('hr.schedule_default',id=id,testId=test_id,start_test_date=start_date,end_test_date=end_date,test_time=time_str))
@@ -1076,7 +1085,7 @@ def schedule_test(id):
             }
 
     return render_template(
-        'hr/view_applicant.html',
+        'hr/test_schedule.html',
         tests=test_dict,
         applicant=applicant,
         selected_test_id=selected_test_id,
@@ -1174,7 +1183,7 @@ def format_date(date_input, time_input):
     if isinstance(date_input, str):
         date_input = datetime.strptime(date_input, '%Y-%m-%d').date()
     if isinstance(time_input, str):
-        time_input = datetime.strptime(time_input, '%H:%M').time()
+        time_input = datetime.strptime(time_input, '%H:%M:%S').time()
 
     dt = datetime.combine(date_input, time_input)
 
@@ -1260,9 +1269,7 @@ def available_interviewers():
     except ValueError:
         return jsonify([])
     
-
 #View all applicants
-
 @bp.route('/filter_all_applicants')
 @no_cache
 @login_required
@@ -1270,12 +1277,12 @@ def available_interviewers():
 def filter_all_applicants():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
-    stages = db.session.query(Applicant.status).distinct().all()
+    stages = [s[0] for s in db.session.query(Applicant.status).distinct().order_by(Applicant.status).all()]
 
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
     status_id = request.args.get('status', '')
-    status = request.args.get('current_stage',' ')
+    stage = request.args.get('stages',' ')
 
     query = Applicant.query
 
@@ -1290,8 +1297,8 @@ def filter_all_applicants():
     elif status_id == 'experienced':
         query = query.filter(Applicant.is_fresher == False)
 
-    if status:
-        query = query.filter(Applicant.status==status)
+    if stage:
+        query = query.filter(Applicant.status==stage)
 
     applicants = query.order_by(Applicant.last_applied.desc()).all()
 
@@ -1356,3 +1363,94 @@ def search_all_applicants():
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     
     return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs, search_query=search_query)
+
+
+@bp.route('/search_sort_all_applicants', methods=['GET'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def search_sort_all_applicants():
+    search_query = request.args.get('query', '').strip()
+    sort_by = request.args.get('sort_by', 'date')
+
+    # Start with a single base query
+    query = Applicant.query.options(
+        joinedload(Applicant.uploader),
+        joinedload(Applicant.job)
+    )
+
+    # Apply search filter
+    if search_query:
+        if '@' in search_query:
+            query = query.filter(Applicant.email.ilike(f'%{search_query}%'))
+        else:
+            query = query.filter(Applicant.name.ilike(f'%{search_query}%'))
+
+    # Apply sort filter
+    if sort_by == 'name':
+        query = query.order_by(Applicant.name.asc())
+    elif sort_by == 'hr':
+        query = query.join(Applicant.uploader).order_by(User.name.asc())
+    else:
+        query = query.order_by(Applicant.last_applied.desc())
+
+    # Fetch applicants
+    applicants = query.all()
+
+    # For the dropdowns (HR, Jobs)
+    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.all()
+
+    return render_template(
+        'hr/applicants_all.html',
+        applicants=applicants,
+        search_query=search_query,
+        sort_by=sort_by,
+        users=users,
+        jobs=jobs
+    )
+
+@bp.route('/search_sort_applicants', methods=['GET'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def search_sort_applicants():
+    search_query = request.args.get('query', '').strip()
+    sort_by = request.args.get('sort_by', 'date')
+
+    # Start with a single base query
+    query = Applicant.query.options(
+        joinedload(Applicant.uploader),
+        joinedload(Applicant.job)
+    )
+
+    # Apply search filter
+    if search_query:
+        if '@' in search_query:
+            query = query.filter(Applicant.email.ilike(f'%{search_query}%'))
+        else:
+            query = query.filter(Applicant.name.ilike(f'%{search_query}%'))
+
+    # Apply sort filter
+    if sort_by == 'name':
+        query = query.order_by(Applicant.name.asc())
+    elif sort_by == 'hr':
+        query = query.join(Applicant.uploader).order_by(User.name.asc())
+    else:
+        query = query.order_by(Applicant.last_applied.desc())
+
+    # Fetch applicants
+    applicants = query.all()
+
+    # For the dropdowns (HR, Jobs)
+    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    jobs = JobRequirement.query.all()
+
+    return render_template(
+        'hr/applicants.html',
+        applicants=applicants,
+        search_query=search_query,
+        sort_by=sort_by,
+        users=users,
+        jobs=jobs
+    )
