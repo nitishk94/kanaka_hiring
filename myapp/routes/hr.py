@@ -9,7 +9,7 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info, can_update_applicant
+from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info, can_update_applicant, store_result
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
@@ -593,6 +593,8 @@ def schedule_interview(id):
     if response.status_code == 201:
         flash('Interview round {round} scheduled and calendar invite sent.', 'success')
         current_app.logger.info(f"Meeting created for round {round} for applicant {id}")
+        if not applicant.test_result and history.test_date:
+            store_result(id)
     else:
         flash('Interview saved, but failed to schedule calendar meeting.', 'warning')
         current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
@@ -669,32 +671,165 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
+    users = User.query.filter_by(role='referrer').all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
-    return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs)
+    return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
 @bp.route('/filter_referrals')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def filter_referrals():
-    referral_id = request.args.get('referral_id')
-    job_id = request.args.get('job_id')
-    referral_users = User.query.filter_by(role='referral').all()
+    referral_id = request.args.get('referral_id', type=int)
+    job_id = request.args.get('job_id', type=int)
 
-    query = JobRequirement.query
+    referral_users = User.query.filter_by(role='referrer').all()
+    jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+    query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
-    # Apply Job ID filter
-    if job_id:
-        query = query.filter_by(id=job_id)
-
-    # Optional: Apply Referral filter only if JobRequirement has a relationship with Referral
     if referral_id:
-        query = query.join(JobRequirement.referrals).filter(Referral.id == referral_id)
-        # NOTE: You must define this relationship in your model first!
+        query = query.filter(Referral.referrer_id == referral_id)
+    if job_id:
+        query = query.filter(Referral.job_id == job_id)
 
-    jobs = query.order_by(JobRequirement.id.desc()).all()
+    referrals = query.order_by(Referral.id.desc()).all()
 
-    return render_template('hr/view_referrals.html', jobs=jobs, users=referral_users)
+    return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
+
+
+@bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def upload_referral_applicant(referral_id,referrer_id, name):
+    if '_user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+
+    if request.method == 'GET':
+        form_data = session.pop('form_data', None)
+        job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position)\
+                                            .filter(JobRequirement.is_open == True).all()
+        if not form_data:
+            form_data = {}
+        form_data['name'] = name
+        return render_template('hr/upload_referral_applicant.html', job_positions=job_positions, form_data=form_data)
+
+    # ---- POST logic begins ----
+    file = request.files.get('cv')
+    if not validate_file(file):
+        flash('File is corrupted.', 'warning')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.upload_referral_applicant'))
+
+    email = request.form.get('email').lower()
+    if not can_upload_applicant_email(email):
+        flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.view_referrals'))
+
+    phone_number = request.form.get('phone_number')
+    if not can_upload_applicant_phone(phone_number):
+        flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.view_referrals'))
+
+    def get_bool(key): return bool(request.form.get(key))
+    int_or_none = lambda x: int(x) if x else None
+
+    try:
+        dob = request.form.get('dob')
+        dob = datetime.strptime(dob, '%Y-%m-%d').date() if dob else None
+    except ValueError:
+        dob = None
+
+    is_fresher = get_bool('is_fresher')
+    experience = request.form.get('experience')
+    if not is_fresher and '0' in experience:
+        flash("Experience cannot be 0", "error")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.upload_referral_applicant'))
+
+    new_applicant = Applicant(
+        name=name,
+        email=email,
+        phone_number=phone_number,
+        dob=dob,
+        gender=request.form.get('gender'),
+        marital_status=request.form.get('marital_status'),
+        native_place=request.form.get('native_place', '').title(),
+        current_location=request.form.get('current_location', '').title(),
+        work_location=request.form.get('work_location', '').title(),
+        graduation_year=int_or_none(request.form.get('graduation_year')),
+        is_fresher=is_fresher,
+        qualification=request.form.get('qualification'),
+        current_internship=get_bool('current_internship'),
+        internship_duration=int_or_none(request.form.get('internship_duration')),
+        paid_internship=get_bool('paid_internship'),
+        stipend=int_or_none(request.form.get('stipend')),
+        experience=experience,
+        referenced_from=request.form.get('referenced_from'),
+        linkedin_profile=request.form.get('linkedin_profile') or 'Not Provided',
+        github_profile=request.form.get('github_profile') or 'Not Provided',
+        is_kanaka_employee=get_bool('is_kanaka_employee'),
+        current_company=request.form.get('current_company'),
+        designation=request.form.get('designation'),
+        current_job_position=request.form.get('current_job_position', '').title(),
+        current_ctc=int_or_none(request.form.get('current_ctc')),
+        expected_ctc=int_or_none(request.form.get('expected_ctc')),
+        notice_period=int_or_none(request.form.get('notice_period')),
+        tenure_at_current_company=request.form.get('tenure_at_current_company'),
+        current_offers_yes_no=get_bool('current_offers_yes_no'),
+        current_offers_description=request.form.get('current_offers_description') or None,
+        reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
+        comments=request.form.get('comments') or 'No comments',
+        last_applied=date.today(),
+        current_stage='Need to schedule test/interview',
+        uploaded_by=current_user.id,
+        referred_by=referrer_id,
+        job_id=int_or_none(request.form.get('position')) if not is_fresher else None,
+    )
+
+    # Save file
+    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(upload_dir, filename)
+    file.save(file_path)
+    new_applicant.cv_file_path = file_path
+
+    try:
+        db.session.add(new_applicant)
+        db.session.commit()
+
+        history = RecruitmentHistory(applicant_id=new_applicant.id, applied_date=date.today())
+        db.session.add(history)
+
+        try:
+            referral=Referral.query.get_or_404(referral_id)
+            referral.applicant_id = new_applicant.id
+            db.session.add(referral)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Failed to assign applicant_id to referral: {e}")
+
+        flash('New applicant successfully created!', 'success')
+        current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
+        return redirect(url_for('hr.upload_referral_applicant'))
+
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'email' in str(e.orig):
+            flash('This email is already registered.', 'error')
+        elif 'phone_number' in str(e.orig):
+            flash('This phone number is already registered.', 'error')
+        else:
+            flash('Database error. Please try again.', 'error')
+        current_app.logger.error(f"IntegrityError: {e}")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.upload_referral_applicant'))
+
 
 @bp.route('/onboarding')
 @no_cache
@@ -995,6 +1130,7 @@ def submit_joblisting_update(id):
 def close_joblisting(id):
     joblisting = JobRequirement.query.get_or_404(id)
     joblisting.is_open = False
+    joblisting.for_vendor = False
     db.session.commit()
     current_app.logger.info(f"Job listing {joblisting.position} closed by {current_user.username}")
     flash('Job listing closed successfully', 'success')

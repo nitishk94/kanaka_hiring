@@ -25,8 +25,9 @@
                             <select name="referral_id" id="referral_id" class="select select-bordered">
 
                                 <option value="">-- All --</option>
-                                {% for user in referrals %}
-                                    <option value="{{ user.id }}" {% if request.args.get('referral_id') == user.id %}selected{% endif %}>
+                                {% for user in users %}
+                                    <option value="{{ user.id }}" {% if request.args.get('referral_id')|int == user.id %}selected{% endif %}>
+
                                         {{ user.name }}
                                     </option>
                                 {% endfor %}
@@ -48,7 +49,7 @@
 
                         <!-- Buttons -->
                         <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-                        <a href="{{ url_for('hr.filter_referrals') }}" class="btn btn-outline mt-2">Clear Filter</a>
+                        <a href="{{ url_for('hr.view_referrals') }}" class="btn btn-outline mt-2">Clear Filter</a>
                     </form>
                 </div>
             </div>
@@ -94,7 +95,8 @@
                                 Track Status
                             </a>
                             {% else %}
-                            <a href="{{ url_for('hr.show_upload_form') }}" class="btn btn-sm btn-info">
+                            <a href="{{ url_for('hr.upload_referral_applicant',referral_id=referral.id , referrer_id=referral.referrer_id, name=referral.name) }}" class="btn btn-sm btn-info">
+
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                     <polyline points="17 8 12 3 7 8" />

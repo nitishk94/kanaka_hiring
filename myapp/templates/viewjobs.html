@@ -51,17 +51,29 @@
             </div>
         </div>
 
-        <!-- Search form -->
-        <form method="GET" action="{{ url_for('main.search_job') }}" class="flex gap-2 min-w-[250px]">
-            <input
-                type="text"
-                name="q"
-                placeholder="Search jobs..."
-                class="input input-bordered flex-grow"
-                required
-            />
+        <form method="GET" action="{{ url_for('main.search_job') }}" class="flex gap-2 min-w-[250px] relative">
+            <div class="relative w-full">
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Search jobs..."
+                    class="input input-bordered w-full pr-10"
+                    value="{{ search_query or '' }}"
+                    id="searchInput"
+                />
+                <button
+                    type="button"
+                    id="clearSearchBtn"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                    style="display: {{ 'inline' if search_query else 'none' }};"
+                >
+                    &#10005;
+                </button>
+            </div>
             <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
         </form>
+
+
 
         <!-- Total jobs count -->
         <div class="stat text-center min-w-[100px]">
@@ -77,25 +89,52 @@
     {% if jobs %}
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {% for job in jobs %}
-            <div class="card bg-base-100 shadow-lg rounded-lg flex flex-col justify-between p-6 text-center">
-                <div class="flex flex-col items-center">
-                    {% if not job.is_open %}
-                        <span class="badge badge-error mb-2">Closed</span>
-                    {% endif %}
-                    <h2 class="text-xl font-bold mb-2">{{ job.position }}</h2>
-                    <p class="text-gray-700 mb-4">{{ job.skillset }}</p>
-                    <p class="text-gray-700 mb-4">Experience: {{ job.experience }} years</p>
-                    <p class="text-sm text-gray-500 mb-4">Added by: {{ job.created_by.username if job.created_by else 'Unknown' }}</p>
-                </div>
+            {% if current_user.role=='referrer'%}
+                {% if job.for_vendor%}
+                    <div class="card bg-base-100 shadow-lg rounded-lg flex flex-col justify-between p-6 text-center">
+                        <div class="flex flex-col items-center">
+                            {% if not job.is_open %}
+                                <span class="badge badge-error mb-2">Closed</span>
+                            {% endif %}
+                            <h2 class="text-xl font-bold mb-2">{{ job.position }}</h2>
+                            <p class="text-gray-700 mb-4">{{ job.skillset }}</p>
+                            <p class="text-gray-700 mb-4">Experience: {{ job.experience }} years</p>
+                            <p class="text-sm text-gray-500 mb-4">Added by: {{ job.created_by.username if job.created_by else 'Unknown' }}</p>
+                        </div>
 
-                <!-- View Description button -->
-                <div class="flex justify-center mt-auto">
-                    <a href="{{ url_for('main.view_details_joblisting', id=job.id) }}" class="btn btn-info w-auto px-6">
-                        View Description
-                    </a>
-                </div>
+                        <!-- View Description button -->
+                        <div class="flex justify-center mt-auto">
+                            <a href="{{ url_for('main.view_details_joblisting', id=job.id) }}" class="btn btn-info w-auto px-6">
+                                View Description
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="card bg-base-100 shadow-lg rounded-lg flex flex-col justify-between p-6 text-center">
+                    <div class="flex flex-col items-center">
+                        {% if not job.is_open %}
+                            <span class="badge badge-error mb-2">Closed</span>
+                        {% endif %}
+                        {% if job.for_vendor %}
+                            <span class="badge badge-success mb-2">Open for external vendor</span>
+                        {% endif %}
+                        <h2 class="text-xl font-bold mb-2">{{ job.position }}</h2>
+                        <p class="text-gray-700 mb-4">{{ job.skillset }}</p>
+                        <p class="text-gray-700 mb-4">Experience: {{ job.experience }} years</p>
+                        <p class="text-sm text-gray-500 mb-4">Added by: {{ job.created_by.username if job.created_by else 'Unknown' }}</p>
+                    </div>
 
-            </div>
+                    <!-- View Description button -->
+                    <div class="flex justify-center mt-auto">
+                        <a href="{{ url_for('main.view_details_joblisting', id=job.id) }}" class="btn btn-info w-auto px-6">
+                            View Description
+                        </a>
+                    </div>
+
+                </div>
+            {% endif %}
+
         {% endfor %}
     </div>
     {% else %}
@@ -107,3 +146,23 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if (clearBtn && searchInput) {
+            clearBtn.addEventListener('click', function(e) {
+                searchInput.value = '';
+                searchInput.focus();
+                clearBtn.style.display = 'none';
+            });
+            searchInput.addEventListener('input', function() {
+                clearBtn.style.display = searchInput.value ? 'inline' : 'none';
+            });
+        }
+    });
+</script>
+{% endblock %} 

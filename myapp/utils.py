@@ -11,13 +11,16 @@ import json
 
 def can_update_applicant(id, email):
     applicant = Applicant.query.filter_by(email=email).first()
-    if applicant.id == id:
-        return True
-    else:
-        six_months = (datetime.now() - timedelta(days=180)).date()
-        if applicant.last_applied < six_months:
+    if applicant:
+        if applicant.id == id:
             return True
-        return False
+        else:
+            six_months = (datetime.now() - timedelta(days=180)).date()
+            if applicant.last_applied < six_months:
+                return True
+            return False
+    
+    return True
 
 def can_upload_applicant_email(email):
     applicant = Applicant.query.filter_by(email=email).first()
@@ -171,3 +174,4 @@ def store_result(id):
             db.session.add(test_result)
             history.test_result = True
             db.session.commit()
+

@@ -8,14 +8,26 @@
         <h1 class="text-3xl font-bold">All Applicants List</h1>
         <div class="flex items-center gap-4 ml-auto">
             <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" class="flex gap-2 min-w-[250px]">
-                <input
-                    type="text"
-                    name="query"
-                    placeholder="Search by name or email"
-                    class="input input-bordered flex-grow"
-                    value="{{ search_query or '' }}"
-                />
+            <!-- Search Box -->
+            <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" class="flex gap-2 min-w-[250px] relative">
+                <div class="relative w-full">
+                    <input
+                        type="text"
+                        name="query"
+                        placeholder="Search by name or email"
+                        class="input input-bordered w-full pr-10"
+                        value="{{ search_query or '' }}"
+                        id="searchInput"
+                    />
+                    <button
+                        type="button"
+                        id="clearSearchBtn"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                        style="display: {{ 'inline' if search_query else 'none' }};"
+                    >
+                        &#10005;
+                    </button>
+                </div>
                 <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
             </form>
 
@@ -175,11 +187,31 @@
     <div class="text-center py-8">
         <div class="text-6xl mb-4">📝</div>
         <h3 class="text-xl font-semibold mb-2">No Applicants Yet</h3>
-        <p class="text-gray-600 mb-4">Start by uploading some applicants to see them here.</p>
+        <p class="text-gray-600 mb-4">Apply appropriate filters to check data.</p>
         <a href="{{ url_for('hr.show_upload_form') }}" class="btn btn-primary">
             Upload Applicants
         </a>
     </div>
     {% endif %}
 </div>
+{% endblock %} 
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if (clearBtn && searchInput) {
+            clearBtn.addEventListener('click', function(e) {
+                searchInput.value = '';
+                searchInput.focus();
+                clearBtn.style.display = 'none';
+            });
+            searchInput.addEventListener('input', function() {
+                clearBtn.style.display = searchInput.value ? 'inline' : 'none';
+            });
+        }
+    });
+</script>
 {% endblock %} 

@@ -29,7 +29,7 @@
                             pattern="[A-Za-z\s]+"
                             title="Please enter a valid name (letters and spaces only)"
                             class="input input-bordered"
-                            value="{{ form_data.name if form_data else '' }}"
+                            value="{{ form_data.name if form_data and form_data.name else '' }}"
                         />
                     </div>
 
@@ -167,13 +167,6 @@
                         </label>
                     </div>
 
-                    <div class="form-control">
-                        <label class="label cursor-pointer justify-start gap-4">
-                            <input type="checkbox" id="referral-toggle" name="is_referred" class="checkbox checkbox-primary" {% if form_data and form_data.is_referred %}checked{% endif %} />
-                            <span class="label-text">Referral</span>
-                        </label>
-                    </div>
-
                     <div class="form-control" id="current-internship-toggle-container" style="display: none;">
                         <label class="label cursor-pointer justify-start gap-4">
                             <input type="checkbox" id="current-internship-toggle" name="current_internship" class="checkbox checkbox-primary" {% if form_data and form_data.current_internship %}checked{% endif %} />
@@ -193,34 +186,6 @@
                             <input type="checkbox" id="current-offers" name="current_offers_yes_no" class="checkbox checkbox-primary" {% if form_data and form_data.current_offers_yes_no %}checked{% endif %} />
                             <span class="label-text">Has Current Offers</span>
                         </label>
-                    </div>
-
-                    
-
-                    <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
-                        <label class="label" for="referred_by">
-                            <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
-                        </label>
-                        <div id="vue-referrer-select">
-                            <multiselect
-                                v-model="selectedReferrer"
-                                :options="referrerNames"
-                                :searchable="true"
-                                :close-on-select="true"
-                                :clear-on-select="false"
-                                :preserve-search="true"
-                                :show-labels="false"
-                                placeholder="Enter referrer's name"
-                                :allow-empty="true"
-                                :custom-label="customLabel"
-                                label="name"
-                                track-by="id"
-                                @input="onInput"
-                                class="input-bordered w-full"
-                                required
-                            ></multiselect>
-                            <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
-                        </div>
                     </div>
                     
                 </div>
@@ -558,7 +523,6 @@
         const fileInput = document.getElementById('cvFile');
         const errorElement = document.getElementById('fileError');
         const fresherToggle = document.getElementById('fresher-toggle');
-        const referralToggle = document.getElementById('referral-toggle');
         const currentInternshipToggle = document.getElementById('current-internship-toggle');
         const paidInternshipToggle = document.getElementById('paid-internship');
         const currentOffersToggle = document.getElementById('current-offers');
@@ -644,21 +608,6 @@
             }
         });
 
-        // Referral toggle functionality
-        referralToggle.addEventListener('change', function() {
-            const referrerSection = document.getElementById('referrer-section');
-            toggleSection(referrerSection, this.checked, false);
-            
-            const referrerInput = document.getElementById('referred_by');
-            // Set required attribute dynamically
-            if (this.checked) {
-                referrerInput.setAttribute('required', 'required');
-            } else {
-                referrerInput.removeAttribute('required');
-                referrerInput.value = '';
-            }
-        });
-
         // Current Internship toggle functionality
         currentInternshipToggle.addEventListener('change', function() {
             const internshipDurationField = document.getElementById('internship-duration-field');
@@ -711,48 +660,11 @@
         if (fresherToggle) {
             fresherToggle.dispatchEvent(new Event('change'));
         }
-        if (referralToggle) {
-            referralToggle.dispatchEvent(new Event('change'));
-        }
         if (currentInternshipToggle && currentInternshipToggle.checked) {
             currentInternshipToggle.dispatchEvent(new Event('change'));
         }
         if (currentOffersToggle && currentOffersToggle.checked) {
             currentOffersToggle.dispatchEvent(new Event('change'));
-        }
-
-        // Vue Multiselect for Referrer
-        if (document.getElementById('vue-referrer-select')) {
-            new Vue({
-                el: '#vue-referrer-select',
-                components: {
-                    Multiselect: window.VueMultiselect.default
-                },
-                data: function() {
-                    const referrers = JSON.parse('{{ referrer_names|tojson|safe }}');
-                    const initial = "{{ form_data.referred_by if form_data else '' }}";
-                    return {
-                        referrerNames: referrers,
-                        selectedReferrer: referrers.find(r => r.id == initial) || null
-                    };
-                },
-                methods: {
-                    customLabel(option) {
-                        return option && option.name ? option.name : '';
-                    },
-                    onInput(val) {
-                        this.$el.querySelector('input[name="referred_by"]').value = val && val.id ? val.id : '';
-                    }
-                },
-                watch: {
-                    selectedReferrer(val) {
-                        this.onInput(val);
-                    }
-                },
-                mounted() {
-                    this.onInput(this.selectedReferrer);
-                }
-            });
         }
 
         fileInput.addEventListener('change', function(e) {
@@ -765,19 +677,6 @@
                 errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
                 fileInput.value = '';
                 return;
-            }
-        });
-
-        // Custom validation for referral name
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            if (referralToggle.checked) {
-                const referrerInput = document.getElementById('referred_by');
-                if (!referrerInput.value) {
-                    e.preventDefault();
-                    alert('Please select a referral name.');
-                    return false;
-                }
             }
         });
     });
