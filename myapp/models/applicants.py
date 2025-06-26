@@ -1,5 +1,5 @@
 from myapp.extensions import db
-from sqlalchemy import BigInteger, event
+from sqlalchemy import BigInteger
 
 class Applicant(db.Model):
     __tablename__ = 'applicants'
@@ -55,12 +55,3 @@ class Applicant(db.Model):
     job = db.relationship("JobRequirement", foreign_keys=[job_id],backref="applicants")
     test_results = db.relationship("TestResult", back_populates="applicant")
 
-@event.listens_for(Applicant, 'after_insert')
-def link_applicant_to_referral(mapper, connection, target):
-    from myapp.models.referrals import Referral
-    if target.is_referred:
-        connection.execute(
-        Referral.__table__.update()
-        .where(Referral.name == target.name)
-        .values(applicant_id = target.id)
-    )

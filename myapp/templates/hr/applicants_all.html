@@ -23,7 +23,7 @@
                         type="button"
                         id="clearSearchBtn"
                         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                        style="display: {{ 'inline' if search_query else 'none' }};"
+                        {% if not search_query %}style="display: none;"{% endif %}
                     >
                         &#10005;
                     </button>
@@ -182,6 +182,33 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="flex justify-center mt-6">
+        <nav class="join">
+            {% set args = request.args.copy() %}
+            {% if pagination.has_prev %}
+                {% set args = args.to_dict() %}
+                {% set _ = args.update({'page': pagination.prev_num}) %}
+                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">&lsaquo; Prev</a>
+            {% else %}
+                <span class="join-item btn btn-disabled">&lsaquo; Prev</span>
+            {% endif %}
+
+            <span class="join-item btn font-bold bg-gray-800 text-white">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+            {% if pagination.has_next %}
+                {% set args = request.args.copy() %}
+                {% set args = args.to_dict() %}
+                {% set _ = args.update({'page': pagination.next_num}) %}
+                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">Next &rsaquo;</a>
+            {% else %}
+                <span class="join-item btn btn-disabled">Next &rsaquo;</span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
 
     {% if not applicants %}
     <div class="text-center py-8">
