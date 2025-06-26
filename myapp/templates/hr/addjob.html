@@ -63,7 +63,7 @@
                     <!-- Job Clients -->
                     <div class="form-control md:col-span-1">
                         <label class="label" for="job_clients">
-                            <span class="label-text">Client Name</span>
+                            <span class="label-text">Client Name </span>
                         </label>
                         <input
                             id="job_clients"
@@ -109,13 +109,13 @@
                                 class="input input-bordered"
                                 value="{{ form_data.job_experience if form_data else '' }}"
                             />
-                        </div>
-                        <!-- Open for external vendors -->
-                        <div class="form-control flex flex-row items-center h-full md:mb-0 mb-4 md:ml-4">
+                        </div>   
+                    </div>
+
+                    <div class="form-control flex flex-row items-center h-full md:mb-0 mb-4 md:ml-4">
                             <input type="checkbox" id="for_vendor" name="for_vendor" class="checkbox checkbox-primary mr-2" {% if form_data and form_data.for_vendor %}checked{% endif %} />
                             <label for="for_vendor" class="label-text cursor-pointer">Open for external vendors</label>
                         </div>
-                    </div>
 
                 </div>
 

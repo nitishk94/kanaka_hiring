@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from flask_login import login_user, logout_user, current_user, login_required
+from sqlalchemy import text
 from myapp.models.users import User
 from myapp.extensions import db
 from myapp.utils import is_valid_email
@@ -21,7 +22,9 @@ def show_register_page():
         flash('You are already logged in.', 'info')
         return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
     
-    return render_template('auth/register.html')
+    form_data = session.pop('form_data', None)
+    
+    return render_template('auth/register.html', form_data=form_data)
 
 @bp.route('/register', methods=['POST'])
 def handle_register():
@@ -37,22 +40,27 @@ def handle_register():
 
     if password != confirm_password:
         flash('Passwords do not match', 'error')
-        return render_template('auth/register.html', form_data=request.form)
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('auth.show_register_page'))
 
     if not is_valid_email(email):
         flash('Please enter a valid email address', 'error')
-        return render_template('auth/register.html', form_data=request.form)
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('auth.show_register_page'))
 
     if User.query.filter_by(email=email).first():
         flash('Email already exists', 'error')
-        return render_template('auth/register.html', form_data=request.form)
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('auth.show_register_page'))
 
     if User.query.filter_by(username=username).first():
         flash('Username already exists', 'error')
-        return render_template('auth/register.html', form_data=request.form)
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('auth.show_register_page'))
 
     user = User(name=name, username=username, email=email, auth_type='local')
     user.set_password(password)
+    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": 1})
     db.session.add(user)
     db.session.commit()
     
@@ -66,7 +74,9 @@ def login():
         flash('You are already logged in.', 'info')
         return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
 
-    return render_template('auth/login.html', form_data=request.args)
+    form_data = session.pop('form_data', None)
+
+    return render_template('auth/login.html', form_data=form_data)
 
 @bp.route('/login/microsoft', methods=['GET', 'POST'])
 @no_cache
@@ -88,9 +98,6 @@ def login_external():
     username_or_email = request.form.get('username_or_email')
     password = request.form.get('password')
 
-    if '@' in username_or_email and not is_valid_email(username_or_email):
-        flash('Please enter a valid email address', 'error')
-        return redirect(url_for('auth.login_referrer'))
     if '@' in username_or_email and not is_valid_email(username_or_email):
         flash('Please enter a valid email address', 'error')
         return redirect(url_for('auth.login_referrer'))
@@ -127,7 +134,8 @@ def login_external():
     
     flash('Invalid username/email or password', 'error')
     current_app.logger.info(f"Invalid login attempt: {username_or_email}")
-    return render_template('auth/login.html', form_data=request.form)
+    form_data = {'username_or_email': username_or_email}
+    return render_template('auth/login.html', form_data=form_data), 401
 
 @bp.route('/auth/redirect')
 @no_cache
@@ -143,7 +151,6 @@ def authorized_redirect():
     # 2. Validate state
     incoming_state = request.args.get("state")
     stored_state = session.get("msal_state")
-    current_app.logger.debug(f"State: stored={stored_state}, incoming={incoming_state}")
     if not stored_state or stored_state != incoming_state:
         current_app.logger.error("State mismatch or missing")
         flash("Authentication mismatch. Please try again.", "error")
@@ -183,6 +190,8 @@ def authorized_redirect():
         current_app.logger.error("No email in id_token_claims")
         flash("Unable to determine user email from Microsoft.", "error")
         return redirect(url_for("auth.login"))
+    else:
+        session["microsoft_user_email"] = email
 
     email = email.lower()
     user = User.query.filter_by(email=email).first()
@@ -208,7 +217,9 @@ def show_add_new_user():
         flash('You are already logged in.', 'info')
         return redirect(url_for(ROLE_REDIRECTS.get(current_user.role, 'main.home')))
     
-    return render_template('auth/add_internal_user.html')
+    form_data = session.pop('form_data', None)
+    
+    return render_template('auth/add_internal_user.html', form_data=form_data)
 
 @bp.route('/register/internal', methods=['POST'])
 @no_cache
@@ -219,21 +230,14 @@ def add_new_user():
     
     name = request.form.get('name')
     username = request.form.get('username').lower()
-    email = request.form.get('email').lower()
-
-    if not is_valid_email(email):
-        flash('Please enter a valid email address', 'error')
-        return render_template('auth/add_internal_user.html', form_data=request.form)
-
-    if User.query.filter_by(email=email).first():
-        flash('Email already exists', 'error')
-        return render_template('auth/add_internal_user.html', form_data=request.form)
+    email = session.pop('microsoft_user_email', '').lower()
 
     if User.query.filter_by(username=username).first():
         flash('Username already exists', 'error')
-        return render_template('auth/add_internal_user.html', form_data=request.form)
+        return redirect(url_for('auth.show_add_new_user'))
 
     user = User(name=name, username=username, email=email, auth_type='microsoft')
+    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": 1})
     db.session.add(user)
     db.session.commit()
     

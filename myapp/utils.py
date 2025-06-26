@@ -11,13 +11,16 @@ import json
 
 def can_update_applicant(id, email):
     applicant = Applicant.query.filter_by(email=email).first()
-    if applicant.id == id:
-        return True
-    else:
-        six_months = (datetime.now() - timedelta(days=180)).date()
-        if applicant.last_applied < six_months:
+    if applicant:
+        if applicant.id == id:
             return True
-        return False
+        else:
+            six_months = (datetime.now() - timedelta(days=180)).date()
+            if applicant.last_applied < six_months:
+                return True
+            return False
+    
+    return True
 
 def can_upload_applicant_email(email):
     applicant = Applicant.query.filter_by(email=email).first()
@@ -69,17 +72,6 @@ def update_status(id):
             history.current_stage = new_stage
             applicant.current_stage = new_stage
             db.session.commit()
-
-def button_status(id):
-    applicant = Applicant.query.get_or_404(id)
-    history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    today = date.today()
-    
-    if(history.test_date + timedelta(days=1)) == today:
-        decision=1000
-        return decision
-    return 1
-
 
 def generate_timeline(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
@@ -134,7 +126,7 @@ def generate_timeline(id):
         if not history.hr_round_date:
             timeline.append({'title': 'Pending HR Round'})
         elif history.hr_round_comments and not history.rejected:
-            timeline.append({'title': 'Hired', 'date': history.updated_at.date()})
+            timeline.append({'title': 'Offered', 'date': history.updated_at.date()})
     
     # Sort timeline by date
     timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))
@@ -165,7 +157,7 @@ def store_result(id):
     if response.status_code == 200:
         result = response.json()
         if result.get('status') == 'Complete':
-            test_result = TestResult(
+            new_test_result = TestResult(
                 testlink_id=testInviteid,
                 name=applicant.name,
                 email=result['candidateEmail'],
@@ -179,6 +171,7 @@ def store_result(id):
                 sections=str(result['sections']),
                 applicant_id=id
             )
-            db.session.add(test_result)
+            db.session.add(new_test_result)
             history.test_result = True
             db.session.commit()
+           

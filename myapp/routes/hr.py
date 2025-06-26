@@ -354,31 +354,48 @@ def filter_applicants():
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     page = request.args.get('page', 1, type=int)
     per_page = 20
-    
-    hr_id = request.args.get('hr_id', '')
-    job_id = request.args.get('job_id', '')
-    status_id = request.args.get('status', '')
 
-    query = Applicant.query
+    hr_id = request.args.get('hr_id', '').strip()
+    job_id = request.args.get('job_id', '').strip()
+    status_id = request.args.get('status', '').strip()
 
+    excluded_stages = ['Rejected','On Hold' ,'Joined']  
+
+    query = Applicant.query.options(
+        joinedload(Applicant.uploader),
+        joinedload(Applicant.job)
+    )
+
+    # Apply filters
     if hr_id:
         query = query.filter(Applicant.uploaded_by == int(hr_id))
-
     if job_id:
         query = query.filter(Applicant.job_id == int(job_id))
-
     if status_id == 'fresher':
-        query = query.filter(Applicant.is_fresher == True)
+        query = query.filter(Applicant.is_fresher.is_(True))
     elif status_id == 'experienced':
-        query = query.filter(Applicant.is_fresher == False)
-    
+        query = query.filter(Applicant.is_fresher.is_(False))
+
+    # Apply stage exclusion
     if excluded_stages:
         query = query.filter(~Applicant.status.in_(excluded_stages))
 
-    applicants_pagination = query.order_by(Applicant.last_applied.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    # Order and paginate
+    query = query.order_by(Applicant.last_applied.desc())
+    applicants_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     applicants = applicants_pagination.items
 
-    return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs, pagination=applicants_pagination)
+    return render_template(
+        'hr/applicants.html',
+        applicants=applicants,
+        users=hr_users,
+        jobs=jobs,
+        pagination=applicants_pagination,
+        hr_id=hr_id,
+        job_id=job_id,
+        status_id=status_id
+    )
+
 
 @bp.route('/sort_applicants')
 @no_cache
@@ -1460,7 +1477,7 @@ def filter_all_applicants():
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
     status_id = request.args.get('status', '')
-    stage = request.args.get('all_stages', '').strip()
+    stage = request.args.get('all_stages','').strip()
 
     query = Applicant.query
 
@@ -1476,7 +1493,7 @@ def filter_all_applicants():
         query = query.filter(Applicant.is_fresher == False)
 
     if stage:
-        query = query.filter(Applicant.status == stage)
+        query = query.filter(Applicant.status==stage)
 
     applicants_pagination = query.order_by(Applicant.last_applied.desc()).paginate(page=page, per_page=per_page, error_out=False)
     applicants = applicants_pagination.items
@@ -1515,7 +1532,8 @@ def sort_all_applicants():
         applicants=applicants,
         users=users,
         jobs=jobs,
-        search_query='' )
+        search_query='' 
+    )
 
 @bp.route('/search_all_applicants')
 @no_cache
@@ -1542,7 +1560,8 @@ def search_all_applicants():
     
     return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs, search_query=search_query)
 
-@bp.route('/search_sort_all_applicants', methods=['GET'])
+
+@bp.route('/search_sort_filter_all_applicants', methods=['GET'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
@@ -1610,11 +1629,11 @@ def search_sort_filter_all_applicants():
         pagination=applicants_pagination
     )
 
-@bp.route('/search_sort_applicants', methods=['GET'])
+@bp.route('/search_sort_filter_applicants', methods=['GET'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def search_sort_applicants():
+def search_sort_filter_applicants():
     search_query = request.args.get('query', '').strip()
     sort_by = request.args.get('sort_by', 'date')
     page = request.args.get('page', 1, type=int)
@@ -1636,6 +1655,8 @@ def search_sort_applicants():
             query = query.filter(Applicant.email.ilike(f'%{search_query}%'))
         else:
             query = query.filter(Applicant.name.ilike(f'%{search_query}%'))
+
+    query = query.filter(~Applicant.status.in_(excluded_stages))
 
     # Apply additional filters
     if hr_id:
@@ -1660,6 +1681,7 @@ def search_sort_applicants():
     applicants_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     applicants = applicants_pagination.items
 
+    # For the dropdowns (HR, Jobs)
     users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.all()
     stages = ['Applied','On Hold','Offered','Joined','Rejected']
@@ -1676,3 +1698,4 @@ def search_sort_applicants():
         selected_stage=selected_stage,
         pagination=applicants_pagination
     )
+

@@ -608,6 +608,21 @@
             }
         });
 
+        // Referral toggle functionality
+        referralToggle.addEventListener('change', function() {
+            const referrerSection = document.getElementById('referrer-section');
+            toggleSection(referrerSection, this.checked, false);
+            
+            const referrerInput = document.getElementById('referred_by');
+            // Set required attribute dynamically
+            if (this.checked) {
+                referrerInput.setAttribute('required', 'required');
+            } else {
+                referrerInput.removeAttribute('required');
+                referrerInput.value = '';
+            }
+        });
+
         // Current Internship toggle functionality
         currentInternshipToggle.addEventListener('change', function() {
             const internshipDurationField = document.getElementById('internship-duration-field');
@@ -677,6 +692,19 @@
                 errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
                 fileInput.value = '';
                 return;
+            }
+        });
+
+        // Custom validation for referral name
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (referralToggle.checked) {
+                const referrerInput = document.getElementById('referred_by');
+                if (!referrerInput.value) {
+                    e.preventDefault();
+                    alert('Please select a referral name.');
+                    return false;
+                }
             }
         });
     });

@@ -77,7 +77,7 @@
     <div class="modal">
         <div class="modal-box w-11/12 max-w-2xl">
             <h3 class="font-bold text-lg mb-4">Reschedule Interview for {{ interview.applicant.name }}</h3>
-            <form action="{{ url_for('hr.reschedule_interview', id=interview.applicant_id) }}" method="POST">
+            <form action="{{ url_for('hr.reschedule_interview', id=interview.applicant_id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
                 <div class="form-control w-full">
                     <label class="label" for="interview_date">
                         <span class="label-text">Select Date</span>
@@ -91,15 +91,32 @@
                     <input type="time" name="interview_time" class="input input-bordered w-full" required />
                 </div>
                 <div class="form-control w-full mt-4">
-                    <label class="label" for="interviewer_id">
-                        <span class="label-text">Select Interviewer</span>
+                    <label class="label">
+                        <span class="label-text">Select Interviewers</span>
                     </label>
-                    <select name="interviewer_id" class="select select-bordered w-full" required>
-                        <option value="">Select an interviewer</option>
-                        {% for interviewer in interviewers %}
-                            <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="dropdown dropdown-bottom w-full">
+                        <div tabindex="0" role="button" class="btn btn-outline w-full justify-between">
+                            <span class="truncate">Select Interviewers</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-full max-h-96 overflow-y-auto">
+                            {% for interviewer in interviewers %}
+                            <li>
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input type="checkbox" 
+                                           name="interviewer_ids" 
+                                           value="{{ interviewer.id }}" 
+                                           class="checkbox checkbox-sm"
+                                           {% if interview and interview.interviewer_id == interviewer.id|string %}checked{% endif %}>
+                                    <span class="label-text">{{ interviewer.name or interviewer.username }}</span>
+                                </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <input type="hidden" name="interviewer_ids_hidden" value="">
                 </div>
                 <div class="modal-action">
                     <button type="submit" class="btn btn-primary">Reschedule</button>
@@ -118,33 +135,89 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('form[action*="schedule_interview"], form[action*="reschedule_interview"]').forEach(function(form) {
         const dateInput = form.querySelector('input[name="interview_date"]');
         const timeInput = form.querySelector('input[name="interview_time"]');
-        const interviewerSelect = form.querySelector('select[name="interviewer_id"]');
+        const interviewerSelect = form.querySelector('select[name="interviewer_ids"]');
+
+        // Update form submission to handle multiple interviewers
+        form.addEventListener('submit', function(e) {
+            // Ensure at least one interviewer is selected
+            const selectedOptions = Array.from(interviewerSelect.selectedOptions).map(option => option.value);
+            if (selectedOptions.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one interviewer');
+                return false;
+            }
+            
+            // Add a hidden input for each selected interviewer
+            selectedOptions.forEach(interviewerId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'interviewer_ids';
+                input.value = interviewerId;
+                form.appendChild(input);
+            });
+            
+            return true;
+        });
 
         async function updateInterviewers() {
             const date = dateInput.value;
             const time = timeInput.value;
             if (!date || !time) return;
+            
+            // Store currently selected interviewer IDs
+            const selectedInterviewers = Array.from(interviewerSelect.selectedOptions).map(opt => opt.value);
+            
             const url = `/hr/available_interviewers?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
-                interviewerSelect.innerHTML = '<option value="">Select an interviewer</option>';
+                
+                // Clear existing options but keep the first empty one
+                interviewerSelect.innerHTML = '';
+                
+                // Add available interviewers
                 data.forEach(function(interviewer) {
                     const option = document.createElement('option');
                     option.value = interviewer.id;
                     option.textContent = interviewer.name;
+                    // Re-select previously selected interviewers if they're still available
+                    if (selectedInterviewers.includes(interviewer.id.toString())) {
+                        option.selected = true;
+                    }
                     interviewerSelect.appendChild(option);
                 });
+                
+                // If no interviewers available, show a message
+                if (data.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No interviewers available at this time';
+                    option.disabled = true;
+                    option.selected = true;
+                    interviewerSelect.appendChild(option);
+                }
+                
             } catch (err) {
                 console.error('Error fetching available interviewers:', err);
-                interviewerSelect.innerHTML = '<option value="">Error loading interviewers</option>';
+                interviewerSelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Error loading interviewers';
+                option.disabled = true;
+                option.selected = true;
+                interviewerSelect.appendChild(option);
             }
         }
 
         if (dateInput && timeInput && interviewerSelect) {
             dateInput.addEventListener('change', updateInterviewers);
             timeInput.addEventListener('change', updateInterviewers);
+            
+            // Initial load if date and time are already filled
+            if (dateInput.value && timeInput.value) {
+                updateInterviewers();
+            }
         }
     });
 });

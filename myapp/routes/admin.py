@@ -54,6 +54,10 @@ def change_role(user_id):
         flash('Role is required', 'error')
         return redirect(url_for('admin.edit_user', user_id=user_id))
     user.role = role
+    from sqlalchemy import text
+
+    db.session.execute(text(f"SET app.current_user_id = '{current_user.id}'"))
+
     db.session.commit()
     current_app.logger.info(f"Role updated for user {user.username}: {role.capitalize() if role != 'hr' else 'HR'} by Admin {current_user.username}")
     flash('User role updated successfully', 'success')

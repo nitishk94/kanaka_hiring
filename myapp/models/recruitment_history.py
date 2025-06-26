@@ -70,9 +70,9 @@ class RecruitmentHistory(db.Model):
         round2_time = ensure_time(self.interview_round_2_time)
         round1_time = ensure_time(self.interview_round_1_time)
 
-        latest_hr = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=3).order_by(Interview.id.desc()).first()
-        latest_round2 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=2).order_by(Interview.id.desc()).first()
-        latest_round1 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number=1).order_by(Interview.id.desc()).first()
+        latest_hr = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='HR').order_by(Interview.id.desc()).first()
+        latest_round2 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='Round 2' or 'Client Round 2').order_by(Interview.id.desc()).first()
+        latest_round1 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='Round 1' or 'Client Round 1').order_by(Interview.id.desc()).first()
 
         if self.rejected:
             return "Rejected"
@@ -95,7 +95,7 @@ class RecruitmentHistory(db.Model):
             if test_date >= today:
                 return f"Test scheduled on {test_date.strftime('%Y-%m-%d')}"
             elif test_date < today:
-                return "Test completed"
+                return "Check Results"
             
         return "Need to schedule test"
         

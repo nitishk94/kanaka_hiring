@@ -1,182 +1,641 @@
 {% extends "base.html" %}
 
-{% block title %}All Applicants List{% endblock %}
+{% block title %}Applicant Details{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <h1 class="text-3xl font-bold">All Applicants List</h1>
-        <div class="flex items-center gap-4 ml-auto">
-            <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" class="flex gap-2 min-w-[250px]">
-                <input
-                    type="text"
-                    name="query"
-                    placeholder="Search by name or email"
-                    class="input input-bordered flex-grow"
-                    value="{{ search_query or '' }}"
-                />
-                <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
-            </form>
-
-            <!-- Sort By Dropdown -->
-            <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-outline btn-primary w-48">
-                    Sort By
-                </div>
-                <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-                    <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" id="sortForm" class="flex flex-col gap-2">
-                        <input type="hidden" name="query" value="{{ search_query or '' }}">
-                        <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
-                            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
-                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
-                            <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
-                        </select>
-                    </form>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Applicant Details</h1>
+        <div class="flex gap-2 items-center">
+            {% if applicant.is_referred %}
+                <div class="badge badge-lg badge-info">Referral</div>
+            {% endif %}
+            <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
+                {{ applicant.status }}
+            </div>
+        </div>  
+    </div>
+    <div>
+        <a href="{{ url_for('hr.show_update_form', id=applicant.id) }}" class="btn btn-warning w-auto px-8 text-lg">
+            Edit
+        </a>
+    </div>
+    <br>
+ 
+    <!-- Personal Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="card bg-base-100 shadow-xl lg:col-span-1">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Personal Information</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Full Name</p>
+                        <p class="font-semibold">{{ applicant.name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Email</p>
+                        <p class="font-semibold">{{ applicant.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Phone Number</p>
+                        <p class="font-semibold">{{ applicant.phone_number }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Date of Birth</p>
+                        <p class="font-semibold">{{ applicant.dob.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Gender</p>
+                        <p class="font-semibold">{{ applicant.gender.capitalize() }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Marital Status</p>
+                        <p class="font-semibold">{{ applicant.marital_status.capitalize() }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Native Place</p>
+                        <p class="font-semibold">{{ applicant.native_place }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Current Location</p>
+                        <p class="font-semibold">{{ applicant.current_location }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Work Location</p>
+                        <p class="font-semibold">{{ applicant.work_location }}</p>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Filter Dropdown -->
-            <form method="GET" action="{{ url_for('hr.filter_all_applicants') }}" class="flex items-center gap-2">
-                <div class="dropdown dropdown-end">
-                    <div tabindex="0" role="button" class="btn btn-outline btn-primary">
-                        Filter
+        <!-- Professional Information -->
+        <div class="card bg-base-100 shadow-xl lg:col-span-3">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Professional Information</h2>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Qualification</p>
+                        <p class="font-semibold">{{ applicant.qualification }}</p>
                     </div>
-                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-                        <!-- HR Filter -->
-                        <div class="flex flex-col">
-                            <label for="hr_id" class="font-semibold mb-1">HR:</label>
-                            <select name="hr_id" id="hr_id" class="select select-bordered">
-                                <option value="">-- All HR --</option>
-                                {% for hr in users %}
-                                    <option value="{{ hr.id }}"
-                                        {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
-                                        {{ hr.name if hr.name else hr.username }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <br>
-                        <!-- Job Filter -->
-                        <div class="flex flex-col">
-                            <label for="job_id" class="font-semibold mb-1">Job Position:</label>
-                            <select name="job_id" id="job_id" class="select select-bordered">
-                                <option value="">-- All Jobs --</option>
-                                {% for job in jobs %}
-                                    <option value="{{ job.id }}"
-                                        {% if request.args.get('job_id')|string == job.id|string %}selected{% endif %}>
-                                        {{ job.position }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <br>
-                        <!-- Status Filter -->
-                        <div class="flex flex-col">
-                            <label for="status" class="font-semibold mb-1">Applicants:</label>
-                            <select name="status" id="status" class="select select-bordered">
-                                <option value="">-- All Applicants --</option>
-                                <option value="fresher" {% if request.args.get('status') == 'fresher' %}selected{% endif %}>Fresher</option>
-                                <option value="experienced" {% if request.args.get('status') == 'experienced' %}selected{% endif %}>Experienced</option>
-                            </select>
-                        </div>
-                        <br>
-                        <div class="flex flex-col">
-                            <label for="stages" class="font-semibold mb-1">Current Stage:</label>
-                            <select name="stages" id="stages" class="select select-bordered">
-                                <option value="">-- All Stages --</option>
-                                {% for stage in stages %}
-                                    <option value="{{ stage }}"
-                                        {% if request.args.get('stages')|string == stage|string %}selected{% endif %}>
-                                        {{ stage }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <br>
-                        <!-- Filter Buttons -->
-                        <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-                        <a href="{{ url_for('hr.filter_all_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
+                    <div>
+                        <p class="text-sm text-gray-500">Graduation Year</p>
+                        <p class="font-semibold">{{ applicant.graduation_year if applicant.graduation_year else 'Not provided' }}</p>
                     </div>
+                    {% if applicant.is_fresher %}
+                        <div>
+                            <p class="text-sm text-gray-500">Experience</p>
+                            <p class="font-semibold">Fresher</p>
+                        </div>
+                    {% else %}
+                        <div>
+                            <p class="text-sm text-gray-500">Experience</p>
+                            <p class="font-semibold">{{ applicant.experience }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Source Information -->
+                    <div>
+                        <p class="text-sm text-gray-500">Referenced From</p>
+                        <p class="font-semibold">{{ applicant.referenced_from }}</p>
+                    </div>
+                    {% if applicant.is_referred %}
+                        <div>
+                            <p class="text-sm text-gray-500">Referred By</p>
+                            <p class="font-semibold">{{ applicant.referred_by }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Social Profiles -->
+                    <div>
+                        <p class="text-sm text-gray-500">LinkedIn Profile</p>
+                        {% if applicant.linkedin_profile != 'Not Provided' %}
+                            <a href="{{ applicant.linkedin_profile }}" target="_blank" class="link link-primary">View Profile</a>
+                        {% else %}
+                            <p class="font-semibold">Not provided</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">GitHub Profile</p>
+                        {% if applicant.github_profile != 'Not Provided' %}
+                            <a href="{{ applicant.github_profile }}" target="_blank" class="link link-primary">View Profile</a>
+                        {% else %}
+                            <p class="font-semibold">Not provided</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Internship Information -->
+                    {% if applicant.current_internship %}
+                        <div>
+                            <p class="text-sm text-gray-500">Current Internship</p>
+                            <p class="font-semibold">Yes</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Internship Duration</p>
+                            <p class="font-semibold">{{ applicant.internship_duration if applicant.internship_duration else 'Not provided' }} months</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Paid Internship</p>
+                            <p class="font-semibold">{{ 'Yes' if applicant.paid_internship else 'No' }}</p>
+                        </div>
+                        {% if applicant.paid_internship %}
+                            <div>
+                                <p class="text-sm text-gray-500">Stipend</p>
+                                <p class="font-semibold">{{ applicant.stipend if applicant.stipend else 'Not provided' }}</p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <!-- Professional Information -->
+                    {% if not applicant.is_fresher %}
+                        <div>
+                            <p class="text-sm text-gray-500">Kanaka Employee</p>
+                            <p class="font-semibold">{{ 'Yes' if applicant.is_kanaka_employee else 'No' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Current Company</p>
+                            <p class="font-semibold">{{ applicant.current_company }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Designation</p>
+                            <p class="font-semibold">{{ applicant.designation }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Current Job Position</p>
+                            <p class="font-semibold">{{ applicant.current_job_position }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Current CTC</p>
+                            <p class="font-semibold">{{ applicant.current_ctc if applicant.current_ctc else 'Not provided' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Expected CTC</p>
+                            <p class="font-semibold">{{ applicant.expected_ctc if applicant.expected_ctc else 'Not provided' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Notice Period</p>
+                            <p class="font-semibold">{{ applicant.notice_period|string + ' days' if applicant.notice_period else 'Not provided' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Tenure at Current Company</p>
+                            <p class="font-semibold">{{ applicant.tenure_at_current_company if applicant.tenure_at_current_company else 'Not provided' }}</p>
+                        </div>
+                        {% if applicant.current_offers_yes_no %}
+                            <div>
+                                <p class="text-sm text-gray-500">Current Offers</p>
+                                <p class="font-semibold">Yes</p>
+                                {% if applicant.current_offers_description %}
+                                    <p class="text-sm text-gray-500 mt-2">Details:</p>
+                                    <p class="font-semibold whitespace-pre-line">{{ applicant.current_offers_description }}</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <p class="text-sm text-gray-500">Reason for Change</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.reason_for_change if applicant.reason_for_change else 'Not provided' }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Comments Section -->
+                    {% if applicant.comments %}
+                        <div>
+                            <p class="text-sm text-gray-500">Additional Comments</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.comments }}</p>
+                        </div>
+                    {% endif %}
+                    
                 </div>
-            </form>
 
-            <!-- Total Applicants -->
-            <div class="stats shadow">
-                <div class="stat">
-                    <div class="stat-title">Total Applicants</div>
-                    <div class="stat-value">{{ applicants|length }}</div>
+            </div>
+        </div>
+
+        <!-- CV Section -->
+        <div class="card bg-base-100 shadow-xl lg:col-span-4">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Resume</h2>
+                {% if applicant.cv_file_path %}
+                    <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <div>
+                                <p class="font-semibold">Resume File</p>
+                                <p class="text-sm text-gray-500">Uploaded on {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('hr.download_cv', id=applicant.id) }}" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download CV
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>No resume uploaded</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Application Status -->
+        <div class="card bg-base-100 shadow-xl lg:col-span-4">
+            <div class="card-body">
+                <h2 class="card-title mb-4">Application Status</h2>
+                <div class="flex justify-between items-center">
+                    
+                {% if applicant.job_id %}
+                        <div>
+                            <p class="text-sm text-gray-500">Applying for</p>
+                            <p class="font-semibold whitespace-pre-line">{{ applicant.job.position if applicant.job_id else 'N/A'  }}</p>
+                        </div>
+                    {% endif %}
+                    <div class="flex items-center gap-4">
+                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
+                            {{ applicant.current_stage }}
+                        </div>
+                        <p class="text-gray-600">Last updated: {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Logic to render buttons -->
+                        <form method="POST" action="{{ url_for('main.track_status', id=applicant.id) }}" class="inline">
+                            <button class="btn btn-info">Track Status</button>
+                        </form>
+
+                        {% if 'Rejected' not in applicant.current_stage %}
+                            {% if applicant.current_stage == 'Need to schedule test' %}
+                                <div class="flex gap-2">
+                                <a href="{{ url_for('hr.schedule_test', id=applicant.id) }}" 
+                                   class="btn btn-warning btn-info">
+                                    
+                                    Schedule Test
+                                </a>
+                            </div>
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4" >Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            
+
+                            {% endif %}
+
+                            {% if applicant.current_stage != 'Need to schedule test' and applicant.history_entries[0].test_date %}
+                                <div class="flex gap-2">
+                                <a href="{{ url_for('hr.test_result', id=applicant.id) }}" 
+                                   class="btn btn-warning btn-info">
+                                    View Test Result
+                                </a>
+                            </div>
+                            {% endif %}
+                            
+                            {% if applicant.history_entries[0].test_result and applicant.current_stage != 'Need to schedule test' and not applicant.history_entries[0].interview_round_1_date and not applicant.history_entries[0].interview_round_2_date %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview Round 1</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class=
+                                            "form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].interview_round_1_date and not applicant.history_entries[0].interview_round_1_comments  %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Reschedule Round 1</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select New Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select New Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select New Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_ids" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-full mt-4">Reschedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].interview_round_1_comments and not applicant.history_entries[0].interview_round_2_date %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-primary">Schedule Interview Round 2</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+
+                            {% if applicant.history_entries[0].interview_round_2_date and not applicant.history_entries[0].interview_round_2_comments %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Reschedule Round 2</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select New Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select New Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select New Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_ids" class="select select-bordered w-full" required>
+                                                    <option value="">Select an interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-full mt-4">Reschedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].interview_round_2_comments and not applicant.history_entries[0].hr_round_comments %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Schedule HR Interview</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select HR Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an HR interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-warning w-full mt-4">Schedule HR Round</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if applicant.history_entries[0].hr_round_date and not applicant.history_entries[0].hr_round_comments %}
+                                <div class="dropdown dropdown-top">
+                                    <label tabindex="0" class="btn btn-warning">Reschedule HR Round</label>
+                                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_date">
+                                                    <span class="label-text">Select New Date</span>
+                                                </label>
+                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full">
+                                                <label class="label" for="interview_time">
+                                                    <span class="label-text">Select New Time</span>
+                                                </label>
+                                                <input type="time" name="interview_time" class="input input-bordered w-full" required />
+                                            </div>
+                                            <div class="form-control w-full mt-4">
+                                                <label class="label" for="interviewer_id">
+                                                    <span class="label-text">Select New HR Interviewer</span>
+                                                </label>
+                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                    <option value="">Select an HR interviewer</option>
+                                                    {% for interviewer in interviewers %}
+                                                        <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-secondary w-full mt-4">Reschedule</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}                                
+                            <div class="flex flex-wrap items-center gap-2">
+                                    {% if applicant.history_entries[0].hr_round_comments and applicant.status=='Applied' %}
+                                        <form method="POST" action="{{ url_for('hr.offered_application', id=applicant.id) }}" class="inline-flex">
+                                            <button type="submit" class="btn btn-success whitespace-nowrap">Offer job</button>
+                                        </form>
+                                    {% endif %}
+
+                                    {% if applicant.status == "Offered" %}
+                                        <form method="POST" action="{{ url_for('hr.joined_application', id=applicant.id) }}" class="inline-flex">
+                                            <button type="submit" class="btn btn-success whitespace-nowrap">Joined job</button>
+                                        </form>
+                                    {% endif %}
+
+                                    {% if applicant.status != "On Hold" %}
+                                        <form method="POST" action="{{ url_for('hr.put_on_hold_application', id=applicant.id) }}" class="inline-flex">
+                                            <label for="hold-modal-{{ applicant.id }}" class="btn btn-warning whitespace-nowrap cursor-pointer">
+                                                Put On-hold
+                                            </label>
+                                        </form>
+                                    {% else %}
+                                        <form method="POST" action="{{ url_for('hr.put_off_hold_application', id=applicant.id) }}" class="inline-flex">
+                                            <button type="submit" class="btn btn-success whitespace-nowrap">
+                                                Take off Hold
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    <form method="POST" action="{{ url_for('hr.reject_application', id=applicant.id) }}" class="inline-flex">
+                                        <label for="reject-modal" class="btn btn-error whitespace-nowrap cursor-pointer">
+                                            Reject
+                                        </label>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
-        <table class="table table-zebra table-compact">
-            <thead>
-                <tr>
-                    <th>Application Date</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Experience</th>
-                    <th>HR</th>
-                    <th>Job Position</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for applicant in applicants %}
-                    <tr>
-                        <td>{{ applicant.last_applied }}</td>
-                        <td>{{ applicant.name }}</td>
-                        <td>{{ applicant.email }}</td>
-                        <td>{{ applicant.phone_number }}</td>
-                        <td>
-                            {% if applicant.is_fresher %}
-                                Fresher
-                            {% else %}
-                                {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
-                            {% endif %}
-                        </td>
-                        <td>{{ applicant.uploader.name }}</td>
-                        <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
-                        <td>{{ applicant.status }}</td>
-                        <td>
-                            <div class="flex gap-2">
-                                <a href="{{ url_for('hr.view_applicant', id=applicant.id) }}" 
-                                   class="btn btn-sm btn-info">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    View Details
-                                </a>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="flex gap-2">
-                                <form method="POST" action="{{ url_for('main.track_status', id=applicant.id) }}" class="inline">
-                                    <button class="btn btn-info">Track Status</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <input type="checkbox" id="hold-modal-{{ applicant.id }}" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Put Applicant on Hold</h3>
+            <p class="py-4">Are you sure you want to put {{ applicant.name }} on hold?</p>
+            <div class="modal-action">
+            <label for="hold-modal-{{ applicant.id }}" class="btn">Cancel</label>
+            <form method="POST" action="{{ url_for('hr.put_on_hold_application', id=applicant.id) }}">
+                <button type="submit" class="btn btn-warning">Confirm Hold</button>
+            </form>
+            </div>
+        </div>
     </div>
 
-    {% if not applicants %}
-    <div class="text-center py-8">
-        <div class="text-6xl mb-4">📝</div>
-        <h3 class="text-xl font-semibold mb-2">No Applicants Yet</h3>
-        <p class="text-gray-600 mb-4">Start by uploading some applicants to see them here.</p>
-        <a href="{{ url_for('hr.show_upload_form') }}" class="btn btn-primary">
-            Upload Applicants
-        </a>
+    <!-- Reject Application Confirmation Modal -->
+    <input type="checkbox" id="reject-modal" class="modal-toggle" />
+    <div class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">Confirm Rejection</h3>
+            <p class="py-4">Are you sure you want to reject this application? This action cannot be undone.</p>
+            <div class="modal-action">
+                <form method="POST" action="{{ url_for('hr.reject_application', id=applicant.id) }}">
+                    <button type="submit" class="btn btn-error">Yes, Reject</button>
+                </form>
+                <label for="reject-modal" class="btn">Cancel</label>
+            </div>
+        </div>
     </div>
-    {% endif %}
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('form[action*="schedule_interview"], form[action*="reschedule_interview"]').forEach(function(form) {
+        const dateInput = form.querySelector('input[name="interview_date"]');
+        const timeInput = form.querySelector('input[name="interview_time"]');
+        const interviewerSelect = form.querySelector('select[name="interviewer_id"]');
+
+        async function updateInterviewers() {
+            const date = dateInput.value;
+            const time = timeInput.value;
+            if (!date || !time) return;
+            const url = `/hr/available_interviewers?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                interviewerSelect.innerHTML = '<option value="">Select an interviewer</option>';
+                data.forEach(function(interviewer) {
+                    const option = document.createElement('option');
+                    option.value = interviewer.id;
+                    option.textContent = interviewer.name;
+                    interviewerSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error('Error fetching available interviewers:', err);
+                interviewerSelect.innerHTML = '<option value="">Error loading interviewers</option>';
+            }
+        }
+
+        if (dateInput && timeInput && interviewerSelect) {
+            dateInput.addEventListener('change', updateInterviewers);
+            timeInput.addEventListener('change', updateInterviewers);
+        }
+    });
+});
+</script>
+{% endblock %}

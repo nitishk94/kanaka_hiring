@@ -26,24 +26,6 @@
     <form method="POST" action="{{ url_for('hr.schedule_test', id=applicant.id) }}" class="space-y-6">
         <!-- Hidden field for selected test ID -->
         <input type="hidden" name="test_id" value="{{ selected_test_id }}">
-
-        <!-- Test Date -->
-        <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Select Test Start Date:</label>
-            <input type="date" name="start_test_date" class="input input-bordered w-full" required>
-        </div>
-
-        <!-- Test Time -->
-        <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Select Test Start Time:</label>
-            <input type="time" name="test_time" class="input input-bordered w-full" required>
-        </div>
-
-        <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Select Test End Date:</label>
-            <input type="date" name="end_test_date" class="input input-bordered w-full" required>
-        </div>
-
         <!-- Test Link Dropdown -->
         <div class="form-control">
             <label class="label font-semibold text-lg text-black">Select Test Link:</label>
