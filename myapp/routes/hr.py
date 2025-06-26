@@ -721,6 +721,7 @@ def filter_referrals():
     referrals = query.order_by(Referral.id.desc()).all()
 
     return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
+
 @bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -858,6 +859,7 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         current_app.logger.error(f"IntegrityError: {e}")
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.view_referrals'))
+    
 
 @bp.route('/onboarding')
 @no_cache

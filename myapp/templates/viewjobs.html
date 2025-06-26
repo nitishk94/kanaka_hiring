@@ -76,9 +76,13 @@
 
 
         <!-- Total jobs count -->
-        <div class="stat text-center min-w-[100px]">
-            <div class="stat-title">Total Jobs</div>
-            <div class="stat-value">{{ jobs|length }}</div>
+        <div class="stats shadow">
+            <div class="stat text-center min-w-[100px]">
+                <div class="stat-title">Total Jobs</div>
+                <div class="stat-value">
+                    {{ jobs | selectattr('for_vendor') | select | list | length }}
+                </div>
+            </div>
         </div>
 
     </div>

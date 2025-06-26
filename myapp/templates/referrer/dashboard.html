@@ -26,23 +26,43 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a href="{{ url_for('referrer.refer_candidates') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="card-body">
-                <div class="flex items-center gap-4">
-                    <div class="bg-primary/10 p-4 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="card-title">Refer Candidates</h2>
-                        <p class="text-gray-600">Submit a referral and upload CV of the candidate</p>
+        {% if current_user.auth_type=='local' %}
+            <a href="{{ url_for('referrer.upload_by_referral',referrer_id=current_user.id) }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="card-body">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-primary/10 p-4 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Refer Candidates</h2>
+                            <p class="text-gray-600">Submit a referral and upload CV of the candidate</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </a>
+            </a>
+        {% else %}
+            <a href="{{ url_for('referrer.refer_candidates') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="card-body">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-primary/10 p-4 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Refer Candidates</h2>
+                            <p class="text-gray-600">Submit a referral and upload CV of the candidate</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        {% endif %}
 
         <a href="{{ url_for('referrer.referrals') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
