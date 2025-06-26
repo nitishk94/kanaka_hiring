@@ -87,7 +87,7 @@
                     <td>
                         <div class="flex gap-2">
                             {% if referral.applicant_id %}
-                            <a href="{{ url_for('main.track_status', id=referral.id) }}" class="btn btn-sm btn-info">
+                            <a href="{{ url_for('main.track_status', id=referral.applicant_id) }}" class="btn btn-sm btn-info">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                     <circle cx="12" cy="12" r="3" />

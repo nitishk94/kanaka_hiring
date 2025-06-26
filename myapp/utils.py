@@ -157,7 +157,7 @@ def store_result(id):
     if response.status_code == 200:
         result = response.json()
         if result.get('status') == 'Complete':
-            test_result = TestResult(
+            new_test_result = TestResult(
                 testlink_id=testInviteid,
                 name=applicant.name,
                 email=result['candidateEmail'],
@@ -171,7 +171,7 @@ def store_result(id):
                 sections=str(result['sections']),
                 applicant_id=id
             )
-            db.session.add(test_result)
+            db.session.add(new_test_result)
             history.test_result = True
             db.session.commit()
-
+           

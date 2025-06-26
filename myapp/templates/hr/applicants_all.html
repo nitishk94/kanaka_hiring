@@ -9,7 +9,7 @@
         <div class="flex items-center gap-4 ml-auto">
             <!-- Search Box -->
             <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" class="flex gap-2 min-w-[250px] relative">
+            <form method="GET" action="{{ url_for('hr.search_sort_filter_all_applicants') }}" class="flex gap-2 min-w-[250px] relative">
                 <div class="relative w-full">
                     <input
                         type="text"
@@ -23,13 +23,13 @@
                         type="button"
                         id="clearSearchBtn"
                         class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                        style="display: {{ 'inline' if search_query else 'none' }};"
+                        {% if not search_query %}style="display: none;"{% endif %}
                     >
                         &#10005;
                     </button>
                 </div>
                 <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
-            </form>
+            
 
             <!-- Sort By Dropdown -->
             <div class="dropdown dropdown-end">
@@ -37,19 +37,19 @@
                     Sort By
                 </div>
                 <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-                    <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" id="sortForm" class="flex flex-col gap-2">
+                    
                         <input type="hidden" name="query" value="{{ search_query or '' }}">
                         <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
                             <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
                             <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
                             <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
                         </select>
-                    </form>
+
                 </div>
             </div>
 
             <!-- Filter Dropdown -->
-            <form method="GET" action="{{ url_for('hr.filter_all_applicants') }}" class="flex items-center gap-2">
+            
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-outline btn-primary">
                         Filter
@@ -111,7 +111,7 @@
                         <br>
                         <!-- Filter Buttons -->
                         <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-                        <a href="{{ url_for('hr.filter_all_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
+                        <a href="{{ url_for('hr.search_sort_filter_all_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
                     </div>
                 </div>
             </form>
@@ -119,7 +119,7 @@
             <!-- Total Applicants -->
             <div class="stats shadow">
                 <div class="stat">
-                    <div class="stat-title">Total Applicants</div>
+                    <div class="stat-title">Applicants Displayed</div>
                     <div class="stat-value">{{ applicants|length }}</div>
                 </div>
             </div>
@@ -182,6 +182,33 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="flex justify-center mt-6">
+        <nav class="join">
+            {% set args = request.args.copy() %}
+            {% if pagination.has_prev %}
+                {% set args = args.to_dict() %}
+                {% set _ = args.update({'page': pagination.prev_num}) %}
+                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">&lsaquo; Prev</a>
+            {% else %}
+                <span class="join-item btn btn-disabled">&lsaquo; Prev</span>
+            {% endif %}
+
+            <span class="join-item btn font-bold bg-gray-800 text-white">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+            {% if pagination.has_next %}
+                {% set args = request.args.copy() %}
+                {% set args = args.to_dict() %}
+                {% set _ = args.update({'page': pagination.next_num}) %}
+                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">Next &rsaquo;</a>
+            {% else %}
+                <span class="join-item btn btn-disabled">Next &rsaquo;</span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
 
     {% if not applicants %}
     <div class="text-center py-8">

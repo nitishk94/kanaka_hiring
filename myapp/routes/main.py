@@ -21,19 +21,6 @@ def home():
 def profile():
     return render_template('profile.html', user=current_user)
 
-@bp.route('/track_referral_status/<int:id>', methods=['GET', 'POST'])
-@no_cache
-@login_required
-def track_referral_status(id):
-    history = Referral.query.filter_by(id=id).first()
-    name=history.name
-    applicant = Applicant.query.filter_by(name=name).first()
-    if not applicant:
-        flash('Referral not yet updated', 'warning')
-        return redirect(url_for('referrer.referrals'))
-    else:
-        return track_status(applicant.id)
-
 @bp.route('/track/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required

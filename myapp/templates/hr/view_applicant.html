@@ -283,7 +283,7 @@
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-primary">Schedule Interview</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
-                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
@@ -307,7 +307,7 @@
                                                     {% endfor %}
                                                 </select>
                                             </div>
-                                            <button type="submit" class="btn btn-primary w-full mt-4">Schedule</button>
+                                            <button type="submit" class="btn btn-primary w-full mt-4" >Schedule</button>
                                         </form>
                                     </div>
                                 </div>
@@ -324,11 +324,11 @@
                             </div>
                             {% endif %}
                             
-                            {% if applicant.history_entries[0].test_result and applicant.current_stage != 'Need to schedule test' and not applicant.history_entries[0].interview_round_2_date %}
+                            {% if applicant.history_entries[0].test_result and applicant.current_stage != 'Need to schedule test' and not applicant.history_entries[0].interview_round_1_date and not applicant.history_entries[0].interview_round_2_date %}
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-primary">Schedule Interview Round 1</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
-                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class=
                                             "form-control w-full">
                                                 <label class="label" for="interview_date">
@@ -363,7 +363,7 @@
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-warning">Reschedule Round 1</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select New Date</span>
@@ -380,7 +380,7 @@
                                                 <label class="label" for="interviewer_id">
                                                     <span class="label-text">Select New Interviewer</span>
                                                 </label>
-                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                <select name="interviewer_ids" class="select select-bordered w-full" required>
                                                     <option value="">Select an interviewer</option>
                                                     {% for interviewer in interviewers %}
                                                         <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
@@ -397,7 +397,7 @@
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-primary">Schedule Interview Round 2</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-80">
-                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}">
+                                        <form method="POST" action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
@@ -432,7 +432,7 @@
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-warning">Reschedule Round 2</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select New Date</span>
@@ -449,7 +449,7 @@
                                                 <label class="label" for="interviewer_id">
                                                     <span class="label-text">Select New Interviewer</span>
                                                 </label>
-                                                <select name="interviewer_id" class="select select-bordered w-full" required>
+                                                <select name="interviewer_ids" class="select select-bordered w-full" required>
                                                     <option value="">Select an interviewer</option>
                                                     {% for interviewer in interviewers %}
                                                         <option value="{{ interviewer.id }}">{{ interviewer.username }}</option>
@@ -466,7 +466,7 @@
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-warning">Schedule HR Interview</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                        <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST">
+                                        <form action="{{ url_for('hr.schedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
@@ -500,7 +500,7 @@
                                 <div class="dropdown dropdown-top">
                                     <label tabindex="0" class="btn btn-warning">Reschedule HR Round</label>
                                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-96">
-                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST">
+                                        <form action="{{ url_for('hr.reschedule_interview', id=applicant.id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select New Date</span>
