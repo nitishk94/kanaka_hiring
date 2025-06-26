@@ -74,8 +74,8 @@
                             name="phone_number"
                             required
                             placeholder="Enter phone number"
-                            pattern="[0-9]{10}"
-                            title="Please enter a valid 10-digit phone number"
+                            pattern="^(?!([6-9])\1{9})[6-9][0-9]{9}$"
+                            title="Please enter a valid 10-digit phone number starting with 6-9 and not all digits repeated"
                             class="input input-bordered"
                             value="{{ form_data.phone_number if form_data else '' }}"
                         />
@@ -744,7 +744,20 @@
                 return;
             }
         });
+
+        //Validation for negative notice period
+        const noticeInput = document.getElementById('notice_period');
+        const form = noticeInput.closest('form');
+    
+        form.addEventListener('submit', function (e) {
+          if (noticeInput.value < 0) {
+                e.preventDefault();
+                alert("Notice period cannot be negative.");
+                noticeInput.focus();
+            }
+        });
     });
+
 </script>
 {% endblock %}
 

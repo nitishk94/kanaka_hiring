@@ -15,6 +15,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
 from pytz import timezone, utc
 import requests
+from flask import send_from_directory, abort
 import os
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
@@ -84,6 +85,14 @@ def show_upload_form():
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
     return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
+def is_valid_mobile(phone_number):
+    # Must be 10 digits and start with 6-9
+    if not re.fullmatch(r'^[6-9]\d{9}$', phone_number):
+        return False
+    # Reject if all digits are the same (like 9999999999)
+    if len(set(phone_number)) == 1:
+        return False
+    return True
 
 @bp.route('/upload_applicants', methods=['POST'])
 @login_required
@@ -441,12 +450,30 @@ def search_applicants():
         sort_by=sort_by
     )
 
+
+
+
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def download_cv(id):
-    return f"Download CV for Applicant {id}"
+    applicant = db.session.get(Applicant, id)  # or Applicant.query.get(id)
+    
+    if not applicant or not applicant.cv_filename:
+        abort(404, description="CV not found for this applicant.")
+
+    # Define your uploads folder path
+    upload_folder = os.path.join(current_app.root_path, 'uploads', 'cvs')
+    
+    try:
+        return send_from_directory(
+            upload_folder,
+            applicant.cv_filename,
+            as_attachment=True
+        )
+    except FileNotFoundError:
+        abort(404, description="File not found on server.")
 
 @bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @no_cache
