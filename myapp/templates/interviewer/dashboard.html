@@ -58,6 +58,42 @@
                 </div>
             </div>
         </a>
+        <a href="{{ url_for('referrer.refer_candidates') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div class="card-body">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-primary/10 p-4 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Refer Candidates</h2>
+                            <p class="text-gray-600">Submit a referral and upload CV of the candidate</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        <a href="{{ url_for('referrer.referrals') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="bg-secondary/10 p-4 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="card-title">View Referred Candidates</h2>
+                        <p class="text-gray-600">View the status of the referred candidates</p>
+                    </div>
+                </div>
+            </div>
+        </a>
     </div>
 </div>
 {% endblock %} 

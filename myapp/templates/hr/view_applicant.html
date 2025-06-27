@@ -8,7 +8,11 @@
         <h1 class="text-3xl font-bold">Applicant Details</h1>
         <div class="flex gap-2 items-center">
             {% if applicant.is_referred %}
-                <div class="badge badge-lg badge-info">Referral</div>
+                {% if applicant.uploader.role == 'hr' %}
+                    <div class="badge badge-lg badge-info">Employee Referral</div>
+                {% else %}
+                    <div class="badge badge-lg badge-info">External Referral</div>
+                {% endif %}
             {% endif %}
             <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
                 {{ applicant.status }}

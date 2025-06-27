@@ -25,7 +25,6 @@ def dashboard():
 @bp.route('/referral', methods=['GET', 'POST'])
 @no_cache
 @login_required
-@role_required('referrer')
 def refer_candidates():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")

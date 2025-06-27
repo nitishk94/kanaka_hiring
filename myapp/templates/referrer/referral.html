@@ -8,10 +8,13 @@
 
     <form method="POST" enctype="multipart/form-data" class="space-y-6">
         <!-- Full Name -->
+       <!-- Full Name -->
         <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Full Name:</label>
-            <input type="text" name="name" class="input input-bordered w-full" required 
-                   value="{{ form_data.name if form_data and form_data.name }}">
+        <label class="label font-semibold text-lg text-black">
+            <span>Full Name: <span class="text-error">*</span></span>
+        </label>
+        <input type="text" name="name" class="input input-bordered w-full" required 
+                value="{{ form_data.name if form_data and form_data.name }}">
         </div>
 
         <!-- Fresher Checkbox -->
@@ -39,9 +42,12 @@
 
         <!-- CV Upload -->
         <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Upload CV:</label>
-            <input type="file" name="cv" class="file-input file-input-bordered w-full" required>
+        <label class="label font-semibold text-lg text-black">
+            <span>Upload CV: <span class="text-error">*</span></span>
+        </label>
+        <input type="file" name="cv" class="file-input file-input-bordered w-full" required>
         </div>
+
 
         <!-- Submit -->
         <div class="text-center mt-6">

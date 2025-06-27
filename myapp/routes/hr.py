@@ -1,3 +1,4 @@
+from sqlalchemy import and_ ,or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify
@@ -48,7 +49,7 @@ def applicants():
         .paginate(page=page, per_page=per_page, error_out=False)
     applicants = applicants_pagination.items
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
-    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    hrs = User.query.filter(or_(User.role.in_(['hr', 'admin']),and_(User.role == 'referrer',User.auth_type == 'local'))).all()
     for applicant in applicants:
         update_status(applicant.id)
     return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs, pagination=applicants_pagination)
@@ -60,15 +61,12 @@ def applicants():
 def all_applicants():
     search_query = request.args.get('search', '').strip()
     stages = ['Applied','On Hold','Offered','Joined','Rejected']
-
-    
-    
     if search_query:
         return redirect(url_for('hr.search_applicants', query=search_query))
     
     applicants = Applicant.query.options(joinedload(Applicant.uploader)).order_by(Applicant.last_applied.desc()).all()
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
-    hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    hrs = User.query.filter(or_(User.role.in_(['hr', 'admin']),and_(User.role == 'referrer',User.auth_type == 'local'))).all()
     for applicant in applicants:
         update_status(applicant.id)
     return render_template('hr/applicants_all.html', users=hrs, jobs=jobs, all_stages=stages)
@@ -1614,7 +1612,7 @@ def search_sort_filter_all_applicants():
     applicants = applicants_pagination.items
 
     # For the dropdowns (HR, Jobs)
-    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    users = User.query.filter(or_(User.role.in_(['hr', 'admin']),and_(User.role == 'referrer',User.auth_type == 'local'))).all()
     jobs = JobRequirement.query.all()
     stages = ['Applied','On Hold','Offered','Joined','Rejected']
     selected_stage = stage
@@ -1684,7 +1682,7 @@ def search_sort_filter_applicants():
     applicants = applicants_pagination.items
 
     # For the dropdowns (HR, Jobs)
-    users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    users = User.query.filter(or_(User.role.in_(['hr', 'admin']),and_(User.role == 'referrer',User.auth_type == 'local'))).all()
     jobs = JobRequirement.query.all()
     stages = ['Applied','On Hold','Offered','Joined','Rejected']
     selected_stage = stage
