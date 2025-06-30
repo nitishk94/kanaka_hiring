@@ -26,6 +26,26 @@ def manage_users():
         
     return render_template('admin/manage_users.html', users=users, selected_role=role)
 
+@bp.route('/update_user/<int:user_id>', methods=['POST'])
+@no_cache
+@login_required
+@role_required('admin')
+def update_user(user_id):
+    user = User.query.get_or_404(user_id)
+
+    name = request.form.get('name')
+    designation = request.form.get('designation')
+    linkedin_profile = request.form.get('linkedin_profile')
+
+    user.name = name
+    user.designation = designation
+    user.linkedin_profile = linkedin_profile
+
+    db.session.commit()
+    flash("User details updated successfully", "success")
+    return redirect(url_for('admin.edit_user', user_id=user.id))
+
+
 @bp.route('/edit_user/<int:user_id>', methods=['GET'])
 @no_cache
 @login_required

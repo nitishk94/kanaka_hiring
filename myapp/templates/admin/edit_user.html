@@ -14,8 +14,14 @@
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
                 <h2 class="card-title mb-4">Role Information</h2>
-                <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id) }}">
+                <form method="POST" action="{{ url_for('admin.update_user', user_id=user.id) }}">
                     <div class="grid grid-cols-1 gap-6">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Name</span>
+                            </label>
+                            <input type="text" name="name" value="{{ user.name }}" class="input input-bordered"  />
+                        </div>
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text">Username</span>
@@ -30,26 +36,25 @@
                         </div>
                         <div class="form-control">
                             <label class="label">
-                                <span class="label-text">Role <span class="text-error">*</span></span>
+                                <span class="label-text">Designation</span>
                             </label>
-                            <select name="role" class="select select-bordered" required>
-                                {% if current_user.is_superuser %}
-                                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-                                {% endif %}
-                                <option value="hr" {% if user.role == 'hr' %}selected{% endif %}>HR</option>
-                                <option value="interviewer" {% if user.role == 'interviewer' %}selected{% endif %}>Interviewer</option>
-                                <option value="referrer" {% if user.role == 'referrer' %}selected{% endif %}>Referrer</option>
-                            </select>
+                            <input type="text" name="designation" value="{{ user.designation }}" class="input input-bordered"  />
+                        </div>
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">LinkedIn Profile</span>
+                            </label>
+                            <input type="text" name="linkedin_profile" value="{{ user.linkedin_profile }}" class="input input-bordered"  />
                         </div>
                     </div>
                     <div class="form-control mt-6">
-                        <button type="submit" class="btn btn-primary">Update Role</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Password Update Card -->
+        <!-- Password Update Card
         {% if user.role == 'referrer' and user.auth_type == 'local' %}
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
@@ -130,12 +135,12 @@
                     </form>
                 </div>
             </div>
-        {% endif %}
+        {% endif %} -->
     </div>
 </div>
 {% endblock %} 
 
-{% block extra_js %}
+<!-- {% block extra_js %}
 <script>
     function togglePassword1() {
         const input = document.getElementById("myInput1");
@@ -195,4 +200,4 @@
         }
     }
 </script>
-{% endblock %}
+{% endblock %} -->

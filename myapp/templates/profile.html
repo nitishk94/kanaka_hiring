@@ -22,7 +22,7 @@
             <p><strong>LinkedIn Profile:</strong> {{ user.linkedin_profile }}</p>
         </div>
 
-        {% if user.role == 'admin' %}
+        <!-- {% if user.role == 'admin' %}
             <div class="bg-base-100 p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Change Password</h2>
                 <form action="{{ url_for('admin.change_password', user_id=user.id) }}" method="POST">
@@ -46,7 +46,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary mt-4">Change Password</button>
                 </form>
-            </div>
-        </div>
+            </div> -->
+    </div>
     {% endif %}
 {% endblock %} 
