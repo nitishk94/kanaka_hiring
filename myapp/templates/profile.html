@@ -8,8 +8,13 @@
             <h1 class="text-3xl font-bold">User Profile</h1>
         </div>
 
-        <div class="bg-base-100 p-6 rounded-lg shadow-md mb-6">
-            <h2 class="text-xl font-semibold mb-4">User Details</h2>
+    <div class="bg-base-100 p-6 rounded-lg shadow-md mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">User Details</h2>
+            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline">
+                Edit
+            </a>
+    </div>
             <p><strong>Name:</strong> {{ user.name }}</p>
             <p><strong>Username:</strong> {{ user.username }}</p>
             <p><strong>Email:</strong> {{ user.email }}</p>
