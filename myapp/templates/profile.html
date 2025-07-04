@@ -11,7 +11,7 @@
     <div class="bg-base-100 p-6 rounded-lg shadow-md mb-6">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-semibold">User Details</h2>
-            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-outline">
+            <a href="{{ url_for('main.edit_own_profile') }}" class="btn btn-sm btn-outline">
                 Edit
             </a>
     </div>
@@ -22,31 +22,6 @@
             <p><strong>LinkedIn Profile:</strong> {{ user.linkedin_profile }}</p>
         </div>
 
-        <!-- {% if user.role == 'admin' %}
-            <div class="bg-base-100 p-6 rounded-lg shadow-md">
-                <h2 class="text-xl font-semibold mb-4">Change Password</h2>
-                <form action="{{ url_for('admin.change_password', user_id=user.id) }}" method="POST">
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Current Password</span>
-                        </label>
-                        <input type="password" name="current_password" class="input input-bordered" required />
-                    </div>
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">New Password</span>
-                        </label>
-                        <input type="password" name="new_password" class="input input-bordered" required />
-                    </div>
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Confirm New Password</span>
-                        </label>
-                        <input type="password" name="confirm_password" class="input input-bordered" required />
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-4">Change Password</button>
-                </form>
-            </div> -->
     </div>
-    {% endif %}
+
 {% endblock %} 

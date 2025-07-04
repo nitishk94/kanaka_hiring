@@ -7,6 +7,8 @@ from myapp.models.applicants import Applicant
 from myapp.models.jobrequirement import JobRequirement
 from myapp.models.referrals import Referral
 from myapp.utils import generate_timeline, update_status
+from myapp.extensions import db
+
 
 bp = Blueprint('main', __name__)
 
@@ -20,6 +22,21 @@ def home():
 @login_required
 def profile():
     return render_template('profile.html', user=current_user)
+
+@bp.route('/profile/edit_profile', methods = ['GET', 'POST'])
+@no_cache
+@login_required
+def edit_own_profile():
+    user = current_user
+
+    if request.method == 'POST':
+        user.name = request.form.get('name')
+        user.designation = request.form.get('designation')
+        user.linkedin_profile = request.form.get('linkedin_profile')
+        db.session.commit()
+        flash("Profile updated successfully", "success")
+        return redirect(url_for('main.profile'))
+    return render_template('edit_profile.html', user=user)
 
 @bp.route('/track/<int:id>', methods=['GET', 'POST'])
 @no_cache
