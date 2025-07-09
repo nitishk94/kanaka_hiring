@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify, send_file
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.users import User
@@ -472,7 +472,13 @@ def search_applicants():
 @login_required
 @role_required(*HR_ROLES)
 def download_cv(id):
-    return f"Download CV for Applicant {id}"
+    applicant = Applicant.query.get_or_404(id)
+
+    if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
+        flash("CV file not found.", "error")
+        return redirect(url_for('hr.show_upload_form'))
+    
+    return send_file(applicant.cv_file_path, as_attachment=True)
 
 @bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @no_cache
