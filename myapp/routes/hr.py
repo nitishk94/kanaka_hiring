@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify, send_file
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.users import User
@@ -9,7 +9,7 @@ from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.interviews import Interview
 from myapp.models.referrals import Referral
 from myapp.models.jobrequirement import JobRequirement
-from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info, can_update_applicant
+from myapp.utils import validate_file, update_status, can_upload_applicant_email, can_upload_applicant_phone, is_future_or_today, get_json_info, can_update_applicant, store_result
 from myapp.extensions import db
 from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
@@ -36,17 +36,23 @@ def dashboard():
 @role_required(*HR_ROLES)
 def applicants():
     search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
     
     if search_query:
         return redirect(url_for('hr.search_applicants', query=search_query))
     
     excluded_stages = ['Rejected', 'On Hold', 'Joined']
-    applicants = Applicant.query.options(joinedload(Applicant.uploader)).filter(~Applicant.status.in_(excluded_stages)).order_by(Applicant.last_applied.desc()).all()
+    applicants_pagination = Applicant.query.options(joinedload(Applicant.uploader))\
+        .filter(~Applicant.status.in_(excluded_stages))\
+        .order_by(Applicant.last_applied.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    applicants = applicants_pagination.items
     jobs = JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     hrs = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     for applicant in applicants:
         update_status(applicant.id)
-    return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs)
+    return render_template('hr/applicants.html', applicants=applicants, users=hrs, jobs=jobs, pagination=applicants_pagination)
 
 @bp.route('/all_applicants')
 @no_cache
@@ -355,30 +361,50 @@ def view_applicant(id):
 def filter_applicants():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
 
-    hr_id = request.args.get('hr_id', '')
-    job_id = request.args.get('job_id', '')
-    status_id = request.args.get('status', '')
+    hr_id = request.args.get('hr_id', '').strip()
+    job_id = request.args.get('job_id', '').strip()
+    status_id = request.args.get('status', '').strip()
 
-    query = Applicant.query
+    excluded_stages = ['Rejected','On Hold' ,'Joined']  
 
+    query = Applicant.query.options(
+        joinedload(Applicant.uploader),
+        joinedload(Applicant.job)
+    )
+
+    # Apply filters
     if hr_id:
         query = query.filter(Applicant.uploaded_by == int(hr_id))
-
     if job_id:
         query = query.filter(Applicant.job_id == int(job_id))
-
     if status_id == 'fresher':
-        query = query.filter(Applicant.is_fresher == True)
+        query = query.filter(Applicant.is_fresher.is_(True))
     elif status_id == 'experienced':
-        query = query.filter(Applicant.is_fresher == False)
-    
+        query = query.filter(Applicant.is_fresher.is_(False))
+
+    # Apply stage exclusion
     if excluded_stages:
         query = query.filter(~Applicant.status.in_(excluded_stages))
 
-    applicants = query.order_by(Applicant.last_applied.desc()).all()
+    # Order and paginate
+    query = query.order_by(Applicant.last_applied.desc())
+    applicants_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    applicants = applicants_pagination.items
 
-    return render_template('hr/applicants.html', applicants=applicants, users=hr_users, jobs=jobs)
+    return render_template(
+        'hr/applicants.html',
+        applicants=applicants,
+        users=hr_users,
+        jobs=jobs,
+        pagination=applicants_pagination,
+        hr_id=hr_id,
+        job_id=job_id,
+        status_id=status_id
+    )
+
 
 @bp.route('/sort_applicants')
 @no_cache
@@ -618,8 +644,10 @@ def schedule_interview(id):
     response = requests.post(graph_endpoint, headers=headers, json=body)
 
     if response.status_code == 201:
-        flash('Interview round {round} scheduled and calendar invite sent.', 'success')
+        flash(f'Interview round {round} scheduled and calendar invite sent.', 'success')
         current_app.logger.info(f"Meeting created for round {round} for applicant {id}")
+        if history.test_result and history.test_date and not history.interview_round_1_comments:
+            store_result(id)
     else:
         flash('Interview saved, but failed to schedule calendar meeting.', 'warning')
         current_app.logger.error(f"Graph API error: {response.status_code}, {response.text}")
@@ -696,32 +724,167 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
+    users = User.query.filter_by(role='referrer').all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
-    return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs)
+    return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
 @bp.route('/filter_referrals')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def filter_referrals():
-    referral_id = request.args.get('referral_id')
-    job_id = request.args.get('job_id')
-    referral_users = User.query.filter_by(role='referral').all()
+    referral_id = request.args.get('referral_id', type=int)
+    job_id = request.args.get('job_id', type=int)
 
-    query = JobRequirement.query
+    referral_users = User.query.filter_by(role='referrer').all()
+    jobs = JobRequirement.query.order_by(JobRequirement.position).all()
+    query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
-    # Apply Job ID filter
-    if job_id:
-        query = query.filter_by(id=job_id)
-
-    # Optional: Apply Referral filter only if JobRequirement has a relationship with Referral
     if referral_id:
-        query = query.join(JobRequirement.referrals).filter(Referral.id == referral_id)
-        # NOTE: You must define this relationship in your model first!
+        query = query.filter(Referral.referrer_id == referral_id)
+    if job_id:
+        query = query.filter(Referral.job_id == job_id)
 
-    jobs = query.order_by(JobRequirement.id.desc()).all()
+    referrals = query.order_by(Referral.id.desc()).all()
 
-    return render_template('hr/view_referrals.html', jobs=jobs, users=referral_users)
+    return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
+@bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def upload_referral_applicant(referral_id,referrer_id, name):
+    if '_user_id' not in session:
+        current_app.logger.warning(f"Session expired for user {current_user.username}")
+        return {'error': 'Session expired. Please log in again.'}, 401
+
+    if request.method == 'GET':
+        form_data = session.pop('form_data', None)
+        job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position)\
+                                            .filter(JobRequirement.is_open == True).all()
+        if not form_data:
+            form_data = {}
+        form_data['name'] = name
+        return render_template(
+            'hr/upload_referral_applicant.html',
+            job_positions=job_positions,
+            form_data=form_data,
+            referral_id=referral_id,
+            referrer_id=referrer_id,
+            name=name
+        )
+
+
+    # ---- POST logic begins ----
+    file = request.files.get('cv')
+    if not validate_file(file):
+        flash('File is corrupted.', 'warning')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+
+    email = request.form.get('email').lower()
+    if not can_upload_applicant_email(email):
+        flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.view_referrals'))
+
+    phone_number = request.form.get('phone_number')
+    if not can_upload_applicant_phone(phone_number):
+        flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.view_referrals'))
+
+    def get_bool(key): return bool(request.form.get(key))
+    int_or_none = lambda x: int(x) if x else None
+
+    try:
+        dob = request.form.get('dob')
+        dob = datetime.strptime(dob, '%Y-%m-%d').date() if dob else None
+    except ValueError:
+        dob = None
+
+    is_fresher = get_bool('is_fresher')
+    experience = request.form.get('experience')
+    if not is_fresher and '0' in experience:
+        flash("Experience cannot be 0", "error")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+    
+    new_applicant = Applicant(
+        name=name,
+        email=email,
+        phone_number=phone_number,
+        dob=dob,
+        gender=request.form.get('gender'),
+        marital_status=request.form.get('marital_status'),
+        native_place=request.form.get('native_place', '').title(),
+        current_location=request.form.get('current_location', '').title(),
+        work_location=request.form.get('work_location', '').title(),
+        graduation_year=int_or_none(request.form.get('graduation_year')),
+        is_fresher=is_fresher,
+        qualification=request.form.get('qualification'),
+        current_internship=get_bool('current_internship'),
+        internship_duration=int_or_none(request.form.get('internship_duration')),
+        paid_internship=get_bool('paid_internship'),
+        stipend=int_or_none(request.form.get('stipend')),
+        experience=experience,
+        referenced_from=request.form.get('referenced_from'),
+        linkedin_profile=request.form.get('linkedin_profile') or 'Not Provided',
+        github_profile=request.form.get('github_profile') or 'Not Provided',
+        is_kanaka_employee=get_bool('is_kanaka_employee'),
+        current_company=request.form.get('current_company'),
+        designation=request.form.get('designation'),
+        current_job_position=request.form.get('current_job_position', '').title(),
+        current_ctc=int_or_none(request.form.get('current_ctc')),
+        expected_ctc=int_or_none(request.form.get('expected_ctc')),
+        notice_period=int_or_none(request.form.get('notice_period')),
+        tenure_at_current_company=request.form.get('tenure_at_current_company'),
+        current_offers_yes_no=get_bool('current_offers_yes_no'),
+        current_offers_description=request.form.get('current_offers_description') or None,
+        reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
+        comments=request.form.get('comments') or 'No comments',
+        last_applied=date.today(),
+        current_stage='Need to schedule test/interview',
+        uploaded_by=current_user.id,
+        is_referred=True,
+        referred_by=int(referrer_id),
+        job_id=int_or_none(request.form.get('position')) if not is_fresher else None,
+    )
+
+    # Save file
+    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(upload_dir, filename)
+    file.save(file_path)
+    new_applicant.cv_file_path = file_path
+
+    try:
+        db.session.add(new_applicant)
+        db.session.flush()
+
+        history = RecruitmentHistory(applicant_id=new_applicant.id, applied_date=date.today())
+        db.session.add(history)
+
+        referral = Referral.query.get_or_404(referral_id)
+        referral.applicant_id = int(new_applicant.id)
+        
+        db.session.commit()
+        
+        flash('New applicant successfully created!', 'success')
+        current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
+        return redirect(url_for('hr.view_referrals'))
+
+    except IntegrityError as e:
+        db.session.rollback()
+        if 'email' in str(e.orig):
+            flash('This email is already registered.', 'error')
+        elif 'phone_number' in str(e.orig):
+            flash('This phone number is already registered.', 'error')
+        else:
+            flash('Database error. Please try again.', 'error')
+        current_app.logger.error(f"IntegrityError: {e}")
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('hr.view_referrals'))
 
 @bp.route('/onboarding')
 @no_cache
@@ -1022,6 +1185,7 @@ def submit_joblisting_update(id):
 def close_joblisting(id):
     joblisting = JobRequirement.query.get_or_404(id)
     joblisting.is_open = False
+    joblisting.for_vendor = False
     db.session.commit()
     current_app.logger.info(f"Job listing {joblisting.position} closed by {current_user.username}")
     flash('Job listing closed successfully', 'success')
@@ -1334,6 +1498,8 @@ def filter_all_applicants():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     stages = ['Applied','On Hold','Offered','Joined','Rejected']
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
 
     hr_id = request.args.get('hr_id', '')
     job_id = request.args.get('job_id', '')
@@ -1356,9 +1522,10 @@ def filter_all_applicants():
     if stage:
         query = query.filter(Applicant.status==stage)
 
-    applicants = query.order_by(Applicant.last_applied.desc()).all()
+    applicants_pagination = query.order_by(Applicant.last_applied.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    applicants = applicants_pagination.items
 
-    return render_template('hr/applicants_all.html', applicants=applicants, users=hr_users, jobs=jobs, all_stages=stages, selected_stage=stage )
+    return render_template('hr/applicants_all.html', applicants=applicants, users=hr_users, jobs=jobs, all_stages=stages, selected_stage=stage, pagination=applicants_pagination)
 
 @bp.route('/sort_all_applicants')
 @no_cache
@@ -1421,15 +1588,21 @@ def search_all_applicants():
     return render_template('hr/applicants_all.html', applicants=applicants, users=hrs, jobs=jobs, search_query=search_query)
 
 
-@bp.route('/search_sort_all_applicants', methods=['GET'])
+@bp.route('/search_sort_filter_all_applicants', methods=['GET'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def search_sort_all_applicants():
+def search_sort_filter_all_applicants():
     search_query = request.args.get('query', '').strip()
     sort_by = request.args.get('sort_by', 'date')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
 
-    # Start with a single base query
+    hr_id = request.args.get('hr_id', '')
+    job_id = request.args.get('job_id', '')
+    status_id = request.args.get('status', '')
+    stage = request.args.get('all_stages', '').strip()
+
     query = Applicant.query.options(
         joinedload(Applicant.uploader),
         joinedload(Applicant.job)
@@ -1442,6 +1615,18 @@ def search_sort_all_applicants():
         else:
             query = query.filter(Applicant.name.ilike(f'%{search_query}%'))
 
+    # Apply additional filters
+    if hr_id:
+        query = query.filter(Applicant.uploaded_by == int(hr_id))
+    if job_id:
+        query = query.filter(Applicant.job_id == int(job_id))
+    if status_id == 'fresher':
+        query = query.filter(Applicant.is_fresher == True)
+    elif status_id == 'experienced':
+        query = query.filter(Applicant.is_fresher == False)
+    if stage:
+        query = query.filter(Applicant.status == stage)
+
     # Apply sort filter
     if sort_by == 'name':
         query = query.order_by(Applicant.name.asc())
@@ -1450,12 +1635,14 @@ def search_sort_all_applicants():
     else:
         query = query.order_by(Applicant.last_applied.desc())
 
-    # Fetch applicants
-    applicants = query.all()
+    applicants_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    applicants = applicants_pagination.items
 
     # For the dropdowns (HR, Jobs)
     users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.all()
+    stages = ['Applied','On Hold','Offered','Joined','Rejected']
+    selected_stage = stage
 
     return render_template(
         'hr/applicants_all.html',
@@ -1463,18 +1650,27 @@ def search_sort_all_applicants():
         search_query=search_query,
         sort_by=sort_by,
         users=users,
-        jobs=jobs
+        jobs=jobs,
+        all_stages=stages,
+        selected_stage=selected_stage,
+        pagination=applicants_pagination
     )
 
-@bp.route('/search_sort_applicants', methods=['GET'])
+@bp.route('/search_sort_filter_applicants', methods=['GET'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def search_sort_applicants():
+def search_sort_filter_applicants():
     search_query = request.args.get('query', '').strip()
     sort_by = request.args.get('sort_by', 'date')
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
 
-    # Start with a single base query
+    hr_id = request.args.get('hr_id', '')
+    job_id = request.args.get('job_id', '')
+    status_id = request.args.get('status', '')
+    stage = request.args.get('all_stages', '').strip()
+
     query = Applicant.query.options(
         joinedload(Applicant.uploader),
         joinedload(Applicant.job)
@@ -1487,6 +1683,20 @@ def search_sort_applicants():
         else:
             query = query.filter(Applicant.name.ilike(f'%{search_query}%'))
 
+    query = query.filter(~Applicant.status.in_(excluded_stages))
+
+    # Apply additional filters
+    if hr_id:
+        query = query.filter(Applicant.uploaded_by == int(hr_id))
+    if job_id:
+        query = query.filter(Applicant.job_id == int(job_id))
+    if status_id == 'fresher':
+        query = query.filter(Applicant.is_fresher == True)
+    elif status_id == 'experienced':
+        query = query.filter(Applicant.is_fresher == False)
+    if stage:
+        query = query.filter(Applicant.status == stage)
+
     # Apply sort filter
     if sort_by == 'name':
         query = query.order_by(Applicant.name.asc())
@@ -1495,12 +1705,14 @@ def search_sort_applicants():
     else:
         query = query.order_by(Applicant.last_applied.desc())
 
-    # Fetch applicants
-    applicants = query.all()
+    applicants_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    applicants = applicants_pagination.items
 
     # For the dropdowns (HR, Jobs)
     users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     jobs = JobRequirement.query.all()
+    stages = ['Applied','On Hold','Offered','Joined','Rejected']
+    selected_stage = stage
 
     return render_template(
         'hr/applicants.html',
@@ -1508,5 +1720,9 @@ def search_sort_applicants():
         search_query=search_query,
         sort_by=sort_by,
         users=users,
-        jobs=jobs
+        jobs=jobs,
+        all_stages=stages,
+        selected_stage=selected_stage,
+        pagination=applicants_pagination
     )
+

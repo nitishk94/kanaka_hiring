@@ -60,6 +60,7 @@ def handle_register():
 
     user = User(name=name, username=username, email=email, auth_type='local')
     user.set_password(password)
+    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": 1})
     db.session.add(user)
     db.session.commit()
     
@@ -133,8 +134,8 @@ def login_external():
     
     flash('Invalid username/email or password', 'error')
     current_app.logger.info(f"Invalid login attempt: {username_or_email}")
-    session['form_data'] = request.form.get('username_or_email', '')
-    return redirect(url_for('auth.login'))
+    form_data = {'username_or_email': username_or_email}
+    return render_template('auth/login.html', form_data=form_data), 401
 
 @bp.route('/auth/redirect')
 @no_cache
@@ -236,8 +237,7 @@ def add_new_user():
         return redirect(url_for('auth.show_add_new_user'))
 
     user = User(name=name, username=username, email=email, auth_type='microsoft')
-    db.session.execute(text("SET app.current_user_id = '{current_user.id}'"))
-
+    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": 1})
     db.session.add(user)
     db.session.commit()
     

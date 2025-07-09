@@ -7,42 +7,52 @@
     <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h1 class="text-3xl font-bold">Active Applicants List</h1>
         <div class="flex items-center gap-4 flex-wrap">
-            <form method="GET" action="{{ url_for('hr.search_sort_applicants') }}" class="flex gap-2 min-w-[250px]">
+            <form method="GET" action="{{ url_for('hr.search_sort_filter_applicants') }}" class="flex gap-2 min-w-[250px] relative">
+            <div class="relative w-full">
                 <input
                     type="text"
                     name="query"
-                    placeholder="Search by name or email..."
-                    class="input input-bordered flex-grow"
+                    placeholder="Search jobs..."
+                    class="input input-bordered w-full pr-10"
                     value="{{ search_query or '' }}"
+                    id="searchInput"
                 />
                 
                 <input type="hidden" name="sort_by" value="{{ sort_by or 'date' }}">
                 <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
             </form>
+                <button
+                    type="button"
+                    id="clearSearchBtn"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                    style="display: {{ 'inline' if search_query else 'none' }}"
+                >
+                    &#10005;
+                </button>
+            </div>
+            <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
+        
             <!-- Sort By Dropdown (identical to Filter) -->
             <div class="dropdown dropdown-end ">
                 <div tabindex="0" role="button" class="btn btn-outline btn-primary w-48">
                     Sort By
                 </div>
                 <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-                    <form method="GET" action="{{ url_for('hr.search_sort_applicants') }}" id="sortForm" class="flex flex-col gap-2">
+                    
                         <input type="hidden" name="query" value="{{ search_query or '' }}">
                         <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
                             <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
                             <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
                             <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
                         </select>
-                    </form>
+                    
                 </div>
             </div>
 
             <!-- Filter Dropdown -->
-            <form method="GET" action="{{ url_for('hr.filter_applicants') }}" class="flex items-center gap-2">
+            
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-outline btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
                         Filter
                     </div>
                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
@@ -85,7 +95,7 @@
                         </div>
                         <!-- Filter Buttons -->
                         <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-                        <a href="{{ url_for('hr.filter_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
+                        <a href="{{ url_for('hr.search_sort_filter_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
                     </div>
                 </div>
             </form>
@@ -93,7 +103,7 @@
             <!-- Total Applicants -->
             <div class="stats shadow">
                 <div class="stat">
-                    <div class="stat-title">Total Applicants</div>
+                    <div class="stat-title">Applicants Displayed</div>
                     <div class="stat-value">{{ applicants|length }}</div>
                 </div>
             </div>
@@ -156,6 +166,33 @@
         </table>
     </div>
 
+    <!-- Pagination Controls -->
+    {% if pagination and pagination.pages > 1 %}
+    <div class="flex justify-center mt-6">
+        <nav class="join">
+            {% set args = request.args.copy() %}
+            {% if pagination.has_prev %}
+                {% set args = args.to_dict() %}
+                {% set _ = args.update({'page': pagination.prev_num}) %}
+                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">&lsaquo; Prev</a>
+            {% else %}
+                <span class="join-item btn btn-disabled">&lsaquo; Prev</span>
+            {% endif %}
+
+            <span class="join-item btn font-bold bg-gray-800 text-white">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+            {% if pagination.has_next %}
+                {% set args = request.args.copy() %}
+                {% set args = args.to_dict() %}
+                {% set _ = args.update({'page': pagination.next_num}) %}
+                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">Next &rsaquo;</a>
+            {% else %}
+                <span class="join-item btn btn-disabled">Next &rsaquo;</span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
     {% if not applicants %}
     <div class="text-center py-8">
         <div class="text-6xl mb-4">📝</div>
@@ -168,3 +205,23 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        if (clearBtn && searchInput) {
+            clearBtn.addEventListener('click', function(e) {
+                searchInput.value = '';
+                searchInput.focus();
+                clearBtn.style.display = 'none';
+            });
+            searchInput.addEventListener('input', function() {
+                clearBtn.style.display = searchInput.value ? 'inline' : 'none';
+            });
+        }
+    });
+</script>
+{% endblock %} 

@@ -77,7 +77,7 @@
     <div class="modal">
         <div class="modal-box w-11/12 max-w-2xl">
             <h3 class="font-bold text-lg mb-4">Reschedule Interview for {{ interview.applicant.name }}</h3>
-            <form action="{{ url_for('hr.reschedule_interview', id=interview.applicant_id) }}" method="POST">
+            <form action="{{ url_for('hr.reschedule_interview', id=interview.applicant_id) }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
                 <div class="form-control w-full">
                     <label class="label" for="interview_date">
                         <span class="label-text">Select Date</span>

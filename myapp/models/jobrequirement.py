@@ -16,3 +16,4 @@ class JobRequirement(db.Model):
 
     created_by = db.relationship('User', back_populates='job_listings')
     interviews = db.relationship('Interview', back_populates='job')
+    
