@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold">All Applicants List</h1>
         <div class="flex items-center gap-4 ml-auto">
             <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_sort_all_applicants') }}" class="flex gap-2 min-w-[250px]">
+            <form method="GET" action="{{ url_for('hr.search_sort_filter_all_applicants') }}" class="flex gap-2 min-w-[250px]">
                 <input
                     type="text"
                     name="query"
