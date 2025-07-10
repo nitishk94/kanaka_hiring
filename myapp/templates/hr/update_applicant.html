@@ -25,7 +25,15 @@
                         <label class="label" for="dob">
                             <span class="label-text">Date of Birth <span class="text-error">*</span></span>
                         </label>
-                        <input id="dob" type="date" name="dob" required class="input input-bordered" value="{{ applicant.dob if applicant else '' }}" />
+                        <input 
+                            id="dob" 
+                            type="date" 
+                            name="dob" 
+                            required class="input input-bordered"
+                            value="{{ applicant.dob if applicant else '' }}" 
+                            max = "2050-12-31"
+
+                        />
                     </div>
                     <!-- Email -->
                     <div class="form-control">

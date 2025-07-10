@@ -340,7 +340,7 @@ def view_applicant(id):
     update_status(id)
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
-
+    current_date = date.today().isoformat() 
     return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
 
 @bp.route('/filter_applicants')
@@ -868,6 +868,7 @@ def upload_referral_applicant(referral_id,referrer_id, name):
 @role_required(*HR_ROLES)
 def onboarding():
     return "Onboarding and Offer Letter Page"
+
 
 @bp.route('/filter_interviews')
 @no_cache
