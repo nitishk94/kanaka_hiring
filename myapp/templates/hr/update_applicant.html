@@ -40,7 +40,7 @@ git {% extends "base.html" %}
                         <label class="label" for="phone_number">
                             <span class="label-text">Phone Number <span class="text-error">*</span></span>
                         </label>
-                        <input id="phone_number" type="tel" name="phone_number" required placeholder="Enter phone number" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" class="input input-bordered" value="{{ applicant.phone_number if applicant else '' }}" />
+                        <input id="phone_number" type="tel" name="phone_number" required placeholder="Enter phone number" pattern="^(?!([6-9])\1{9})[6-9][0-9]{9}$" title="Please enter a valid 10-digit phone number" class="input input-bordered" value="{{ applicant.phone_number if applicant else '' }}" />
                     </div>
                     <!-- Gender -->
                     <div class="form-control">
@@ -177,7 +177,7 @@ git {% extends "base.html" %}
                             name="graduation_year"
                             placeholder="Enter graduation year"
                             class="input input-bordered w-full"
-                            min="1950"
+                            min="1980"
                             max="2030"
                             required
                             value="{{ applicant.graduation_year if applicant.graduation_year else '' }}"

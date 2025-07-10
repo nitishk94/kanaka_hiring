@@ -37,6 +37,30 @@
             </select>
         </div>
 
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const isFresher = document.getElementById("is_fresher");
+                const position = document.getElementById("position");
+                const positionSection = document.getElementById("position-section");
+
+                function toggleRequired() {
+                if (isFresher.checked) {
+                    position.removeAttribute("required");
+                    positionSection.style.display = "none";
+                } else {
+                    position.setAttribute("required", "required");
+                    positionSection.style.display = "block";
+                }
+            }
+
+            // Initial load
+            toggleRequired();
+
+            // On checkbox toggle
+            isFresher.addEventListener("change", toggleRequired);
+        });
+        </script>
+
         <!-- CV Upload -->
         <div class="form-control">
             <label class="label font-semibold text-lg text-black">Upload CV:</label>

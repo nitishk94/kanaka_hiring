@@ -46,7 +46,7 @@
         <!-- Budget -->
         <div class="form-control">
             <label class="label font-semibold text-lg" for="job_budget">Budget (INR) <span class="text-error">*</span></label>
-            <input type="number" id="job_budget" name="job_budget" min="0" step="any" value="{{ joblisting.budget }}" required
+            <input type="number" id="job_budget" name="job_budget" min="100000" step="10000" value="{{ joblisting.budget }}" required
                    class="input input-bordered w-full" />
         </div>
 
