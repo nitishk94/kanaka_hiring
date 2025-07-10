@@ -196,7 +196,7 @@
                 </div>
                     <div class="form-control" id="position-section">
                         <label class="label font-semibold text-lg text-black">Select Job Position:</label>
-                        <select name="position" id="position" class="select select-bordered w-full">
+                        <select name="position" id="position" class="select select-bordered w-full" required>
                             <option value="">-- Choose a Position --</option>
                             {% for id, position in job_positions %}
                                     <option value="{{ id }}"

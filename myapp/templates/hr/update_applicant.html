@@ -155,9 +155,9 @@ git {% extends "base.html" %}
                     </div>
                 
                 <!-- Job Position Dropdown -->
-                <div class="form-control" id="position-section">
+                <div class="form-control" id="position-section" required>
                     <label class="label-text">Select Job Position:</label>
-                    <select name="position" id="position" class="select select-bordered w-full">
+                    <select name="position" id="position" class="select select-bordered w-full" required>
                         <option value="">-- Choose a Position --</option>
                         {% for id, position in job_positions %}
                             <option value="{{ id }}" {% if form_data and applicant.position == id|string %}selected{% endif %}>{{ position }}</option>

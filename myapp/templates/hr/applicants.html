@@ -17,15 +17,11 @@
                     value="{{ search_query or '' }}"
                     id="searchInput"
                 />
-                
-                <input type="hidden" name="sort_by" value="{{ sort_by or 'date' }}">
-                <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
-            </form>
                 <button
                     type="button"
                     id="clearSearchBtn"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                    style="display: {{ 'inline' if search_query else 'none' }}"
+                    style="display: {{ 'inline' if search_query else 'none' }};"
                 >
                     &#10005;
                 </button>
