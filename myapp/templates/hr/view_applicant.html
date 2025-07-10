@@ -89,7 +89,7 @@
                     {% else %}
                         <div>
                             <p class="text-sm text-gray-500">Experience</p>
-                            <p class="font-semibold">{{ applicant.experience }}</p>
+                            <p class="font-semibold">{{ applicant.experience }} years</p>
                         </div>
                     {% endif %}
 
@@ -177,7 +177,7 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-500">Tenure at Current Company</p>
-                            <p class="font-semibold">{{ applicant.tenure_at_current_company if applicant.tenure_at_current_company else 'Not provided' }}</p>
+                            <p class="font-semibold">{{ applicant.tenure_at_current_company if applicant.tenure_at_current_company + 'years' else 'Not provided' }}</p>
                         </div>
                         {% if applicant.current_offers_yes_no %}
                             <div>

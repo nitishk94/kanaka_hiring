@@ -89,6 +89,7 @@
                             placeholder="Enter budget amount"
                             class="input input-bordered"
                             min="0"
+                            step="10000"
                             step="any"
                             value="{{ form_data.job_budget if form_data else '' }}"
                         />
@@ -103,7 +104,8 @@
                             </label>
                             <input
                                 id="job_experience"
-                                type="text"
+                                type="number"
+                                min="0"
                                 name="job_experience"
                                 required
                                 placeholder="Enter experience required"

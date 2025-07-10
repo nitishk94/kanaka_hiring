@@ -32,14 +32,14 @@
         <!-- Experience -->
         <div class="form-control">
             <label class="label font-semibold text-lg" for="job_experience">Experience <span class="text-error">*</span></label>
-            <input type="text" id="job_experience" name="job_experience" value="{{ joblisting.experience }}" required
+            <input type="number" id="job_experience" name="job_experience" value="{{ joblisting.experience }}" required
                    class="input input-bordered w-full" />
         </div>
 
         <!-- Client Name -->
         <div class="form-control">
-            <label class="label font-semibold text-lg" for="job_clients">Client Name <span class="text-error">*</span></label>
-            <input type="text" id="job_clients" name="job_clients" value="{{ joblisting.clients }}" required
+            <label class="label font-semibold text-lg" for="job_clients">Client Name</label>
+            <input type="text" id="job_clients" name="job_clients" value="{{ joblisting.clients }}"
                    class="input input-bordered w-full" />
         </div>
 
