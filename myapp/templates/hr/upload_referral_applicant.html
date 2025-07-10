@@ -140,7 +140,7 @@
 
                     <div class="form-control">
                         <label class="label" for="work_location">
-                            <span class="label-text">Work Location <span class="text-error">*</span></span>
+                            <span class="label-text">Work Location </span>
                         </label>
                         <input
                             id="work_location"
@@ -148,8 +148,9 @@
                             name="work_location"
                             required
                             placeholder="Enter work location"
-                            class="input input-bordered"
-                            value="{{ form_data.work_location if form_data else '' }}"
+                            class="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+                            value="Pune"
+                            readonly
                         />
                     </div>
                 </div>
