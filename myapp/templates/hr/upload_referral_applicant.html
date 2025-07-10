@@ -358,20 +358,6 @@
                         />
                     </div>
 
-                    <div id="designation-field" class="form-control w-full" style="display: none;">
-                        <label class="label" for="designation">
-                            <span class="label-text">Designation <span class="text-error">*</span></span>
-                        </label>
-                        <input
-                            id="designation"
-                            type="text"
-                            name="designation"
-                            required
-                            placeholder="Enter designation"
-                            class="input input-bordered w-full"
-                            value="{{ form_data.designation if form_data else '' }}"
-                        />
-                    </div>
 
                     <div id="job-position-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="current_job_position">
@@ -571,7 +557,6 @@
                 'experience-field',
                 'kanaka-employee-field',
                 'current-company-field',
-                'designation-field',
                 'job-position-field',
                 'current-ctc-field',
                 'expected-ctc-field',

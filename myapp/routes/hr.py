@@ -159,7 +159,6 @@ def handle_upload_applicant():
         github_profile=request.form.get('github_profile') or 'Not Provided',
         is_kanaka_employee=get_bool('is_kanaka_employee'),
         current_company=request.form.get('current_company'),
-        designation=request.form.get('designation'),
         current_job_position=request.form.get('current_job_position', '').title(),
         current_ctc=int_or_none(request.form.get('current_ctc')),
         expected_ctc=int_or_none(request.form.get('expected_ctc')),
@@ -294,7 +293,6 @@ def update_applicant(id):
     applicant.github_profile = request.form.get('github_profile') or 'Not Provided'
     applicant.is_kanaka_employee = get_bool('is_kanaka_employee')
     applicant.current_company = request.form.get('current_company')
-    applicant.designation = request.form.get('designation')
     applicant.current_job_position = request.form.get('current_job_position', '').title()
     applicant.current_ctc = int_or_none(request.form.get('current_ctc'))
     applicant.expected_ctc = int_or_none(request.form.get('expected_ctc'))
@@ -811,7 +809,6 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         github_profile=request.form.get('github_profile') or 'Not Provided',
         is_kanaka_employee=get_bool('is_kanaka_employee'),
         current_company=request.form.get('current_company'),
-        designation=request.form.get('designation'),
         current_job_position=request.form.get('current_job_position', '').title(),
         current_ctc=int_or_none(request.form.get('current_ctc')),
         expected_ctc=int_or_none(request.form.get('expected_ctc')),
