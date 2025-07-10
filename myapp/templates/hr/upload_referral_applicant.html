@@ -46,6 +46,7 @@
                             type="date"
                             name="dob"
                             required
+                            min="1950-01-01"
                             class="input input-bordered"
                             value="{{ form_data.dob if form_data else '' }}"
                         />
@@ -220,7 +221,7 @@
                             name="graduation_year"
                             placeholder="Enter graduation year"
                             class="input input-bordered w-full"
-                            min="1950"
+                            min="1980"
                             max="2030"
                             required
                             value="{{ form_data.graduation_year if form_data else '' }}"
@@ -293,7 +294,7 @@
                             name="internship_duration"
                             placeholder="Enter duration in months"
                             class="input input-bordered w-full"
-                            min="0"
+                            min="1"
                             value="{{ form_data.internship_duration if form_data else '' }}"
                         />
                     </div>
@@ -326,7 +327,6 @@
                             required
                             placeholder="Enter years of experience"
                             class="input input-bordered w-full"
-                            min="1"
                             value="{{ form_data.experience if form_data else '' }}"
 
                         />
@@ -396,6 +396,8 @@
                             id="current_ctc"
                             type="number"
                             name="current_ctc"
+                            min="1"
+                            step="0.25"
                             placeholder="Enter current CTC"
                             class="input input-bordered w-full"
                             value="{{ form_data.current_ctc if form_data else '' }}"
@@ -410,6 +412,8 @@
                         <input
                             id="expected_ctc"
                             type="number"
+                            min="1"
+                            step="0.25"
                             name="expected_ctc"
                             placeholder="Enter expected CTC"
                             class="input input-bordered w-full"

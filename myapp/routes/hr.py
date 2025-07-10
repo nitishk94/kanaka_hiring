@@ -476,30 +476,18 @@ def search_applicants():
         sort_by=sort_by
     )
 
-
-
-
+#cv download
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def download_cv(id):
-    applicant = db.session.get(Applicant, id)  # or Applicant.query.get(id)
-    
-    if not applicant or not applicant.cv_filename:
-        abort(404, description="CV not found for this applicant.")
-
-    # Define your uploads folder path
-    upload_folder = os.path.join(current_app.root_path, 'uploads', 'cvs')
-    
-    try:
-        return send_from_directory(
-            upload_folder,
-            applicant.cv_filename,
-            as_attachment=True
-        )
-    except FileNotFoundError:
-        abort(404, description="File not found on server.")
+    applicant = Applicant.query.get_or_404(id)
+    if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
+        flash("CV file not found.", "error")
+        return redirect(url_for('hr.show_upload_form'))
+    return send_file(applicant.cv_file_path, as_attachment=True)
+ 
 
 @bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @no_cache
