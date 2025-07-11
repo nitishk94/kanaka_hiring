@@ -47,7 +47,7 @@
                             name="dob"
                             required
                             min="1950-01-01"
-                            max="2030-01-01"
+                            max="{{ 'max_dob' }}"
                             class="input input-bordered"
                             value="{{ form_data.dob if form_data else '' }}"
                         />

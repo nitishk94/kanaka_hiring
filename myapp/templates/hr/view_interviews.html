@@ -7,7 +7,7 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Interviews List</h1>
         <div class="flex items-center gap-4">
-            <form method="GET" action="{{ url_for('hr.filter_interviews') }}" class="flex items-center gap-2">
+            <form method="GET" action="{{ url_for('hr.filter_interviews_by_hr') }}" class="flex items-center gap-2">
                 <div class="form-control w-full">
                     <label class="label" for="hr_id">
                         <span class="label-text">Filter by HR</span>
@@ -21,6 +21,23 @@
                         {% endfor %}
                     </select>
                 </div>
+            </form>
+
+            <form method="GET" action="{{ url_for('hr.filter_interviews_by_interviewer') }}" class="flex items-center gap-2">
+                <div class="form-control w-full">
+                    <label class="label" for="interviewer_id">
+                        <span class="label-text">Filter by Interviewers</span>
+                    </label>
+                    <select name="interviewer_id" id="interviewer_id" class="select select-bordered w-full" onchange="this.form.submit()">
+                        <option value="">All Interviewers</option>
+                        {% for interviewer in interviewers %}
+                            <option value="{{ interviewer.id }}" {% if request.args.get('interviewer_id')|string == interviewer.id|string %}selected{% endif %}>
+                                {{ interviewer.name if interviewer.name else interviewer.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
             </form>
             <div class="stats shadow">
                 <div class="stat">

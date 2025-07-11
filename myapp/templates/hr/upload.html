@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Upload CV{% endblock %}
+{% block title %}Upload Applicant Details{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -43,6 +43,7 @@
                             name="dob"
                             required
                             min="1950-01-01"
+                            max="{{ max_dob }}"
                             class="input input-bordered"
                             value="{{ form_data.dob if form_data else '' }}"
                         />

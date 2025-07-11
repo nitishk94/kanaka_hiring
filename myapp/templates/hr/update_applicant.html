@@ -1,4 +1,4 @@
-git {% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Edit Applicant Details{% endblock %}
 
@@ -25,7 +25,7 @@ git {% extends "base.html" %}
                         <label class="label" for="dob">
                             <span class="label-text">Date of Birth <span class="text-error">*</span></span>
                         </label>
-                        <input id="dob" type="date" name="dob" required class="input input-bordered" min="1950-01-01"
+                        <input id="dob" type="date" name="dob" required class="input input-bordered" min="1950-01-01" max="{{ max_dob }}"
                             value="{{ applicant.dob if applicant else '' }}" />
                     </div>
                     <!-- Email -->
