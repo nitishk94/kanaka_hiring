@@ -101,9 +101,26 @@ def is_valid_mobile(phone_number):
     return True
 
 def upload_applicant_form():
-    today = date.today()
-    max_dob = today.replace(year=today.year - 18).isoformat()
-    return render_template("hr/upload.html", max_dob=max_dob)
+
+    referrer_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    
+    # Format for Vue multiselect
+    referrer_names = [
+        {
+            "id": user.id,
+            "name": user.name or user.username,
+            "role": user.role
+        }
+        for user in referrer_users
+    ]
+
+    max_dob = date.today().replace(year=date.today().year - 18).isoformat()
+
+    return render_template(
+        "hr/upload.html",
+        referrer_names=referrer_names,
+        max_dob=max_dob)
+
 
     
 @bp.route('/upload_applicants', methods=['POST'])
@@ -252,7 +269,7 @@ def show_update_form(id):
     applicant = Applicant.query.get_or_404(id)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role=['referrer']).all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
