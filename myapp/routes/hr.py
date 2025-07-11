@@ -725,6 +725,7 @@ def filter_referrals():
     referrals = query.order_by(Referral.id.desc()).all()
 
     return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
+
 @bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -738,25 +739,39 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         form_data = session.pop('form_data', None)
         job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position)\
                                             .filter(JobRequirement.is_open == True).all()
+        referral = Referral.query.get_or_404(referral_id)
         if not form_data:
             form_data = {}
         form_data['name'] = name
-        return render_template(
-            'hr/upload_referral_applicant.html',
+        form_data['is_fresher'] = referral.is_fresher
+
+        return render_template('hr/upload_referral_applicant.html',
             job_positions=job_positions,
             form_data=form_data,
             referral_id=referral_id,
             referrer_id=referrer_id,
-            name=name
-        )
+            name=name,
+            referral= referral
+            )
 
 
     # ---- POST logic begins ----
     file = request.files.get('cv')
-    if not validate_file(file):
-        flash('File is corrupted.', 'warning')
+    referral = Referral.query.get_or_404(referral_id)
+
+    if file and file.filename:
+        if not validate_file(file):
+            flash('File is corrupted.', 'warning')
+            session['form_data'] = request.form.to_dict()
+            return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+        use_referral_cv = False
+    elif referral.cv_file_path and os.path.exists(referral.cv_file_path):
+        use_referral_cv = True
+    else:
+        flash("Please upload a valid CV or ensure a referral CV is available.", "warning")
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+
 
     email = request.form.get('email').lower()
     if not can_upload_applicant_email(email):
@@ -827,12 +842,20 @@ def upload_referral_applicant(referral_id,referrer_id, name):
     )
 
     # Save file
-    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(upload_dir, filename)
-    file.save(file_path)
-    new_applicant.cv_file_path = file_path
+    if file and validate_file(file):
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
+        new_applicant.cv_file_path = file_path
+    else:
+        referral = Referral.query.get_or_404(referral_id)
+        if referral.cv_file_path:
+            new_applicant.cv_file_path = referral.cv_file_path
+        else:
+            flash("No CV was uploaded. Please upload a CV or check with the referrer.", "error")
+            return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
 
     try:
         db.session.add(new_applicant)
@@ -861,6 +884,21 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         current_app.logger.error(f"IntegrityError: {e}")
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.view_referrals'))
+
+
+@bp.route('/referral/<int:id>/download_cv')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def download_referral_cv(id):
+    referral = Referral.query.get_or_404(id)
+
+    if not referral.cv_file_path or not os.path.exists(referral.cv_file_path):
+        flash("Referral CV not found.", "error")
+        return redirect(url_for('hr.view_referrals'))
+
+    return send_file(referral.cv_file_path, as_attachment=True)
+
 
 @bp.route('/onboarding')
 @no_cache

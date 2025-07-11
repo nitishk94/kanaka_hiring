@@ -201,13 +201,18 @@
                             <option value="">-- Choose a Position --</option>
                             {% for id, position in job_positions %}
                                     <option value="{{ id }}"
-                                        {% if form_data and form_data.position == id|string %}selected{% endif %}>
+                                        {% if form_data and form_data.position == id|string %}
+                                            selected
+                                        {% elif referral and referral.job_id == id %}
+                                            selected
+                                        {% endif %}>
                                         {{ position }}
                                     </option>
                             {% endfor %}
                         </select>
                     </div>
                 
+
                 <!-- All form fields in one continuous grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
@@ -467,8 +472,16 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">CV Upload & Comments</h2>
                 <div class="form-control">
+                     <div class="flex gap-4">
+                        <label class="label">Uploaded CV: </label>
+                         <a href="{{ url_for('hr.download_referral_cv', id=referral.id) }}"
+                                    class="btn btn-outline bg-blue-500 text-white  mt-1">
+                                    Download CV
+                        </a>
+                    </div>
+
                     <label class="label" for="cvFile">
-                        <span class="label-text">CV Upload <span class="text-error">*</span></span>
+                        <span class="label-text">Upload New CV</span>
                     </label>
                     <div class="space-y-2">
                         <input
@@ -477,7 +490,6 @@
                             id="cvFile"
                             class="file-input file-input-bordered w-full"
                             accept=".pdf,.docx"
-                            required
                         />
                         <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
                         <p id="fileError" class="text-error text-sm"></p>
@@ -501,6 +513,8 @@
                 </div>
             </div>
         </div>
+
+        
     </form>
 </div>
 {% endblock %}
