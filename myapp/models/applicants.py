@@ -28,7 +28,6 @@ class Applicant(db.Model):
     github_profile = db.Column(db.String(255))
     is_kanaka_employee = db.Column(db.Boolean, default = False)
     current_company = db.Column(db.String(100))
-    designation = db.Column(db.String(50))
     current_job_position = db.Column(db.String(100))
     current_ctc = db.Column(db.Integer, nullable=True)
     expected_ctc = db.Column(db.Integer, nullable=True)

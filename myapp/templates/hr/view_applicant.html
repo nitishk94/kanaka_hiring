@@ -155,10 +155,7 @@
                             <p class="text-sm text-gray-500">Current Company</p>
                             <p class="font-semibold">{{ applicant.current_company }}</p>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Designation</p>
-                            <p class="font-semibold">{{ applicant.designation }}</p>
-                        </div>
+        
                         <div>
                             <p class="text-sm text-gray-500">Current Job Position</p>
                             <p class="font-semibold">{{ applicant.current_job_position }}</p>
@@ -288,7 +285,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full" 
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    required 
+                                                />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">

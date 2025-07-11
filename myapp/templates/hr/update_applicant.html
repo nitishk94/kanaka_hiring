@@ -81,9 +81,9 @@
                     <!-- Work Location -->
                     <div class="form-control">
                         <label class="label" for="work_location">
-                            <span class="label-text">Work Location <span class="text-error">*</span></span>
+                            <span class="label-text">Work Location</span>
                         </label>
-                        <input id="work_location" type="text" name="work_location" required placeholder="Enter work location" class="input input-bordered" value="{{ applicant.work_location if applicant.work_location else '' }}" />
+                        <input id="work_location" type="text" name="work_location"  placeholder="Enter work location" class="input input-bordered w-full bg-gray-100 cursor-not-allowed" value="Pune" readonly />
                     </div>
                 </div>
             </div>
@@ -314,21 +314,6 @@
                         />
                     </div>
 
-                    <div id="designation-field" class="form-control w-full" style="display: none;">
-                        <label class="label" for="designation">
-                            <span class="label-text">Designation <span class="text-error">*</span></span>
-                        </label>
-                        <input
-                            id="designation"
-                            type="text"
-                            name="designation"
-                            required
-                            placeholder="Enter designation"
-                            class="input input-bordered w-full"
-                            value="{{ applicant.designation if applicant.designation else '' }}"
-                        />
-                    </div>
-
                     <div id="job-position-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="current_job_position">
                             <span class="label-text">Current Job Position <span class="text-error">*</span></span>
@@ -521,7 +506,6 @@
                 'experience-field',
                 'kanaka-employee-field',
                 'current-company-field',
-                'designation-field',
                 'job-position-field',
                 'current-ctc-field',
                 'expected-ctc-field',

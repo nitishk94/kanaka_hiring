@@ -9,7 +9,8 @@
     <form method="POST" enctype="multipart/form-data" class="space-y-6">
         <!-- Full Name -->
         <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Full Name:</label>
+            <label class="label font-semibold text-lg text-black">
+                <span>Full Name <span class="text-error">*</span></span></label>
             <input type="text" name="name" class="input input-bordered w-full" required 
                    value="{{ form_data.name if form_data and form_data.name }}">
         </div>
@@ -25,7 +26,11 @@
 
         <!-- Job Position Dropdown (Only for Non-Freshers) -->
         <div class="form-control" id="position-section">
-            <label class="label font-semibold text-lg text-black">Select Job Position:</label>
+            <label class="label font-semibold text-lg text-black">
+                <span >
+                    Select Job Position <span class="text-error">*</span>
+                </span>
+            </label>
             <select name="position" id="position" class="select select-bordered w-full" required>
                 <option value="">-- Choose a Position --</option>
                 {% for id, position in job_positions %}
@@ -63,7 +68,9 @@
 
         <!-- CV Upload -->
         <div class="form-control">
-            <label class="label font-semibold text-lg text-black">Upload CV:</label>
+            <label class="label font-semibold text-lg text-black">
+                <span> Upload CV <span class="text-error">*</span> </span>
+            </label>
             <input type="file" name="cv" class="file-input file-input-bordered w-full" required>
         </div>
 
