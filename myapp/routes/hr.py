@@ -1132,7 +1132,7 @@ def submit_job_form():
     job_clients = request.form.get('job_clients')
     job_budget = request.form.get('job_budget')
     job_experience = request.form.get('job_experience')  
-    for_vendor = bool(request.form.get('open_for_vendor'))
+    for_vendor = bool(request.form.get('for_vendor'))
 
     # Validate required fields
     if not job_position or not job_description:
