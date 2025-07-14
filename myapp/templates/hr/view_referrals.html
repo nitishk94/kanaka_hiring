@@ -22,16 +22,24 @@
                         <!-- Referral Name Dropdown -->
                         <div class="flex flex-col">
                             <label for="referrals" class="font-semibold mb-1">Referral Name:</label>
-                            <select name="referral_id" id="referral_id" class="select select-bordered">
+                                <select name="referral_id" id="referral_id" class="select select-bordered">
+                                    <option value="">-- All --</option>
+                                    <optgroup label="Referrers">
+                                        {% for user in users if user.role == 'referrer' %}
+                                            <option value="{{ user.id }}" {% if request.args.get('referral_id')|int == user.id %}selected{% endif %}>
+                                                {{ user.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    <optgroup label="HRs and Admins">
+                                        {% for user in users if user.role in ['hr', 'admin'] %}
+                                            <option value="{{ user.id }}" {% if request.args.get('referral_id')|int == user.id %}selected{% endif %}>
+                                                {{ user.name }} ({{ user.role|capitalize }})
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                </select>
 
-                                <option value="">-- All --</option>
-                                {% for user in users %}
-                                    <option value="{{ user.id }}" {% if request.args.get('referral_id')|int == user.id %}selected{% endif %}>
-
-                                        {{ user.name }}
-                                    </option>
-                                {% endfor %}
-                            </select>
                         </div>
 
                         <!-- Job Position Dropdown -->

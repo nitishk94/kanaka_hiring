@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify, send_file
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
@@ -86,7 +87,11 @@ def show_upload_form():
     form_data = session.pop('form_data', None)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+        {
+            'id': user.id,
+            'name': f"{user.name} ({user.role.capitalize()})"
+        }
+        for user in User.query.filter(func.lower(User.role).in_(['referrer', 'hr', 'admin'])).all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
     return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
@@ -101,7 +106,6 @@ def is_valid_mobile(phone_number):
     return True
 
 def upload_applicant_form():
-
     referrer_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
     
     # Format for Vue multiselect
@@ -120,6 +124,8 @@ def upload_applicant_form():
         "hr/upload.html",
         referrer_names=referrer_names,
         max_dob=max_dob)
+
+
 
 
     
@@ -268,7 +274,7 @@ def show_update_form(id):
     applicant = Applicant.query.get_or_404(id)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role=['referrer']).all()
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
@@ -537,28 +543,26 @@ def download_cv(id):
 @login_required
 @role_required(*HR_ROLES)
 def schedule_interview(id):
+
     if "token" not in session:
         flash("You must be logged in through Microsoft to schedule interviews.", "error")
         return redirect(url_for('auth.login'))
     
     access_token = session["token"]["access_token"]
-    date = request.form.get('interview_date')
-    time = request.form.get('interview_time')
+    interview_date = request.form.get('interview_date')
+    interview_time = request.form.get('interview_time')
     interviewer_id = request.form.get('interviewer_id')
 
-    if isinstance(date, str):
+    if isinstance(interview_date, str):
         try:
-            date = datetime.strptime(date, '%Y-%m-%d').date()
+            date = datetime.strptime(interview_date, '%Y-%m-%d').date()
         except ValueError:
             date = None
 
-    if isinstance(time, str):
+    if isinstance(interview_time, str):
         try:
-            time = datetime.strptime(time, '%H:%M').time()
+            time = datetime.strptime(interview_time, '%H:%M').time()
         except ValueError:
-            try:
-                time = datetime.strptime(time, '%H:%M:%S').time()
-            except ValueError:
                 time = None
     
     if not date or not time:
@@ -755,7 +759,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users = User.query.filter_by(role='referrer').all()
+    users =User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -766,8 +770,7 @@ def view_referrals():
 def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
-
-    referral_users = User.query.filter_by(role='referrer').all()
+    referral_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
