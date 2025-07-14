@@ -427,11 +427,17 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">CV Upload & Comments</h2>
                 <div class="form-control">
+                    <div >
+                        <label>Previously Uploded CV:  </label>
+                       <a href="{{ url_for('hr.download_applicant_cv', id=applicant.id) }}" class="btn btn-primary">
+                            Download CV
+                        </a>
+                    </div>
                     <label class="label" for="cvFile">
-                        <span class="label-text">CV Upload <span class="text-error">*</span></span>
+                        <span class="label-text">CV Upload </span>
                     </label>
                     <div class="space-y-2">
-                        <input type="file" name="cv" id="cvFile" class="file-input file-input-bordered w-full" accept=".pdf,.docx" required />
+                        <input type="file" name="cv" id="cvFile" class="file-input file-input-bordered w-full" accept=".pdf,.docx" />
                         <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
                         <p id="fileError" class="text-error text-sm"></p>
                     </div>

@@ -242,12 +242,24 @@ def update_applicant(id):
         return {'error': 'Session expired. Please log in again.'}, 401
     
     applicant = Applicant.query.get_or_404(id)
-    
     file = request.files.get('cv')
-    if not validate_file(file):
-        flash('File is corrupted.', 'warning')
-        session['form_data'] = request.form.to_dict()
-        return redirect(url_for('show_update_form'), id=id)
+    if file and file.filename:
+        if not validate_file(file):
+            flash('File is corrupted.', 'warning')
+            session['form_data'] = request.form.to_dict()
+            return redirect(url_for('show_update_form'), id=id)
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
+        applicant.cv_file_path = file_path
+    else:
+        if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
+            flash('No existing CV found. Please upload a new one.', 'warning')
+            session['form_data'] = request.form.to_dict()
+            return redirect(url_for('show_update_form', id=id))
+
 
     email = request.form.get('email').lower()
     if not can_update_applicant(id,email):
@@ -306,12 +318,6 @@ def update_applicant(id):
     applicant.is_referred = get_bool('is_referred')
     applicant.referred_by = int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None
 
-    # Handle file upload
-    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(upload_dir, filename)
-    file.save(file_path)
     
     try:
         db.session.commit()
@@ -469,7 +475,7 @@ def search_applicants():
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def download_cv(id):
+def download_applicant_cv(id):
     applicant = Applicant.query.get_or_404(id)
 
     if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
@@ -477,6 +483,20 @@ def download_cv(id):
         return redirect(url_for('hr.show_upload_form'))
     
     return send_file(applicant.cv_file_path, as_attachment=True)
+
+@bp.route('/referral/<int:id>/download_cv')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def download_referral_cv(id):
+    referral = Referral.query.get_or_404(id)
+
+    if not referral.cv_file_path or not os.path.exists(referral.cv_file_path):
+        flash("Referral CV not found.", "error")
+        return redirect(url_for('hr.view_referrals'))
+
+    return send_file(referral.cv_file_path, as_attachment=True)
+
 
 @bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @no_cache
@@ -886,18 +906,6 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         return redirect(url_for('hr.view_referrals'))
 
 
-@bp.route('/referral/<int:id>/download_cv')
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def download_referral_cv(id):
-    referral = Referral.query.get_or_404(id)
-
-    if not referral.cv_file_path or not os.path.exists(referral.cv_file_path):
-        flash("Referral CV not found.", "error")
-        return redirect(url_for('hr.view_referrals'))
-
-    return send_file(referral.cv_file_path, as_attachment=True)
 
 
 @bp.route('/onboarding')
