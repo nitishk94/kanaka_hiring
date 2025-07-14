@@ -269,6 +269,7 @@ def show_update_form(id):
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
     
+    
     form_data = session.pop('form_data', None)
 
     applicant = Applicant.query.get_or_404(id)
@@ -401,7 +402,7 @@ def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
     current_date = date.today().isoformat() 
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date)
 
 @bp.route('/filter_applicants')
 @no_cache
@@ -538,11 +539,14 @@ def download_cv(id):
     return send_file(applicant.cv_file_path, as_attachment=True)
  
 
-@bp.route('/schedule_interview/<int:id>', methods=['POST'])
+@bp.route('/schedule_interview/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def schedule_interview(id):
+    if request.method == 'GET':
+        current_date = date.today().isoformat()
+        return render_template('hr/schedule_interview.html', current_date=current_date)
 
     if "token" not in session:
         flash("You must be logged in through Microsoft to schedule interviews.", "error")
@@ -563,7 +567,7 @@ def schedule_interview(id):
         try:
             time = datetime.strptime(interview_time, '%H:%M').time()
         except ValueError:
-                time = None
+            time = None
     
     if not date or not time:
         flash('Invalid date or time format.', 'error')
