@@ -13,7 +13,7 @@
                     <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
                     <option value="hr" {% if selected_role == 'hr' %}selected{% endif %}>HR</option>
                     <option value="interviewer" {% if selected_role == 'interviewer' %}selected{% endif %}>Interviewer</option>
-                    <option value="referrer" {% if selected_role == 'referrer' %}selected{% endif %}>Referrer</option>
+                    <option value="internal_referrer" {% if selected_role == 'internal_referrer' %}selected{% endif %}>Referrer</option>
                 </select>
             </form>
             <div class="stats shadow">
@@ -52,7 +52,7 @@
                                             {% endif %}
                                             <option value="hr">HR</option>
                                             <option value="interviewer">Interviewer</option>
-                                            <option value="referrer">Referrer</option>
+                                            <option value="internal_referrer">Referrer</option>
                                         </select>
                                         <button type="submit" class="btn btn-sm btn-primary">Assign Role</button>
                                     </form>

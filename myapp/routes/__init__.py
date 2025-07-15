@@ -2,7 +2,7 @@ from .auth import bp as auth_bp
 from .hr import bp as hr_bp
 from .admin import bp as admin_bp
 from .interviewer import bp as interviewer_bp
-from .referrer import bp as referrer_bp
+from .internal_referrer import bp as referrer_bp
 from .main import bp as main_bp
 
 def register_routes(app):

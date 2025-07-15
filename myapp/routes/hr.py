@@ -85,7 +85,7 @@ def show_upload_form():
     form_data = session.pop('form_data', None)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
@@ -226,7 +226,7 @@ def show_update_form(id):
     applicant = Applicant.query.get_or_404(id)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
@@ -347,7 +347,7 @@ def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
     current_date = date.today().isoformat() 
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date=current_date)
 
 @bp.route('/filter_applicants')
 @no_cache
@@ -721,7 +721,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users = User.query.filter_by(role='referrer').all()
+    users = User.query.filter_by(role='internal_referrer').all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -733,7 +733,7 @@ def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
 
-    referral_users = User.query.filter_by(role='referrer').all()
+    referral_users = User.query.filter_by(role='internal_referrer').all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 

@@ -12,6 +12,6 @@ class Referral(db.Model):
     cv_file_path = db.Column(db.Text)
     job_id = db.Column(db.Integer, db.ForeignKey('jobrequirement.id'), nullable = True)
     is_fresher = db.Column(db.Boolean, default = False)
-    
+    is_external_referrer = db.Column(db.Boolean, default = False)
     job = db.relationship("JobRequirement", backref="referrals")
     applicant = db.relationship("Applicant", back_populates="referred_candidate")

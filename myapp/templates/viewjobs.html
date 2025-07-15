@@ -89,7 +89,7 @@
     {% if jobs %}
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {% for job in jobs %}
-            {% if current_user.role=='referrer'%}
+            {% if current_user.role=='external_referrer'%}
                 {% if job.for_vendor%}
                     <div class="card bg-base-100 shadow-lg rounded-lg flex flex-col justify-between p-6 text-center">
                         <div class="flex flex-col items-center">
