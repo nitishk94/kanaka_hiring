@@ -90,6 +90,8 @@
               <li><a href="{{ url_for('interviewer.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
           {% elif current_user.role == 'internal_referrer' and request.endpoint != 'internal_referrer.dashboard' %}
               <li><a href="{{ url_for('internal_referrer.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
+          {% elif current_user.role == 'external_referrer' and request.endpoint != 'external_referrer.dashboard' %}
+              <li><a href="{{ url_for('external_referrer.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
           {% endif %}
           {% if request.endpoint != 'main.profile' %}
               <li><a href="{{ url_for('main.profile') }}"  class="block px-4 py-2 rounded-md text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-0 focus:bg-transparent active:outline-none active:bg-transparent"
@@ -117,6 +119,8 @@
             <a href="{{ url_for('interviewer.dashboard') }}" class="btn btn-primary">Dashboard</a>
         {% elif current_user.role == 'internal_referrer' and request.endpoint != 'internal_referrer.dashboard' %}
             <a href="{{ url_for('internal_referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+        {% elif current_user.role == 'external_referrer' and request.endpoint != 'external_referrer.dashboard' %}
+            <a href="{{ url_for('external_referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
         {% endif %}
         {% if request.endpoint != 'main.profile' %}
             <a href="{{ url_for('main.profile') }}" class="btn btn-ghost">Profile</a>

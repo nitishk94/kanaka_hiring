@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Referrals List{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Referrals List</h1>
+        <div class="flex items-center gap-4">
+            <a href="{{ url_for('external_referrer.refer_candidates') }}" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Refer Candidates
+            </a>
+            <div class="stats shadow">
+                <div class="stat">
+                    <div class="stat-title">Total Referrals</div>
+                    <div class="stat-value">{{ referrals|length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overflow-x-auto bg-base-100 rounded-lg shadow">
+        <table class="table table-zebra">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Job Position</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for referral in referrals %}
+                <tr>
+                    <td>{{ referral.name }}</td>
+                    <td>{{ referral.job.position if referral.job_id else 'N/A' }}</td>
+                    <td>
+                        {% if referral.applicant_id %}
+                            <div class="flex gap-2">
+                                <a href="{{ url_for('main.track_status', id=referral.applicant_id) }}" 
+                                class="btn btn-sm btn-info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    Track Status
+                                </a>
+                            </div>
+                        {% else %}
+                            <div>
+                                Candidate has not been processed yet.
+                            </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not referrals %}
+    <div class="text-center py-8">
+        <div class="text-6xl mb-4">📝</div>
+        <h3 class="text-xl font-semibold mb-2">No Referrals Yet</h3>
+        <p class="text-gray-600 mb-4">Start by referring some candidates to see them here.</p>
+        <a href="{{ url_for('external_referrer.refer_candidates') }}" class="btn btn-primary">
+            Refer Candidates
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 
