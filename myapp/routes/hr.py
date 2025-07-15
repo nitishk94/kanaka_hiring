@@ -785,20 +785,7 @@ def filter_referrals():
     referrals = query.order_by(Referral.id.desc()).all()
     return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
 
-@bp.route('/upload_referral_applicant', methods=['POST'])
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def submit_referral_form():
-    dob_str = request.form.get('dob')
-    if dob_str:
-        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
-        today = date.today()
-        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-        if age < 18:
-            flash("Invalid DOB, the candidate must be at least 18 years old.", "error")
-            return redirect(url_for('hr/upload_referral_applicant.html'))
-        
+
 @bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -829,6 +816,17 @@ def upload_referral_applicant(referral_id,referrer_id, name):
 
 
     # ---- POST logic begins ----
+
+    dob_str = request.form.get('dob')
+    if dob_str:
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+        today = date.today()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age < 18:
+            flash("Invalid DOB, the candidate must be at least 18 years old.", "error")
+            return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+        
+
     file = request.files.get('cv')
     referral = Referral.query.get_or_404(referral_id)
 

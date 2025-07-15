@@ -101,7 +101,7 @@
                     {% if applicant.is_referred %}
                         <div>
                             <p class="text-sm text-gray-500">Referred By</p>
-                            <p class="font-semibold">{{ applicant.referred_by }}</p>
+                            <p class="font-semibold">{{ applicant.referrer.name }}</p>
                         </div>
                     {% endif %}
 

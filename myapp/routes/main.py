@@ -59,7 +59,7 @@ def check_session():
 def view_joblisting():
     jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.is_open.desc()).all()
     if current_user.role=='referral':
-        jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).filter_by(for_vendor=True).order_by(JobRequirement.is_open.desc()).all()
+        jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.is_open.desc()).all()
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
     return render_template('viewjobs.html', jobs=jobs, users=hr_users, is_open=jobs)
 
