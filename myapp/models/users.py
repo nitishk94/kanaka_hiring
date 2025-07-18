@@ -11,8 +11,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=True)
     auth_type = db.Column(db.String(20))
-    linkedin_profile = db.Column(db.Text)
-    designation = db.Column(db.String(100))
     role = db.Column(db.String(20))
     is_superuser = db.Column(db.Boolean, default=False)
     password_changed = db.Column(db.Boolean, default=False)
