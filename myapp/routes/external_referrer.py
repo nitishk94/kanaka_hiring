@@ -53,6 +53,8 @@ def referrals():
     jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     return render_template('external_referrer/candidates.html', referrals=referrals, jobs=jobs)
 
+
+
 @bp.route('/upload_applicants', methods=['POST'])
 @login_required
 @role_required('external_referrer')
@@ -149,7 +151,21 @@ def handle_upload_applicant():
     # Insert into DB
     try:
         db.session.add(new_applicant)
-        db.session.commit()
+        db.session.flush()
+        
+
+        new_referral = Referral(
+            name=new_applicant.name,
+            applicant_id=new_applicant.id,
+            is_fresher=is_fresher,
+            job_id=new_applicant.job_id, 
+            referrer_id=current_user.id,
+            referred_by=User.query.get(current_user.id).name,
+            referral_date=date.today(),
+            cv_file_path = file_path,
+            is_external_referrer = True
+        )
+        db.session.add(new_referral)
 
         history = RecruitmentHistory(
             applicant_id=new_applicant.id,
@@ -159,8 +175,12 @@ def handle_upload_applicant():
         db.session.commit()
 
         flash('New applicant successfully created!', 'success')
+        flash('New referral successfully created!', 'success')
         current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
+        current_app.logger.info(f"New referral (Name = {new_referral.name.title()}) added by {current_user.username}")
         return redirect(url_for('external_referrer.show_upload_form'))
+    
+    
 
     except IntegrityError as e:
         db.session.rollback()
@@ -173,3 +193,5 @@ def handle_upload_applicant():
         current_app.logger.error(f"IntegrityError: {e}")
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
+    
+    

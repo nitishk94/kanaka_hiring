@@ -15,3 +15,4 @@ class Referral(db.Model):
     is_external_referrer = db.Column(db.Boolean, default = False)
     job = db.relationship("JobRequirement", backref="referrals")
     applicant = db.relationship("Applicant", back_populates="referred_candidate")
+    applicant_id = db.Column(db.Integer, db.ForeignKey('applicants.id'), nullable=True)

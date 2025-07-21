@@ -27,7 +27,7 @@ def profile():
 @bp.route('/track/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
-@role_required('hr', 'admin', 'internal_referrer')
+@role_required('hr', 'admin', 'internal_referrer', 'external_referrer')
 def track_status(id):
     update_status(id)
     timeline = generate_timeline(id)
