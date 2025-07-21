@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Upload Applicant Details{% endblock %}
+{% block title %}Upload CV{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -10,11 +10,7 @@
         <p class="text-sm text-error mt-2">Fields marked with <span class="text-error">*</span> are required</p>
     </div>
 
-    <form method="POST" 
-      action="{{ url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name) }}" 
-      enctype="multipart/form-data" 
-      class="space-y-6">
-
+    <form method="POST" action="{{ url_for('external_referrer.handle_upload_applicant') }}" enctype="multipart/form-data" class="space-y-6">
         <!-- Personal Information Card -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
@@ -33,7 +29,7 @@
                             pattern="[A-Za-z\s]+"
                             title="Please enter a valid name (letters and spaces only)"
                             class="input input-bordered"
-                            value="{{ form_data.name if form_data and form_data.name else '' }}"
+                            value="{{ form_data.name if form_data else '' }}"
                         />
                     </div>
 
@@ -46,8 +42,6 @@
                             type="date"
                             name="dob"
                             required
-                            min="1950-01-01"
-                            max="{{ 'max_dob' }}"
                             class="input input-bordered"
                             value="{{ form_data.dob if form_data else '' }}"
                             max = "2050-12-31"
@@ -81,7 +75,7 @@
                             name="phone_number"
                             required
                             placeholder="Enter phone number"
-                            pattern="^(?!([6-9])\1{9})[6-9][0-9]{9}$"
+                            pattern="[0-9]{10}"
                             title="Please enter a valid 10-digit phone number"
                             class="input input-bordered"
                             value="{{ form_data.phone_number if form_data else '' }}"
@@ -142,7 +136,7 @@
 
                     <div class="form-control">
                         <label class="label" for="work_location">
-                            <span class="label-text">Work Location </span>
+                            <span class="label-text">Work Location</span>
                         </label>
                         <input
                             id="work_location"
@@ -151,7 +145,7 @@
                             required
                             placeholder="Enter work location"
                             class="input input-bordered w-full bg-gray-100 cursor-not-allowed"
-                            value="Pune"
+                            value = "Pune"
                             readonly
                         />
                     </div>
@@ -175,6 +169,13 @@
                         </label>
                     </div>
 
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" id="referral-toggle" name="is_referred" class="checkbox  checkbox-primary" checked disabled  />
+                            <span class="label-text">Referral</span>
+                        </label>
+                    </div>
+
                     <div class="form-control" id="current-internship-toggle-container" style="display: none;">
                         <label class="label cursor-pointer justify-start gap-4">
                             <input type="checkbox" id="current-internship-toggle" name="current_internship" class="checkbox checkbox-primary" {% if form_data and form_data.current_internship %}checked{% endif %} />
@@ -195,26 +196,64 @@
                             <span class="label-text">Has Current Offers</span>
                         </label>
                     </div>
+
+                    
+
+                    <!-- <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
+                        <label class="label" for="referred_by">
+                            <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
+                        </label>
+                        <div id="vue-referrer-select">
+                            <multiselect
+                                v-model="selectedReferrer"
+                                :options="referrerNames"
+                                :searchable="true"
+                                :close-on-select="true"
+                                :clear-on-select="false"
+                                :preserve-search="true"
+                                :show-labels="false"
+                                placeholder="Enter referrer's name"
+                                :allow-empty="true"
+                                :custom-label="customLabel"
+                                label="name"
+                                track-by="id"
+                                @input="onInput"
+                                class="input-bordered w-full"
+                                required
+                            ></multiselect>
+                            <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
+                        </div>
+                    </div> -->
+
+                    <div id="referrer-section" class="form-control min-w-[300px]" style="position: relative; z-index: 30;">
+                        <label class="label" for="referred_by">
+                            <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
+                        </label>
+                        <select id="referred_by" name="referred_by" class="select select-bordered w-full" required>
+                            {% for referrer in referrer_names %}
+                                <option value="{{ referrer.id }}"
+                                    {% if referrer.id == selected_referrer_id %}selected{% endif %}>
+                                    {{ referrer.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                     
                 </div>
                     <div class="form-control" id="position-section">
                         <label class="label font-semibold text-lg text-black">Select Job Position:</label>
-                        <select name="position" id="position" class="select select-bordered w-full" required>
+                        <select name="position" id="position" class="select select-bordered w-full">
                             <option value="">-- Choose a Position --</option>
                             {% for id, position in job_positions %}
                                     <option value="{{ id }}"
-                                        {% if form_data and form_data.position == id|string %}
-                                            selected
-                                        {% elif referral and referral.job_id == id %}
-                                            selected
-                                        {% endif %}>
+                                        {% if form_data and form_data.position == id|string %}selected{% endif %}>
                                         {{ position }}
                                     </option>
                             {% endfor %}
                         </select>
                     </div>
                 
-
                 <!-- All form fields in one continuous grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
@@ -229,7 +268,7 @@
                             name="graduation_year"
                             placeholder="Enter graduation year"
                             class="input input-bordered w-full"
-                            min="1980"
+                            min="1950"
                             max="2030"
                             required
                             value="{{ form_data.graduation_year if form_data else '' }}"
@@ -251,16 +290,30 @@
                         />
                     </div>
 
+
+                    <!-- <div class="form-control w-full">
+                        <label class="label" for="referenced_from">
+                            <span class="label-text">Referenced From <span class="text-error">*</span></span>
+                        </label>
+                        <select id="referenced_from" name="referenced_from_display" class="select select-bordered w-full" disabled>
+                            <option value="Third-party" selected>Third-party</option>
+                        </select>
+                        <input type="hidden" name="referenced_from" value="Third-party" />
+                    </div> -->
+
                     <div class="form-control w-full">
                         <label class="label" for="referenced_from">
                             <span class="label-text">Referenced From <span class="text-error">*</span></span>
                         </label>
-                        <select id="referenced_from" name="referenced_from" class="select select-bordered w-full" required>
-                            <option value="">Select source</option>
-                            <option value="Naukri" {% if form_data and form_data.referenced_from == 'Naukri' %}selected{% endif %}>Naukri</option>
-                            <option value="LinkedIn" {% if form_data and form_data.referenced_from == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
-                            <option value="Third-party" {% if form_data and form_data.referenced_from == 'Third-party' %}selected{% endif %}>Third-party</option>
-                        </select>
+                        <input
+                            id="referenced_from_display"
+                            type="text"
+                            class="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+                            value="Third-party"
+                            readonly
+                        />
+                        <!-- Hidden input for submitting the value -->
+                        <input type="hidden" name="referenced_from" value="Third-party" />
                     </div>
 
                     <div class="form-control w-full">
@@ -302,7 +355,7 @@
                             name="internship_duration"
                             placeholder="Enter duration in months"
                             class="input input-bordered w-full"
-                            min="1"
+                            min="0"
                             value="{{ form_data.internship_duration if form_data else '' }}"
                         />
                     </div>
@@ -325,16 +378,17 @@
                     <!-- Working Professional Section -->
                     <div id="experience-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="experience">
-                            <span class="label-text">Experience (in years) <span class="text-error">*</span></span>
+                            <span class="label-text">Experience <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="experience"
-                            type="number"
+                            type="text"
                             name="experience"
                             min="1"
                             required
                             placeholder="Enter years of experience"
                             class="input input-bordered w-full"
+                            min="1"
                             value="{{ form_data.experience if form_data else '' }}"
 
                         />
@@ -366,7 +420,6 @@
                         />
                     </div>
 
-
                     <div id="job-position-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="current_job_position">
                             <span class="label-text">Current Job Position <span class="text-error">*</span></span>
@@ -390,8 +443,6 @@
                             id="current_ctc"
                             type="number"
                             name="current_ctc"
-                            min="1"
-                            step="0.25"
                             placeholder="Enter current CTC"
                             class="input input-bordered w-full"
                             value="{{ form_data.current_ctc if form_data else '' }}"
@@ -406,8 +457,6 @@
                         <input
                             id="expected_ctc"
                             type="number"
-                            min="1"
-                            step="0.25"
                             name="expected_ctc"
                             placeholder="Enter expected CTC"
                             class="input input-bordered w-full"
@@ -432,15 +481,13 @@
 
                     <div id="tenure-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="tenure_at_current_company">
-                            <span class="label-text">Tenure at Current Company (in years) <span class="text-error">*</span></span>
+                            <span class="label-text">Tenure at Current Company <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="tenure_at_current_company"
-                            type="number"
-                            min="1"
-                            step="0.1"
+                            type="text"
                             name="tenure_at_current_company"
-                            placeholder="Enter tenure in years"
+                            placeholder="Enter tenure"
                             class="input input-bordered w-full"
                             value="{{ form_data.tenure_at_current_company if form_data else '' }}"
                             required
@@ -479,16 +526,8 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">CV Upload & Comments</h2>
                 <div class="form-control">
-                     <div class="flex gap-4">
-                        <label class="label">CV Uploaded by Referrer : </label>
-                         <a href="{{ url_for('hr.download_referral_cv', id=referral.id) }}"
-                                    class="btn btn-outline bg-blue-500 text-white  mt-1">
-                                    Download CV
-                        </a>
-                    </div>
-
                     <label class="label" for="cvFile">
-                        <span class="label-text">Upload New CV</span>
+                        <span class="label-text">CV Upload <span class="text-error">*</span></span>
                     </label>
                     <div class="space-y-2">
                         <input
@@ -497,6 +536,7 @@
                             id="cvFile"
                             class="file-input file-input-bordered w-full"
                             accept=".pdf,.docx"
+                            required
                         />
                         <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
                         <p id="fileError" class="text-error text-sm"></p>
@@ -520,8 +560,6 @@
                 </div>
             </div>
         </div>
-
-        
     </form>
 </div>
 {% endblock %}
@@ -536,6 +574,7 @@
         const fileInput = document.getElementById('cvFile');
         const errorElement = document.getElementById('fileError');
         const fresherToggle = document.getElementById('fresher-toggle');
+        const referralToggle = document.getElementById('referral-toggle');
         const currentInternshipToggle = document.getElementById('current-internship-toggle');
         const paidInternshipToggle = document.getElementById('paid-internship');
         const currentOffersToggle = document.getElementById('current-offers');
@@ -620,6 +659,21 @@
             }
         });
 
+        // Referral toggle functionality
+        referralToggle.addEventListener('change', function() {
+            const referrerSection = document.getElementById('referrer-section');
+            toggleSection(referrerSection, this.checked, false);
+            
+            const referrerInput = document.getElementById('referred_by');
+            // Set required attribute dynamically
+            if (this.checked) {
+                referrerInput.setAttribute('required', 'required');
+            } else {
+                referrerInput.removeAttribute('required');
+                referrerInput.value = '';
+            }
+        });
+
         // Current Internship toggle functionality
         currentInternshipToggle.addEventListener('change', function() {
             const internshipDurationField = document.getElementById('internship-duration-field');
@@ -672,11 +726,48 @@
         if (fresherToggle) {
             fresherToggle.dispatchEvent(new Event('change'));
         }
+        if (referralToggle) {
+            referralToggle.dispatchEvent(new Event('change'));
+        }
         if (currentInternshipToggle && currentInternshipToggle.checked) {
             currentInternshipToggle.dispatchEvent(new Event('change'));
         }
         if (currentOffersToggle && currentOffersToggle.checked) {
             currentOffersToggle.dispatchEvent(new Event('change'));
+        }
+
+        // Vue Multiselect for Referrer
+        if (document.getElementById('vue-referrer-select')) {
+            new Vue({
+                el: '#vue-referrer-select',
+                components: {
+                    Multiselect: window.VueMultiselect.default
+                },
+                data: function() {
+                    const referrers = JSON.parse('{{ referrer_names|tojson|safe }}');
+                    const initial = "{{ form_data.referred_by if form_data else '' }}";
+                    return {
+                        referrerNames: referrers,
+                        selectedReferrer: referrers.find(r => r.id == initial) || null
+                    };
+                },
+                methods: {
+                    customLabel(option) {
+                        return option && option.name ? option.name : '';
+                    },
+                    onInput(val) {
+                        this.$el.querySelector('input[name="referred_by"]').value = val && val.id ? val.id : '';
+                    }
+                },
+                watch: {
+                    selectedReferrer(val) {
+                        this.onInput(val);
+                    }
+                },
+                mounted() {
+                    this.onInput(this.selectedReferrer);
+                }
+            });
         }
 
         fileInput.addEventListener('change', function(e) {
@@ -689,6 +780,19 @@
                 errorElement.textContent = `File size (${fileSizeMB.toFixed(2)} MB) exceeds the 5MB limit`;
                 fileInput.value = '';
                 return;
+            }
+        });
+
+        // Custom validation for referral name
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (referralToggle.checked) {
+                const referrerInput = document.getElementById('referred_by');
+                if (!referrerInput.value) {
+                    e.preventDefault();
+                    alert('Please select a referral name.');
+                    return false;
+                }
             }
         });
     });

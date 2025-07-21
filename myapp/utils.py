@@ -2,7 +2,7 @@ from flask import flash
 from myapp.extensions import db
 from myapp.models.applicants import Applicant
 from myapp.models.recruitment_history import RecruitmentHistory
-from datetime import date, datetime, timedelta
+from datetime import  datetime, timedelta
 from myapp.models.testresult import TestResult
 import zipfile
 import requests

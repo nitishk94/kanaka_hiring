@@ -10,19 +10,19 @@ from werkzeug.utils import secure_filename
 from datetime import date
 import os
 
-bp = Blueprint('referrer', __name__, url_prefix='/referrer')
+bp = Blueprint('internal_referrer', __name__, url_prefix='/internal_referrer')
 
 @bp.route('/dashboard')
 @no_cache
 @login_required
-@role_required('referrer')
+@role_required('internal_referrer')
 def dashboard():
-    return render_template('referrer/dashboard.html')
+    return render_template('internal_referrer/dashboard.html')
 
 @bp.route('/referral', methods=['GET', 'POST'])
 @no_cache
 @login_required
-@role_required('referrer')
+@role_required('internal_referrer')
 def refer_candidates():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
@@ -37,7 +37,7 @@ def refer_candidates():
         if not validate_file(file):
             flash('File is corrupted.', 'warning')
             current_app.logger.warning(f"File is corrupted: {file.filename}")
-            return render_template('referrer/referral.html', form_data=request.form, job_positions=job_positions)
+            return render_template('internal_referrer/referral.html', form_data=request.form, job_positions=job_positions)
 
         name = request.form.get('name')
         is_fresher = bool(request.form.get('is_fresher'))  # True if checkbox is checked
@@ -46,7 +46,7 @@ def refer_candidates():
         # Validate name
         if not name:
             flash('Name is required.', 'warning')
-            return render_template('referrer/referral.html', form_data=request.form, job_positions=job_positions)
+            return render_template('internal_referrer/referral.html', form_data=request.form, job_positions=job_positions)
 
         upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'referrals')
         os.makedirs(upload_dir, exist_ok=True)
@@ -70,22 +70,22 @@ def refer_candidates():
             db.session.commit()
             flash('New referral successfully created!', 'success')
             current_app.logger.info(f"New referral (Name = {new_referral.name.title()}) added by {current_user.username}")
-            return redirect(url_for('referrer.referrals'))
+            return redirect(url_for('internal_referrer.referrals'))
 
         except Exception as e:
             db.session.rollback()
             flash('Error creating referral. Please try again.', 'error')
             current_app.logger.error(f"Error creating referral: {str(e)}")
-            return render_template('referrer/referral.html', form_data=request.form, job_positions=job_positions)
+            return render_template('internal_referrer/referral.html', form_data=request.form, job_positions=job_positions)
 
-    return render_template('referrer/referral.html', job_positions=job_positions, form_data={})
+    return render_template('internal_referrer/referral.html', job_positions=job_positions, form_data={})
 
 
 @bp.route('/referrals')
 @no_cache
 @login_required
-@role_required('referrer', 'admin')
+@role_required('internal_referrer', 'admin')
 def referrals():
     referrals = Referral.query.filter_by(referrer_id=current_user.id).order_by(Referral.referral_date.desc()).all()
     jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
-    return render_template('referrer/candidates.html', referrals=referrals, jobs=jobs)
+    return render_template('internal_referrer/candidates.html', referrals=referrals, jobs=jobs)

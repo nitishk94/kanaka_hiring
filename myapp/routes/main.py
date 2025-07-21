@@ -23,25 +23,11 @@ def home():
 def profile():
     return render_template('profile.html', user=current_user)
 
-@bp.route('/profile/edit_profile', methods = ['GET', 'POST'])
-@no_cache
-@login_required
-def edit_own_profile():
-    user = current_user
-
-    if request.method == 'POST':
-        user.name = request.form.get('name')
-        user.designation = request.form.get('designation')
-        user.linkedin_profile = request.form.get('linkedin_profile')
-        db.session.commit()
-        flash("Profile updated successfully", "success")
-        return redirect(url_for('main.profile'))
-    return render_template('edit_profile.html', user=user)
 
 @bp.route('/track/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
-@role_required('hr', 'admin', 'referrer')
+@role_required('hr', 'admin', 'internal_referrer', 'external_referrer')
 def track_status(id):
     update_status(id)
     timeline = generate_timeline(id)
@@ -61,6 +47,7 @@ def view_joblisting():
     if current_user.role=='referral':
         jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.is_open.desc()).all()
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    
     return render_template('viewjobs.html', jobs=jobs, users=hr_users, is_open=jobs)
 
 @bp.route('/view_details_joblisting/<int:id>')

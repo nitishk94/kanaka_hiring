@@ -21,7 +21,7 @@
 
             <!-- Sort By Dropdown -->
             <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-outline btn-primary w-48">
+                <div tabindex="0" role="button" class="btn btn-outline btn-primary w-20">
                     Sort By
                 </div>
                 <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
@@ -39,7 +39,7 @@
             <!-- Filter Dropdown -->
             
                 <div class="dropdown dropdown-end">
-                    <div tabindex="0" role="button" class="btn btn-outline btn-primary">
+                    <div tabindex="0" role="button" class="btn btn-outline btn-primary w-28">
                         Filter
                     </div>
                     <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
@@ -201,11 +201,10 @@
     {% if not applicants %}
     <div class="text-center py-8">
         <div class="text-6xl mb-4">📝</div>
-        <h3 class="text-xl font-semibold mb-2">No Applicants Yet</h3>
-        <p class="text-gray-600 mb-4">Apply appropriate filters to check data.</p>
-        <a href="{{ url_for('hr.show_upload_form') }}" class="btn btn-primary">
+        <h3 class="text-xl font-semibold mb-2">Apply appropriate filters to check data.</h3>
+        <!-- <a href="{{ url_for('hr.show_upload_form') }}" class="btn btn-primary">
             Upload Applicants
-        </a>
+        </a> -->
     </div>
     {% endif %}
 </div>
