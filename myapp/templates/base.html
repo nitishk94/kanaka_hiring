@@ -10,9 +10,6 @@
         body {
             padding: 0;
         }
-        .page-container {
-            padding: 2rem;
-        }
         .navbar {
             padding-left: 2rem;
             padding-right: 2rem;
@@ -50,44 +47,99 @@
         .input.validator input:focus + .validator-hint {
             display: block;
         }
+        .dashboard-btn {
+            background-color: #2563eb; 
+            color: white;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+        }
+        .dashboard-btn:focus,
+        .dashboard-btn:active {
+        outline: none !important;
+        box-shadow: none !important;
+        background-color: transparent !important;
+         color: inherit !important
+        }
+
+
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="navbar bg-base-100 shadow-lg">
-        <div class="flex-1">
-            <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
-        </div>
-        <div class="flex-none">
-            {% if current_user.is_authenticated %}
-                {% if current_user.role == 'admin' and request.endpoint != 'admin.dashboard' %}
-                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% elif current_user.role == 'hr' and request.endpoint != 'hr.dashboard' %}
-                    <a href="{{ url_for('hr.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% elif current_user.role == 'interviewer' and request.endpoint != 'interviewer.dashboard' %}
-                    <a href="{{ url_for('interviewer.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% elif current_user.role == 'referrer' and request.endpoint != 'referrer.dashboard' %}
-                    <a href="{{ url_for('referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
-                {% endif %}
-                {% if request.endpoint != 'main.profile' %}
-                    <a href="{{ url_for('main.profile') }}" class="btn btn-ghost">Profile</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost">Logout</a>
-            {% else %}
-                {% if request.endpoint != 'auth.login' %}
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">Login</a>
-                {% endif %}
-                {% if request.endpoint != 'auth.show_register_page' %}
-                    <a href="{{ url_for('auth.show_register_page') }}" class="btn btn-primary">Register</a>
-                {% endif %}
-            {% endif %}
-        </div>
-    </div>
+<div class="navbar bg-base-100 shadow-lg px-4">
+  <div class="flex-1">
+    <a href="{{ url_for('main.home') }}" class="btn btn-ghost text-xl">Kanaka ATS</a>
+  </div>
 
-    <div>
+  <div class="dropdown dropdown-end md:hidden">
+    <label tabindex="0" class="btn btn-ghost btn-square">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+           viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </label>
+    <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+      {% if current_user.is_authenticated %}
+          {% if current_user.role == 'admin' and request.endpoint != 'admin.dashboard' %}
+              <li><a href="{{ url_for('admin.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
+          {% elif current_user.role == 'hr' and request.endpoint != 'hr.dashboard' %}
+              <li><a href="{{ url_for('hr.dashboard') }} " class="dashboard-btn">Dashboard</a></li>
+          {% elif current_user.role == 'interviewer' and request.endpoint != 'interviewer.dashboard' %}
+              <li><a href="{{ url_for('interviewer.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
+          {% elif current_user.role == 'internal_referrer' and request.endpoint != 'internal_referrer.dashboard' %}
+              <li><a href="{{ url_for('internal_referrer.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
+          {% elif current_user.role == 'external_referrer' and request.endpoint != 'external_referrer.dashboard' %}
+              <li><a href="{{ url_for('external_referrer.dashboard') }}" class="dashboard-btn">Dashboard</a></li>
+          {% endif %}
+          {% if request.endpoint != 'main.profile' %}
+              <li><a href="{{ url_for('main.profile') }}"  class="block px-4 py-2 rounded-md text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-0 focus:bg-transparent active:outline-none active:bg-transparent"
+                style="-webkit-tap-highlight-color: transparent; background-color: transparent !important;">Profile</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+      {% else %}
+          {% if request.endpoint != 'auth.login' %}
+              <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+          {% endif %}
+          {% if request.endpoint != 'auth.show_register_page' %}
+              <li><a href="{{ url_for('auth.show_register_page') }}" class="dashboard-btn">Register</a></li>
+          {% endif %}
+      {% endif %}
+    </ul>
+  </div>
+
+  <div class="hidden md:flex items-center space-x-2">
+    {% if current_user.is_authenticated %}
+        {% if current_user.role == 'admin' and request.endpoint != 'admin.dashboard' %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Dashboard</a>
+        {% elif current_user.role == 'hr' and request.endpoint != 'hr.dashboard' %}
+            <a href="{{ url_for('hr.dashboard') }}" class="btn btn-primary">Dashboard</a>
+        {% elif current_user.role == 'interviewer' and request.endpoint != 'interviewer.dashboard' %}
+            <a href="{{ url_for('interviewer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+        {% elif current_user.role == 'internal_referrer' and request.endpoint != 'internal_referrer.dashboard' %}
+            <a href="{{ url_for('internal_referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+        {% elif current_user.role == 'external_referrer' and request.endpoint != 'external_referrer.dashboard' %}
+            <a href="{{ url_for('external_referrer.dashboard') }}" class="btn btn-primary">Dashboard</a>
+        {% endif %}
+        {% if request.endpoint != 'main.profile' %}
+            <a href="{{ url_for('main.profile') }}" class="btn btn-ghost">Profile</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost">Logout</a>
+    {% else %}
+        {% if request.endpoint != 'auth.login' %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-ghost">Login</a>
+        {% endif %}
+        {% if request.endpoint != 'auth.show_register_page' %}
+            <a href="{{ url_for('auth.show_register_page') }}" class="btn btn-primary">Register</a>
+        {% endif %}
+    {% endif %}
+  </div>
+</div>
+
 
     {% if session.get('_flashes') and session.get('_flashes')[0][0] == 'session_timeout' %}
-    <div class="page-container">
+    <div class="px-4 sm:px-6 md:px-8 lg:px-16">
         <div class="alert alert-warning alert-dismissible fade show mx-4 mt-4" role="alert">
             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -116,7 +168,6 @@
     </main>
     </div>
 
-    <!-- Session Timeout Modal -->
     <dialog id="sessionTimeoutModal" class="modal">
         <div class="modal-box">
             <h3 class="font-bold text-lg">Session Expired</h3>
@@ -179,7 +230,6 @@
             sessionCheckInterval = setInterval(checkSession, 60 * 1000);
         {% endif %}
 
-        // Flash message auto-dismiss
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 document.querySelectorAll('.alert').forEach(function(alert) {
@@ -189,6 +239,11 @@
                 });
             }, 10000);
         });
+        function toggleMenu() {
+        const links = document.getElementById('navLinks');
+        links.classList.toggle('hidden');
+    }
+
     </script>
     {% endblock %}
 </body>

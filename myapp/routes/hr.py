@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify, send_file
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
 from myapp.models.users import User
@@ -85,7 +85,7 @@ def show_upload_form():
     form_data = session.pop('form_data', None)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
@@ -159,7 +159,6 @@ def handle_upload_applicant():
         github_profile=request.form.get('github_profile') or 'Not Provided',
         is_kanaka_employee=get_bool('is_kanaka_employee'),
         current_company=request.form.get('current_company'),
-        designation=request.form.get('designation'),
         current_job_position=request.form.get('current_job_position', '').title(),
         current_ctc=int_or_none(request.form.get('current_ctc')),
         expected_ctc=int_or_none(request.form.get('expected_ctc')),
@@ -227,7 +226,7 @@ def show_update_form(id):
     applicant = Applicant.query.get_or_404(id)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='referrer').all()
+        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
@@ -243,12 +242,24 @@ def update_applicant(id):
         return {'error': 'Session expired. Please log in again.'}, 401
     
     applicant = Applicant.query.get_or_404(id)
-    
     file = request.files.get('cv')
-    if not validate_file(file):
-        flash('File is corrupted.', 'warning')
-        session['form_data'] = request.form.to_dict()
-        return redirect(url_for('show_update_form'), id=id)
+    if file and file.filename:
+        if not validate_file(file):
+            flash('File is corrupted.', 'warning')
+            session['form_data'] = request.form.to_dict()
+            return redirect(url_for('show_update_form'), id=id)
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
+        applicant.cv_file_path = file_path
+    else:
+        if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
+            flash('No existing CV found. Please upload a new one.', 'warning')
+            session['form_data'] = request.form.to_dict()
+            return redirect(url_for('show_update_form', id=id))
+
 
     email = request.form.get('email').lower()
     if not can_update_applicant(id,email):
@@ -294,7 +305,6 @@ def update_applicant(id):
     applicant.github_profile = request.form.get('github_profile') or 'Not Provided'
     applicant.is_kanaka_employee = get_bool('is_kanaka_employee')
     applicant.current_company = request.form.get('current_company')
-    applicant.designation = request.form.get('designation')
     applicant.current_job_position = request.form.get('current_job_position', '').title()
     applicant.current_ctc = int_or_none(request.form.get('current_ctc'))
     applicant.expected_ctc = int_or_none(request.form.get('expected_ctc'))
@@ -308,12 +318,6 @@ def update_applicant(id):
     applicant.is_referred = get_bool('is_referred')
     applicant.referred_by = int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None
 
-    # Handle file upload
-    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(upload_dir, filename)
-    file.save(file_path)
     
     try:
         db.session.commit()
@@ -342,8 +346,8 @@ def view_applicant(id):
     update_status(id)
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
-
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers)
+    current_date = date.today().isoformat() 
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date=current_date)
 
 @bp.route('/filter_applicants')
 @no_cache
@@ -471,8 +475,28 @@ def search_applicants():
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def download_cv(id):
-    return f"Download CV for Applicant {id}"
+def download_applicant_cv(id):
+    applicant = Applicant.query.get_or_404(id)
+
+    if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
+        flash("CV file not found.", "error")
+        return redirect(url_for('hr.show_upload_form'))
+    
+    return send_file(applicant.cv_file_path, as_attachment=True)
+
+@bp.route('/referral/<int:id>/download_cv')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def download_referral_cv(id):
+    referral = Referral.query.get_or_404(id)
+
+    if not referral.cv_file_path or not os.path.exists(referral.cv_file_path):
+        flash("Referral CV not found.", "error")
+        return redirect(url_for('hr.view_referrals'))
+
+    return send_file(referral.cv_file_path, as_attachment=True)
+
 
 @bp.route('/schedule_interview/<int:id>', methods=['POST'])
 @no_cache
@@ -697,7 +721,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users = User.query.filter_by(role='referrer').all()
+    users = User.query.filter_by(role='internal_referrer').all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -709,7 +733,7 @@ def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
 
-    referral_users = User.query.filter_by(role='referrer').all()
+    referral_users = User.query.filter_by(role='internal_referrer').all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
@@ -721,6 +745,7 @@ def filter_referrals():
     referrals = query.order_by(Referral.id.desc()).all()
 
     return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
+
 @bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -734,25 +759,39 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         form_data = session.pop('form_data', None)
         job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position)\
                                             .filter(JobRequirement.is_open == True).all()
+        referral = Referral.query.get_or_404(referral_id)
         if not form_data:
             form_data = {}
         form_data['name'] = name
-        return render_template(
-            'hr/upload_referral_applicant.html',
+        form_data['is_fresher'] = referral.is_fresher
+
+        return render_template('hr/upload_referral_applicant.html',
             job_positions=job_positions,
             form_data=form_data,
             referral_id=referral_id,
             referrer_id=referrer_id,
-            name=name
-        )
+            name=name,
+            referral= referral
+            )
 
 
     # ---- POST logic begins ----
     file = request.files.get('cv')
-    if not validate_file(file):
-        flash('File is corrupted.', 'warning')
+    referral = Referral.query.get_or_404(referral_id)
+
+    if file and file.filename:
+        if not validate_file(file):
+            flash('File is corrupted.', 'warning')
+            session['form_data'] = request.form.to_dict()
+            return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+        use_referral_cv = False
+    elif referral.cv_file_path and os.path.exists(referral.cv_file_path):
+        use_referral_cv = True
+    else:
+        flash("Please upload a valid CV or ensure a referral CV is available.", "warning")
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+
 
     email = request.form.get('email').lower()
     if not can_upload_applicant_email(email):
@@ -805,7 +844,6 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         github_profile=request.form.get('github_profile') or 'Not Provided',
         is_kanaka_employee=get_bool('is_kanaka_employee'),
         current_company=request.form.get('current_company'),
-        designation=request.form.get('designation'),
         current_job_position=request.form.get('current_job_position', '').title(),
         current_ctc=int_or_none(request.form.get('current_ctc')),
         expected_ctc=int_or_none(request.form.get('expected_ctc')),
@@ -824,12 +862,20 @@ def upload_referral_applicant(referral_id,referrer_id, name):
     )
 
     # Save file
-    upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
-    os.makedirs(upload_dir, exist_ok=True)
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(upload_dir, filename)
-    file.save(file_path)
-    new_applicant.cv_file_path = file_path
+    if file and validate_file(file):
+        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
+        os.makedirs(upload_dir, exist_ok=True)
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
+        new_applicant.cv_file_path = file_path
+    else:
+        referral = Referral.query.get_or_404(referral_id)
+        if referral.cv_file_path:
+            new_applicant.cv_file_path = referral.cv_file_path
+        else:
+            flash("No CV was uploaded. Please upload a CV or check with the referrer.", "error")
+            return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
 
     try:
         db.session.add(new_applicant)
@@ -859,12 +905,16 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.view_referrals'))
 
+
+
+
 @bp.route('/onboarding')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def onboarding():
     return "Onboarding and Offer Letter Page"
+
 
 @bp.route('/filter_interviews')
 @no_cache
@@ -1082,7 +1132,7 @@ def submit_job_form():
     job_clients = request.form.get('job_clients')
     job_budget = request.form.get('job_budget')
     job_experience = request.form.get('job_experience')  
-    for_vendor = bool(request.form.get('open_for_vendor'))
+    for_vendor = bool(request.form.get('for_vendor'))
 
     # Validate required fields
     if not job_position or not job_description:

@@ -13,7 +13,8 @@ ROLE_REDIRECTS = {
     'admin': 'admin.dashboard',
     'hr': 'hr.dashboard',
     'interviewer': 'interviewer.dashboard',
-    'referrer': 'referrer.dashboard',
+    'internal_referrer': 'internal_referrer.dashboard',
+    'external_referrer': 'external_referrer.dashboard',
 }
 
 @bp.route('/register', methods=['GET'])
@@ -100,7 +101,7 @@ def login_external():
 
     if '@' in username_or_email and not is_valid_email(username_or_email):
         flash('Please enter a valid email address', 'error')
-        return redirect(url_for('auth.login_referrer'))
+        return redirect(url_for('auth.login')) #error solved
 
     user = None
     if '@' in username_or_email:
@@ -123,10 +124,12 @@ def login_external():
             return redirect(url_for('hr.dashboard'))
         elif user.role == 'admin':
             return redirect(url_for('admin.dashboard'))
-        elif user.role == 'referrer':
-            return redirect(url_for('referrer.dashboard'))
+        elif user.role == 'internal_referrer':
+            return redirect(url_for('internal_referrer.dashboard'))
         elif user.role == 'interviewer':
             return redirect(url_for('interviewer.dashboard'))
+        elif user.role == 'external_referrer':
+            return redirect(url_for('external_referrer.dashboard'))
         else:
             flash('Invalid user role. Please contact support.', 'error')
             current_app.logger.info(f"Invalid user: {username_or_email}")

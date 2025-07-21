@@ -7,6 +7,8 @@ from myapp.models.applicants import Applicant
 from myapp.models.jobrequirement import JobRequirement
 from myapp.models.referrals import Referral
 from myapp.utils import generate_timeline, update_status
+from myapp.extensions import db
+
 
 bp = Blueprint('main', __name__)
 
@@ -21,10 +23,11 @@ def home():
 def profile():
     return render_template('profile.html', user=current_user)
 
+
 @bp.route('/track/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
-@role_required('hr', 'admin', 'referrer')
+@role_required('hr', 'admin', 'internal_referrer', 'external_referrer')
 def track_status(id):
     update_status(id)
     timeline = generate_timeline(id)
@@ -42,8 +45,9 @@ def check_session():
 def view_joblisting():
     jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.is_open.desc()).all()
     if current_user.role=='referral':
-        jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).filter_by(for_vendor=True).order_by(JobRequirement.is_open.desc()).all()
+        jobs = JobRequirement.query.options(joinedload(JobRequirement.created_by)).order_by(JobRequirement.is_open.desc()).all()
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+    
     return render_template('viewjobs.html', jobs=jobs, users=hr_users, is_open=jobs)
 
 @bp.route('/view_details_joblisting/<int:id>')

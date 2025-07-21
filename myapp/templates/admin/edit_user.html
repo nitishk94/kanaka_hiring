@@ -38,7 +38,8 @@
                                 {% endif %}
                                 <option value="hr" {% if user.role == 'hr' %}selected{% endif %}>HR</option>
                                 <option value="interviewer" {% if user.role == 'interviewer' %}selected{% endif %}>Interviewer</option>
-                                <option value="referrer" {% if user.role == 'referrer' %}selected{% endif %}>Referrer</option>
+                                <option value="internal_referrer" {% if user.role == 'internal_referrer' %}selected{% endif %}>Internal Referrer</option>
+                                <option value="external_referrer" {% if user.role == 'external_referrer' %}selected{% endif %}>External Referrer</option>
                             </select>
                         </div>
                     </div>
@@ -50,7 +51,7 @@
         </div>
 
         <!-- Password Update Card -->
-        {% if user.role == 'referrer' and user.auth_type == 'local' %}
+        {% if user.role == 'internal_referrer' and user.auth_type == 'local' %}
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
                     <h2 class="card-title mb-4">Change Password</h2>

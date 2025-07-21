@@ -25,7 +25,15 @@
                         <label class="label" for="dob">
                             <span class="label-text">Date of Birth <span class="text-error">*</span></span>
                         </label>
-                        <input id="dob" type="date" name="dob" required class="input input-bordered" value="{{ applicant.dob if applicant else '' }}" />
+                        <input 
+                            id="dob" 
+                            type="date" 
+                            name="dob" 
+                            required class="input input-bordered"
+                            value="{{ applicant.dob if applicant else '' }}" 
+                            max = "2050-12-31"
+
+                        />
                     </div>
                     <!-- Email -->
                     <div class="form-control">
@@ -80,9 +88,9 @@
                     <!-- Work Location -->
                     <div class="form-control">
                         <label class="label" for="work_location">
-                            <span class="label-text">Work Location <span class="text-error">*</span></span>
+                            <span class="label-text">Work Location</span>
                         </label>
-                        <input id="work_location" type="text" name="work_location" required placeholder="Enter work location" class="input input-bordered" value="{{ applicant.work_location if applicant.work_location else '' }}" />
+                        <input id="work_location" type="text" name="work_location"  placeholder="Enter work location" class="input input-bordered w-full bg-gray-100 cursor-not-allowed" value="Pune" readonly />
                     </div>
                 </div>
             </div>
@@ -313,21 +321,6 @@
                         />
                     </div>
 
-                    <div id="designation-field" class="form-control w-full" style="display: none;">
-                        <label class="label" for="designation">
-                            <span class="label-text">Designation <span class="text-error">*</span></span>
-                        </label>
-                        <input
-                            id="designation"
-                            type="text"
-                            name="designation"
-                            required
-                            placeholder="Enter designation"
-                            class="input input-bordered w-full"
-                            value="{{ applicant.designation if applicant.designation else '' }}"
-                        />
-                    </div>
-
                     <div id="job-position-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="current_job_position">
                             <span class="label-text">Current Job Position <span class="text-error">*</span></span>
@@ -434,11 +427,17 @@
             <div class="card-body">
                 <h2 class="card-title mb-4">CV Upload & Comments</h2>
                 <div class="form-control">
+                    <div >
+                        <label>Previously Uploded CV:  </label>
+                       <a href="{{ url_for('hr.download_applicant_cv', id=applicant.id) }}" class="btn btn-primary">
+                            Download CV
+                        </a>
+                    </div>
                     <label class="label" for="cvFile">
-                        <span class="label-text">CV Upload <span class="text-error">*</span></span>
+                        <span class="label-text">CV Upload </span>
                     </label>
                     <div class="space-y-2">
-                        <input type="file" name="cv" id="cvFile" class="file-input file-input-bordered w-full" accept=".pdf,.docx" required />
+                        <input type="file" name="cv" id="cvFile" class="file-input file-input-bordered w-full" accept=".pdf,.docx" />
                         <p class="text-sm text-gray-500">Accepted formats: PDF or DOCX (Max size: 5MB)</p>
                         <p id="fileError" class="text-error text-sm"></p>
                     </div>
@@ -514,7 +513,6 @@
                 'experience-field',
                 'kanaka-employee-field',
                 'current-company-field',
-                'designation-field',
                 'job-position-field',
                 'current-ctc-field',
                 'expected-ctc-field',

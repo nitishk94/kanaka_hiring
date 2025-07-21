@@ -101,7 +101,7 @@
                     {% if applicant.is_referred %}
                         <div>
                             <p class="text-sm text-gray-500">Referred By</p>
-                            <p class="font-semibold">{{ applicant.referred_by }}</p>
+                            <p class="font-semibold">{{ applicant.referrer.name }}</p>
                         </div>
                     {% endif %}
 
@@ -155,10 +155,7 @@
                             <p class="text-sm text-gray-500">Current Company</p>
                             <p class="font-semibold">{{ applicant.current_company }}</p>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-500">Designation</p>
-                            <p class="font-semibold">{{ applicant.designation }}</p>
-                        </div>
+        
                         <div>
                             <p class="text-sm text-gray-500">Current Job Position</p>
                             <p class="font-semibold">{{ applicant.current_job_position }}</p>
@@ -227,7 +224,7 @@
                                 <p class="text-sm text-gray-500">Uploaded on {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
                             </div>
                         </div>
-                        <a href="{{ url_for('hr.download_cv', id=applicant.id) }}" class="btn btn-primary">
+                        <a href="{{ url_for('hr.download_applicant_cv', id=applicant.id) }}" class="btn btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -288,7 +285,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full" 
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    required 
+                                                />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">

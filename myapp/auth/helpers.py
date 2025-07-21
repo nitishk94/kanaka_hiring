@@ -3,6 +3,7 @@ import uuid
 from flask import current_app, session, url_for
 
 def _load_cache():
+    #Loads the token cache from the session (if it exists). Keeps user login tokens so they don’t have to re-authenticate every time
     cache = msal.SerializableTokenCache()
     if session.get('token_cache'):
         cache.deserialize(session['token_cache'])

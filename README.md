@@ -6,7 +6,8 @@ A modern, full-stack HR recruitment management system built with Flask, SQLAlche
 
 - **Role-based Dashboards**: Separate dashboards for Admin, HR, Interviewer, and Referrer roles.
 - **Applicant Management**: Upload, view, and manage applicants with detailed information and CV uploads.
-- **Referrals**: Referrers can submit candidates, and HR can track and link referrals to applicants.
+- **Internal Referrals**: Internal Referrers/ Employees can submit candidates, and HR can track and link referrals to applicants.
+- **External Referrals**: External Referrers can submit candidates, and HR can track and link referrals to applicants.
 - **Test and Interview Scheduling**: HR can schedule and reschedule both tests and interviews, assign interviewers, and track progress.
 - **Feedback Submission**: Interviewers can submit feedback regarding applicants during each interview.
 - **User Management**: Admins can manage users, view logs, and configure system settings.

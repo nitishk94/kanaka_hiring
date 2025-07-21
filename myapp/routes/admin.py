@@ -26,6 +26,7 @@ def manage_users():
         
     return render_template('admin/manage_users.html', users=users, selected_role=role)
 
+
 @bp.route('/edit_user/<int:user_id>', methods=['GET'])
 @no_cache
 @login_required
