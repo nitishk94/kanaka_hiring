@@ -8,26 +8,14 @@
         <h1 class="text-3xl font-bold">All Applicants List</h1>
         <div class="flex items-center gap-4 ml-auto">
             <!-- Search Box -->
-            <!-- Search Box -->
-            <form method="GET" action="{{ url_for('hr.search_sort_filter_all_applicants') }}" class="flex gap-2 min-w-[250px] relative">
-                <div class="relative w-full">
-                    <input
-                        type="text"
-                        name="query"
-                        placeholder="Search by name or email"
-                        class="input input-bordered w-full pr-10"
-                        value="{{ search_query or '' }}"
-                        id="searchInput"
-                    />
-                    <button
-                        type="button"
-                        id="clearSearchBtn"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                        {% if not search_query %}style="display: none;"{% endif %}
-                    >
-                        &#10005;
-                    </button>
-                </div>
+            <form method="GET" action="{{ url_for('hr.search_sort_filter_all_applicants') }}" class="flex gap-2 min-w-[250px]">
+                <input
+                    type="text"
+                    name="query"
+                    placeholder="Search by name or email"
+                    class="input input-bordered flex-grow"
+                    value="{{ search_query or '' }}"
+                />
                 <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
             
 

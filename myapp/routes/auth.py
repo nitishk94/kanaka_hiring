@@ -101,7 +101,7 @@ def login_external():
 
     if '@' in username_or_email and not is_valid_email(username_or_email):
         flash('Please enter a valid email address', 'error')
-        return redirect(url_for('auth.login')) #error solved
+        return redirect(url_for('auth.login'))
 
     user = None
     if '@' in username_or_email:

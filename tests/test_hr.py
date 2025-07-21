@@ -198,7 +198,7 @@ def test_applicants(logged_in_client):
 def test_applicant_details(logged_in_client):
     hr = logged_in_client(role='hr')
     create_fresher_test_applicant(hr)
-    create_experienced_test_applicant(hr)
+    create_d_test_applicant(hr)
     response = hr.get('hr/view_applicant/1', follow_redirects=True)
     assert response.status_code == 200
     assert b'Applicant Details' in response.data
