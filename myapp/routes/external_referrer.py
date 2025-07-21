@@ -38,7 +38,7 @@ def show_upload_form():
     referrer_names = [
         {'id': current_user.id, 'name': current_user.name} 
     ]
-    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True, JobRequirement.for_vendor == True).all()
 
     return render_template('external_referrer/referral.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data, selected_referrer_id=current_user.id)
 
@@ -53,6 +53,43 @@ def referrals():
     jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     return render_template('external_referrer/candidates.html', referrals=referrals, jobs=jobs)
 
+@bp.route('/profile')
+@login_required
+@role_required('external_referrer')
+def profile():
+    return render_template('profile.html', user=current_user)
+
+
+@bp.route('/change_password/<int:user_id>', methods=['POST'])
+@login_required
+@role_required('external_referrer')
+def change_password(user_id):
+    if current_user.id != user_id:
+        flash("Unauthorized access.", "error")
+        return redirect(url_for('external_referrer.profile'))
+
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+
+    user = User.query.get_or_404(user_id)
+
+    # Verify current password
+    if not user.check_password(current_password):
+        flash("Current password is incorrect.", "error")
+        return redirect(url_for('external_referrer.profile'))
+
+    # Check new password match
+    if new_password != confirm_password:
+        flash("New passwords do not match.", "error")
+        return redirect(url_for('external_referrer.profile'))
+
+    # Update password
+    user.set_password(new_password)
+    db.session.commit()
+
+    flash("Password changed successfully.", "success")
+    return redirect(url_for('external_referrer.profile'))
 
 
 @bp.route('/upload_applicants', methods=['POST'])
@@ -67,19 +104,19 @@ def handle_upload_applicant():
     if not validate_file(file):
         flash('File is corrupted.', 'warning')
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
 
     email = request.form.get('email').lower()
     if not can_upload_applicant_email(email):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
 
     phone_number = request.form.get('phone_number')
     if not can_upload_applicant_phone(phone_number):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
 
     # Collect and process form data
     def get_bool(key): return bool(request.form.get(key))
@@ -98,7 +135,7 @@ def handle_upload_applicant():
     if not is_fresher and '0' in experience:
         flash("Experience cannot be 0", "error")
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
 
     new_applicant = Applicant(
         name=request.form.get('name').title(),
@@ -192,6 +229,6 @@ def handle_upload_applicant():
             flash('Database error. Please try again.', 'error')
         current_app.logger.error(f"IntegrityError: {e}")
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
     
     
