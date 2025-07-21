@@ -171,7 +171,7 @@
 
                     <div class="form-control">
                         <label class="label cursor-pointer justify-start gap-4">
-                            <input type="checkbox" id="referral-toggle" name="is_referred" class="checkbox checkbox-primary" {% if form_data and form_data.is_referred %}checked{% endif %} />
+                            <input type="checkbox" id="referral-toggle" name="is_referred" class="checkbox  checkbox-primary" checked disabled  />
                             <span class="label-text">Referral</span>
                         </label>
                     </div>
@@ -199,7 +199,7 @@
 
                     
 
-                    <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
+                    <!-- <div id="referrer-section" class="form-control min-w-[300px]" style="display: none; position: relative; z-index: 30;">
                         <label class="label" for="referred_by">
                             <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
                         </label>
@@ -223,7 +223,22 @@
                             ></multiselect>
                             <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
                         </div>
+                    </div> -->
+
+                    <div id="referrer-section" class="form-control min-w-[300px]" style="position: relative; z-index: 30;">
+                        <label class="label" for="referred_by">
+                            <span class="label-text">Referrer's Name <span class="text-error">*</span></span>
+                        </label>
+                        <select id="referred_by" name="referred_by" class="select select-bordered w-full" required>
+                            {% for referrer in referrer_names %}
+                                <option value="{{ referrer.id }}"
+                                    {% if referrer.id == selected_referrer_id %}selected{% endif %}>
+                                    {{ referrer.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
                     </div>
+
                     
                 </div>
                     <div class="form-control" id="position-section">
@@ -275,16 +290,30 @@
                         />
                     </div>
 
+
+                    <!-- <div class="form-control w-full">
+                        <label class="label" for="referenced_from">
+                            <span class="label-text">Referenced From <span class="text-error">*</span></span>
+                        </label>
+                        <select id="referenced_from" name="referenced_from_display" class="select select-bordered w-full" disabled>
+                            <option value="Third-party" selected>Third-party</option>
+                        </select>
+                        <input type="hidden" name="referenced_from" value="Third-party" />
+                    </div> -->
+
                     <div class="form-control w-full">
                         <label class="label" for="referenced_from">
                             <span class="label-text">Referenced From <span class="text-error">*</span></span>
                         </label>
-                        <select id="referenced_from" name="referenced_from" class="select select-bordered w-full" required>
-                            <option value="">Select source</option>
-                            <option value="Naukri" {% if form_data and form_data.referenced_from == 'Naukri' %}selected{% endif %}>Naukri</option>
-                            <option value="LinkedIn" {% if form_data and form_data.referenced_from == 'LinkedIn' %}selected{% endif %}>LinkedIn</option>
-                            <option value="Third-party" {% if form_data and form_data.referenced_from == 'Third-party' %}selected{% endif %}>Third-party</option>
-                        </select>
+                        <input
+                            id="referenced_from_display"
+                            type="text"
+                            class="input input-bordered w-full bg-gray-100 cursor-not-allowed"
+                            value="Third-party"
+                            readonly
+                        />
+                        <!-- Hidden input for submitting the value -->
+                        <input type="hidden" name="referenced_from" value="Third-party" />
                     </div>
 
                     <div class="form-control w-full">

@@ -36,74 +36,12 @@ def show_upload_form():
     form_data = session.pop('form_data', None)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
+        {'id': current_user.id, 'name': current_user.name} 
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
-    return render_template('external_referrer/referral.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
+    return render_template('external_referrer/referral.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data, selected_referrer_id=current_user.id)
 
-
-@bp.route('/referral', methods=['GET', 'POST'])
-@no_cache
-@login_required
-@role_required('external_referrer')
-def refer_candidates():
-    if '_user_id' not in session:
-        current_app.logger.warning(f"Session expired for user {current_user.username}")
-        return {'error': 'Session expired. Please log in again.'}, 401
-
-    # Fetch all job positions (id + position name) for dropdown
-    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
-
-    if request.method == 'POST':
-        file = request.files.get('cv')
-        
-        if not validate_file(file):
-            flash('File is corrupted.', 'warning')
-            current_app.logger.warning(f"File is corrupted: {file.filename}")
-            return render_template('external_referrer/referral.html', form_data=request.form, job_positions=job_positions)
-
-        name = request.form.get('name')
-        is_fresher = bool(request.form.get('is_fresher'))  # True if checkbox is checked
-        job_id = request.form.get('position') if not is_fresher else None
-
-        # Validate name
-        if not name:
-            flash('Name is required.', 'warning')
-            return render_template('external_referrer/referral.html', form_data=request.form, job_positions=job_positions)
-
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'referrals')
-        os.makedirs(upload_dir, exist_ok=True)
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(upload_dir, filename)
-        file.save(file_path)
-
-        # Create referral object
-        new_referral = Referral(
-            name=name.title(),
-            is_fresher=is_fresher,
-            job_id=int(job_id) if job_id else None,
-            referrer_id=current_user.id,
-            referred_by=User.query.get(current_user.id).name,
-            referral_date=date.today(),
-            cv_file_path=file_path
-        )
-
-        try:
-            db.session.add(new_referral)
-            db.session.commit()
-            flash('New referral successfully created!', 'success')
-            current_app.logger.info(f"New referral (Name = {new_referral.name.title()}) added by {current_user.username}")
-            return redirect(url_for('external_referrer.referrals'))
-
-        except Exception as e:
-            db.session.rollback()
-            flash('Error creating referral. Please try again.', 'error')
-            current_app.logger.error(f"Error creating referral: {str(e)}")
-            return render_template('external_referrer/referral.html', form_data=request.form, job_positions=job_positions)
-
-    return render_template('external_referrer/referral.html', job_positions=job_positions, form_data={}, referrer_names=[])
-   
 
 
 @bp.route('/referrals', methods=['GET', 'POST'])
@@ -222,7 +160,7 @@ def handle_upload_applicant():
 
         flash('New applicant successfully created!', 'success')
         current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
 
     except IntegrityError as e:
         db.session.rollback()
