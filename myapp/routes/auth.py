@@ -39,6 +39,15 @@ def handle_register():
     password = request.form.get('password')
     confirm_password = request.form.get('confirm_password')
 
+    if not all([name, username, email, password]):
+        flash("Please fill in all fields.", "error")
+        return redirect(url_for('auth.show_register_page'))
+
+    if email.endswith('@kanakasoftware.'):
+        flash('Kanaka employees should login using Microsoft. Registration is not allowed.', 'error')
+        session['form_data'] = request.form.to_dict()
+        return redirect(url_for('auth.show_register_page'))
+
     if password != confirm_password:
         flash('Passwords do not match', 'error')
         session['form_data'] = request.form.to_dict()
@@ -61,8 +70,9 @@ def handle_register():
 
     user = User(name=name, username=username, email=email, auth_type='local')
     user.set_password(password)
-    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": 1})
     db.session.add(user)
+    db.session.flush()
+    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": user.id})
     db.session.commit()
     
     current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
@@ -99,9 +109,14 @@ def login_external():
     username_or_email = request.form.get('username_or_email')
     password = request.form.get('password')
 
+    if not all([username_or_email, password]):
+        flash("Please fill in all fields.", "error")
+        return redirect(url_for('auth.login'))
+
+
     if '@' in username_or_email and not is_valid_email(username_or_email):
         flash('Please enter a valid email address', 'error')
-        return redirect(url_for('auth.login')) #error solved
+        return redirect(url_for('auth.login')) 
 
     user = None
     if '@' in username_or_email:
@@ -235,20 +250,25 @@ def add_new_user():
     username = request.form.get('username').lower()
     email = session.pop('microsoft_user_email', '').lower()
 
+    if not all([name, username, email]):
+        flash("Please fill in all fields.", "error")
+        return redirect(url_for('auth.show_add_new_user'))
+
+
     if User.query.filter_by(username=username).first():
         flash('Username already exists', 'error')
         return redirect(url_for('auth.show_add_new_user'))
 
     user = User(name=name, username=username, email=email, auth_type='microsoft')
-    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": 1})
     db.session.add(user)
+    db.session.flush()
+    db.session.execute(text("SET app.current_user_id = :user_id"), {"user_id": user.id})
     db.session.commit()
     
     current_app.logger.info(f"New user registration: Username = {user.username}, Email = {user.email}")
     return redirect(url_for('auth.login', registration_success=True))
 
 @bp.route('/logout')
-@no_cache
 @no_cache
 @login_required
 def logout():
