@@ -722,6 +722,8 @@ def schedule_interview(id):
 
     return redirect(url_for('hr.view_applicant', id=id))
 
+
+# ??? where used
 @bp.route('/offered_application/<int:id>', methods=['POST'])
 @no_cache
 @login_required

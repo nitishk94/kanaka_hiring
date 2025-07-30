@@ -75,11 +75,9 @@ def update_status(id):
 
 def generate_timeline(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    
     timeline = [
         {'title': 'Application Received', 'date': history.applied_date}
     ]
-    
     # Test scheduling history
     if history.test_date:
         timeline.append({

@@ -13,17 +13,16 @@ from sqlalchemy.exc import IntegrityError
 from myapp.models.recruitment_history import RecruitmentHistory
 from myapp.models.applicants import Applicant
 import os
- 
+
 bp = Blueprint('external_referrer', __name__, url_prefix='/external_referrer')
- 
+
 @bp.route('/dashboard')
 @no_cache
 @login_required
 @role_required('external_referrer')
 def dashboard():
     return render_template('external_referrer/dashboard.html')
- 
- 
+
 @bp.route('/upload_applicants', methods=['GET'])
 @no_cache
 @login_required
@@ -32,80 +31,16 @@ def show_upload_form():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
-   
+    
     form_data = session.pop('form_data', None)
- 
+
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
+        {'id': current_user.id, 'name': current_user.name} 
     ]
-    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
- 
-    return render_template('external_referrer/referral.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
- 
- 
-@bp.route('/referral', methods=['GET', 'POST'])
-@no_cache
-@login_required
-@role_required('external_referrer')
-def refer_candidates():
-    if '_user_id' not in session:
-        current_app.logger.warning(f"Session expired for user {current_user.username}")
-        return {'error': 'Session expired. Please log in again.'}, 401
- 
-    # Fetch all job positions (id + position name) for dropdown
-    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
- 
-    if request.method == 'POST':
-        file = request.files.get('cv')
-       
-        if not validate_file(file):
-            flash('File is corrupted.', 'warning')
-            current_app.logger.warning(f"File is corrupted: {file.filename}")
-            return render_template('external_referrer/referral.html', form_data=request.form, job_positions=job_positions)
- 
-        name = request.form.get('name')
-        is_fresher = bool(request.form.get('is_fresher'))  # True if checkbox is checked
-        job_id = request.form.get('position') if not is_fresher else None
- 
-        # Validate name
-        if not name:
-            flash('Name is required.', 'warning')
-            return render_template('external_referrer/referral.html', form_data=request.form, job_positions=job_positions)
- 
-        upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'referrals')
-        os.makedirs(upload_dir, exist_ok=True)
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(upload_dir, filename)
-        file.save(file_path)
- 
-        # Create referral object
-        new_referral = Referral(
-            name=name.title(),
-            is_fresher=is_fresher,
-            job_id=int(job_id) if job_id else None,
-            referrer_id=current_user.id,
-            referred_by=User.query.get(current_user.id).name,
-            referral_date=date.today(),
-            cv_file_path=file_path
-        )
- 
-        try:
-            db.session.add(new_referral)
-            db.session.commit()
-            flash('New referral successfully created!', 'success')
-            current_app.logger.info(f"New referral (Name = {new_referral.name.title()}) added by {current_user.username}")
-            return redirect(url_for('external_referrer.referrals'))
- 
-        except Exception as e:
-            db.session.rollback()
-            flash('Error creating referral. Please try again.', 'error')
-            current_app.logger.error(f"Error creating referral: {str(e)}")
-            return render_template('external_referrer/referral.html', form_data=request.form, job_positions=job_positions)
- 
-    return render_template('external_referrer/referral.html', job_positions=job_positions, form_data={}, referrer_names=[])
-   
- 
- 
+    job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True, JobRequirement.for_vendor == True).all()
+
+    return render_template('external_referrer/referral.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data, selected_referrer_id=current_user.id)
+
 @bp.route('/referrals', methods=['GET', 'POST'])
 @no_cache
 @login_required
@@ -114,7 +49,44 @@ def referrals():
     referrals = Referral.query.filter_by(referrer_id=current_user.id).order_by(Referral.referral_date.desc()).all()
     jobs= JobRequirement.query.filter(JobRequirement.is_open == True).order_by(JobRequirement.position).all()
     return render_template('external_referrer/candidates.html', referrals=referrals, jobs=jobs)
- 
+
+@bp.route('/profile')
+@login_required
+@role_required('external_referrer')
+def profile():
+    return render_template('profile.html', user=current_user)
+
+@bp.route('/change_password/<int:user_id>', methods=['POST'])
+@login_required
+@role_required('external_referrer')
+def change_password(user_id):
+    if current_user.id != user_id:
+        flash("Unauthorized access.", "error")
+        return redirect(url_for('external_referrer.profile'))
+
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+
+    user = User.query.get_or_404(user_id)
+
+    # Verify current password
+    if not user.check_password(current_password):
+        flash("Current password is incorrect.", "error")
+        return redirect(url_for('external_referrer.profile'))
+
+    # Check new password match
+    if new_password != confirm_password:
+        flash("New passwords do not match.", "error")
+        return redirect(url_for('external_referrer.profile'))
+
+    # Update password
+    user.set_password(new_password)
+    db.session.commit()
+
+    flash("Password changed successfully.", "success")
+    return redirect(url_for('external_referrer.profile'))
+
 @bp.route('/upload_applicants', methods=['POST'])
 @login_required
 @role_required('external_referrer')
@@ -122,44 +94,44 @@ def handle_upload_applicant():
     if '_user_id' not in session:
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
- 
+
     file = request.files.get('cv')
     if not validate_file(file):
         flash('File is corrupted.', 'warning')
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
- 
+        return redirect(url_for('external_referrer.show_upload_form'))
+
     email = request.form.get('email').lower()
     if not can_upload_applicant_email(email):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
- 
+        return redirect(url_for('external_referrer.show_upload_form'))
+
     phone_number = request.form.get('phone_number')
     if not can_upload_applicant_phone(phone_number):
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
- 
+        return redirect(url_for('external_referrer.show_upload_form'))
+
     # Collect and process form data
     def get_bool(key): return bool(request.form.get(key))
- 
+
     try:
         dob = request.form.get('dob')
         dob = datetime.strptime(dob, '%Y-%m-%d').date() if dob else None
     except ValueError:
         dob = None
- 
+
     # Convert relevant fields
     int_or_none = lambda x: int(x) if x else None
- 
+
     is_fresher = get_bool('is_fresher')
     experience = request.form.get('experience')
     if not is_fresher and '0' in experience:
         flash("Experience cannot be 0", "error")
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
- 
+        return redirect(url_for('external_referrer.show_upload_form'))
+
     new_applicant = Applicant(
         name=request.form.get('name').title(),
         email=email,
@@ -199,7 +171,6 @@ def handle_upload_applicant():
         referred_by=int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None,
         job_id=int_or_none(request.form.get('position')) if not get_bool('is_fresher') else None,
     )
- 
     # Save file
     upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
     os.makedirs(upload_dir, exist_ok=True)
@@ -207,23 +178,38 @@ def handle_upload_applicant():
     file_path = os.path.join(upload_dir, filename)
     file.save(file_path)
     new_applicant.cv_file_path = file_path
- 
+
     # Insert into DB
     try:
         db.session.add(new_applicant)
-        db.session.commit()
- 
+        db.session.flush()
+
+        new_referral = Referral(
+            name=new_applicant.name,
+            applicant_id=new_applicant.id,
+            is_fresher=is_fresher,
+            job_id=new_applicant.job_id, 
+            referrer_id=current_user.id,
+            referred_by=User.query.get(current_user.id).name,
+            referral_date=date.today(),
+            cv_file_path = file_path,
+            is_external_referrer = True
+        )
+        db.session.add(new_referral)
+
         history = RecruitmentHistory(
             applicant_id=new_applicant.id,
             applied_date=date.today()
         )
         db.session.add(history)
         db.session.commit()
- 
+
         flash('New applicant successfully created!', 'success')
+        flash('New referral successfully created!', 'success')
         current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
-        return redirect(url_for('hr.show_upload_form'))
- 
+        current_app.logger.info(f"New referral (Name = {new_referral.name.title()}) added by {current_user.username}")
+        return redirect(url_for('external_referrer.show_upload_form'))
+    
     except IntegrityError as e:
         db.session.rollback()
         if 'email' in str(e.orig):
@@ -234,4 +220,5 @@ def handle_upload_applicant():
             flash('Database error. Please try again.', 'error')
         current_app.logger.error(f"IntegrityError: {e}")
         session['form_data'] = request.form.to_dict()
-        return redirect(url_for('hr.show_upload_form'))
+        return redirect(url_for('external_referrer.show_upload_form'))
+     

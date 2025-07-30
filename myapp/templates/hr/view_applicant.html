@@ -3,15 +3,20 @@
 {% block title %}Applicant Details{% endblock %}
 
 {% block content %}
+
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Applicant Details</h1>
+        <h1 class="text-3xl font-bold">Application Details</h1>
         <div class="flex gap-2 items-center">
             {% if applicant.is_referred %}
                 <div class="badge badge-lg badge-info">Referral</div>
             {% endif %}
-            <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
-                {{ applicant.status }}
+            <div class="badge whitespace-normal text-wrap py-2 px-4 max-w-[400px] text-base badge-{{ 
+            'success' if applicant.status in ['Hired', 'Joined', 'Offered'] 
+            else 'error' if 'Rejected' in applicant.status 
+            else 'warning' 
+           }}">
+            {{ applicant.status }}
             </div>
         </div>  
     </div>
@@ -252,11 +257,14 @@
                     
                 {% if applicant.job_id %}
                         <div>
-                            <p class="text-sm text-gray-500">Applying for</p>
+                            <p class="text-sm text-gray-500">Applied for</p>
                             <p class="font-semibold whitespace-pre-line">{{ applicant.job.position if applicant.job_id else 'N/A'  }}</p>
                         </div>
                     {% endif %}
                     <div class="flex items-center gap-4">
+                        <!-- <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm badge-{{ 'success' if applicant.status == 'Hired' or applicant.status == 'Joined' else 'error' if 'Rejected' in applicant.status else 'warning' }}">
+                            {{ applicant.current_stage }}
+                        </div> -->
                         <p class="text-gray-600">Last updated: {{ recruitment_history.updated_at.strftime('%B %d, %Y') }}</p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -339,7 +347,7 @@
                                                 <input 
                                                     type="date" 
                                                     name="interview_date" 
-                                                    class="input input-bordered w-full"
+                                                    class="input input-bordered w-full" 
                                                     min = "{{ current_date }}"
                                                     max = "2050-12-31" 
                                                     value="{{ current_date }}"
