@@ -121,12 +121,26 @@ def generate_timeline(id):
     
     # Final status
     if history.rejected:
-        timeline.append({'title': 'Application Rejected', 'date': history.updated_at.date()})
+        timeline.append({
+            'title': 'Application Rejected',
+            'date': history.updated_at.date()
+        })
     elif history.interview_round_2_date and history.interview_round_2_comments and not history.rejected:
         if not history.hr_round_date:
             timeline.append({'title': 'Pending HR Round'})
-        elif history.hr_round_comments and not history.rejected:
-            timeline.append({'title': 'Offered', 'date': history.updated_at.date()})
+        elif history.hr_round_comments:
+            timeline.append({
+                'title': 'Offered',
+                'date': history.updated_at.date()
+            })
+
+            if history.current_stage and 'Joined' in history.current_stage:
+                timeline.append({
+                    'title': 'Joined',
+                    'date': history.updated_at.date()
+                })
+
+    return timeline
     
     # Sort timeline by date
     timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))

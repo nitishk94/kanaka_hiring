@@ -257,10 +257,7 @@
                         </div>
                     {% endif %}
                     <div class="flex items-center gap-4">
-                        <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[300px] text-sm badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if 'Rejected' in applicant.current_stage else 'warning' }}">
-                            {{ applicant.current_stage }}
-                        </div>
-                        <p class="text-gray-600">Last updated: {{ applicant.last_applied.strftime('%B %d, %Y') }}</p>
+                        <p class="text-gray-600">Last updated: {{ recruitment_history.updated_at.strftime('%B %d, %Y') }}</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <!-- Logic to render buttons -->
@@ -339,7 +336,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full"
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    value="{{ current_date }}"
+                                                    required  />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">
@@ -373,7 +377,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select New Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full"
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    value="{{ current_date }}"
+                                                    required  />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">
@@ -407,7 +418,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full"
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    value="{{ current_date }}"
+                                                    required  />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">
@@ -442,7 +460,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select New Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full"
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    value="{{ current_date }}"
+                                                    required  />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">
@@ -476,7 +501,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full"
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    value="{{ current_date }}"
+                                                    required  />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">
@@ -510,7 +542,14 @@
                                                 <label class="label" for="interview_date">
                                                     <span class="label-text">Select New Date</span>
                                                 </label>
-                                                <input type="date" name="interview_date" class="input input-bordered w-full" required />
+                                                <input 
+                                                    type="date" 
+                                                    name="interview_date" 
+                                                    class="input input-bordered w-full"
+                                                    min = "{{ current_date }}"
+                                                    max = "2050-12-31" 
+                                                    value="{{ current_date }}"
+                                                    required  />
                                             </div>
                                             <div class="form-control w-full">
                                                 <label class="label" for="interview_time">
