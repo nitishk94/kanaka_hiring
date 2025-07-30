@@ -63,7 +63,8 @@
                     <!-- Job Clients -->
                     <div class="form-control md:col-span-1">
                         <label class="label" for="job_clients">
-                            <span class="label-text">Client Name </span>
+                            <span class="label-text">Client Name</span>
+
                         </label>
                         <input
                             id="job_clients"
@@ -87,7 +88,8 @@
                             required
                             placeholder="Enter budget amount"
                             class="input input-bordered"
-                            min="0"
+                            min="100000"
+                            step="10000"
                             step="any"
                             value="{{ form_data.job_budget if form_data else '' }}"
                         />
@@ -102,7 +104,8 @@
                             </label>
                             <input
                                 id="job_experience"
-                                type="text"
+                                type="number"
+                                min="0"
                                 name="job_experience"
                                 required
                                 placeholder="Enter experience required"

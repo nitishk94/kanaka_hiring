@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 from flask import Blueprint, jsonify, render_template, request, redirect, url_for, flash, current_app, session, jsonify, send_file
 from flask_login import login_required, current_user
 from myapp.auth.decorators import role_required, no_cache
@@ -15,6 +16,8 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, date, timedelta
 from pytz import timezone, utc
 import requests
+import re
+from flask import send_from_directory, abort
 import os
 
 bp = Blueprint('hr', __name__, url_prefix='/hr')
@@ -85,12 +88,48 @@ def show_upload_form():
     form_data = session.pop('form_data', None)
 
     referrer_names = [
-        {'id': user.id, 'name': user.name} for user in User.query.filter_by(role='internal_referrer').all()
+        {
+            'id': user.id,
+            'name': f"{user.name} ({user.role.capitalize()})"
+        }
+        for user in User.query.filter(func.lower(User.role).in_(['referrer', 'hr', 'admin'])).all()
     ]
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
-
     return render_template('hr/upload.html', referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
 
+def is_valid_mobile(phone_number):
+    # Must be 10 digits and start with 6-9
+    if not re.fullmatch(r'^(?!([6-9])\1{9})[6-9][0-9]{9}$', phone_number):
+        return False
+    # Reject if all digits are the same (like 9999999999)
+    if len(set(phone_number)) == 1:
+        return False
+    return True
+
+def upload_applicant_form():
+    referrer_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    
+    # Format for Vue multiselect
+    referrer_names = [
+        {
+            "id": user.id,
+            "name": user.name or user.username,
+            "role": user.role
+        }
+        for user in referrer_users
+    ]
+
+    max_dob = date.today().replace(year=date.today().year - 18).isoformat()
+
+    return render_template(
+        "hr/upload.html",
+        referrer_names=referrer_names,
+        max_dob=max_dob)
+
+
+
+
+    
 @bp.route('/upload_applicants', methods=['POST'])
 @login_required
 @role_required(*HR_ROLES)
@@ -116,6 +155,16 @@ def handle_upload_applicant():
         flash('This candidate is under a 6-month freeze period. Please try later.', 'error')
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('hr.show_upload_form'))
+    
+    dob_str = request.form.get('dob')
+    if dob_str:
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+        today = date.today()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age < 18:
+            flash("Invalid DOB, the candidate must be at least 18 years old.", "error")
+            return redirect(url_for('hr.show_upload_form'))
+    
 
     # Collect and process form data
     def get_bool(key): return bool(request.form.get(key))
@@ -221,6 +270,7 @@ def show_update_form(id):
         current_app.logger.warning(f"Session expired for user {current_user.username}")
         return {'error': 'Session expired. Please log in again.'}, 401
     
+    
     form_data = session.pop('form_data', None)
 
     applicant = Applicant.query.get_or_404(id)
@@ -231,6 +281,8 @@ def show_update_form(id):
     job_positions = JobRequirement.query.with_entities(JobRequirement.id, JobRequirement.position).filter(JobRequirement.is_open == True).all()
 
     return render_template('hr/update_applicant.html', applicant=applicant, referrer_names=referrer_names, job_positions=job_positions, form_data=form_data)
+
+
 
 @bp.route('/update_applicants/<int:id>', methods=['POST'])
 @no_cache
@@ -266,6 +318,16 @@ def update_applicant(id):
         flash('The entered email already exists. Please enter a different email.', 'error')
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('show_update_form'), id=id)
+    
+    dob_str = request.form.get('dob')
+    if dob_str:
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+        today = date.today()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age < 18:
+            flash("Invalid DOB, the candidate must be at least 18 years old.", "error")
+            return redirect(url_for('hr.show_update_form', id=applicant.id))
+    
 
     def get_bool(key): return bool(request.form.get(key))
     int_or_none = lambda x: int(x) if x else None
@@ -347,7 +409,7 @@ def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
     current_date = date.today().isoformat() 
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date=current_date)
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date)
 
 @bp.route('/filter_applicants')
 @no_cache
@@ -471,61 +533,48 @@ def search_applicants():
         sort_by=sort_by
     )
 
+#cv download
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def download_applicant_cv(id):
     applicant = Applicant.query.get_or_404(id)
-
     if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
         flash("CV file not found.", "error")
         return redirect(url_for('hr.show_upload_form'))
-    
     return send_file(applicant.cv_file_path, as_attachment=True)
+ 
 
-@bp.route('/referral/<int:id>/download_cv')
-@no_cache
-@login_required
-@role_required(*HR_ROLES)
-def download_referral_cv(id):
-    referral = Referral.query.get_or_404(id)
-
-    if not referral.cv_file_path or not os.path.exists(referral.cv_file_path):
-        flash("Referral CV not found.", "error")
-        return redirect(url_for('hr.view_referrals'))
-
-    return send_file(referral.cv_file_path, as_attachment=True)
-
-
-@bp.route('/schedule_interview/<int:id>', methods=['POST'])
+@bp.route('/schedule_interview/<int:id>', methods=['GET', 'POST'])
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
 def schedule_interview(id):
+    if request.method == 'GET':
+        current_date = date.today().isoformat()
+        return render_template('hr/schedule_interview.html', current_date=current_date)
+
     if "token" not in session:
         flash("You must be logged in through Microsoft to schedule interviews.", "error")
         return redirect(url_for('auth.login'))
     
     access_token = session["token"]["access_token"]
-    date = request.form.get('interview_date')
-    time = request.form.get('interview_time')
+    interview_date = request.form.get('interview_date')
+    interview_time = request.form.get('interview_time')
     interviewer_id = request.form.get('interviewer_id')
 
-    if isinstance(date, str):
+    if isinstance(interview_date, str):
         try:
-            date = datetime.strptime(date, '%Y-%m-%d').date()
+            date = datetime.strptime(interview_date, '%Y-%m-%d').date()
         except ValueError:
             date = None
 
-    if isinstance(time, str):
+    if isinstance(interview_time, str):
         try:
-            time = datetime.strptime(time, '%H:%M').time()
+            time = datetime.strptime(interview_time, '%H:%M').time()
         except ValueError:
-            try:
-                time = datetime.strptime(time, '%H:%M:%S').time()
-            except ValueError:
-                time = None
+            time = None
     
     if not date or not time:
         flash('Invalid date or time format.', 'error')
@@ -721,7 +770,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users = User.query.filter_by(role='internal_referrer').all()
+    users =User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -732,8 +781,7 @@ def view_referrals():
 def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
-
-    referral_users = User.query.filter_by(role='internal_referrer').all()
+    referral_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
@@ -741,10 +789,9 @@ def filter_referrals():
         query = query.filter(Referral.referrer_id == referral_id)
     if job_id:
         query = query.filter(Referral.job_id == job_id)
-
     referrals = query.order_by(Referral.id.desc()).all()
-
     return render_template('hr/view_referrals.html', referrals=referrals, jobs=jobs, users=referral_users)
+
 
 @bp.route('/upload_referral_applicant/<int:referral_id>/<int:referrer_id>/<name>', methods=['GET', 'POST'])
 @no_cache
@@ -776,6 +823,17 @@ def upload_referral_applicant(referral_id,referrer_id, name):
 
 
     # ---- POST logic begins ----
+
+    dob_str = request.form.get('dob')
+    if dob_str:
+        dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+        today = date.today()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        if age < 18:
+            flash("Invalid DOB, the candidate must be at least 18 years old.", "error")
+            return redirect(url_for('hr.upload_referral_applicant', referral_id=referral_id, referrer_id=referrer_id, name=name))
+        
+
     file = request.files.get('cv')
     referral = Referral.query.get_or_404(referral_id)
 
@@ -920,11 +978,9 @@ def onboarding():
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def filter_interviews():
+def filter_interviews_by_hr():
     hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-    
     hr_id = request.args.get('hr_id', '')
-    
     if hr_id:
         interviews = Interview.query\
             .filter_by(completed=False, scheduler_id=hr_id)\
@@ -943,9 +999,35 @@ def filter_interviews():
                 joinedload(Interview.scheduler)
             )\
             .all()
-    
-    
     return render_template('hr/view_interviews.html', interviews=interviews, users=hr_users)
+
+#filter by interviewers
+@bp.route('/filter_interviews')
+@no_cache
+@login_required
+@role_required(*HR_ROLES)
+def filter_interviews_by_interviewer():
+    interviewer_users = User.query.filter(User.role.in_(['interviewer'])).all()
+    interviewer_id = request.args.get('interviewer_id', '')
+    if interviewer_id:
+        interviews = Interview.query\
+            .filter_by(completed=False, scheduler_id=interviewer_id)\
+            .options(
+                joinedload(Interview.applicant),
+                joinedload(Interview.interviewer),
+                joinedload(Interview.scheduler)
+            )\
+            .all()
+    else:
+        interviews = Interview.query\
+            .filter_by(completed=False)\
+            .options(
+                joinedload(Interview.applicant),
+                joinedload(Interview.interviewer),
+                joinedload(Interview.scheduler)
+            )\
+            .all()
+    return render_template('hr/view_interviews.html', interviews=interviews, interviewers=interviewer_users)
 
 @bp.route('/reschedule_interview/<int:id>', methods=['POST'])
 @no_cache
@@ -1748,4 +1830,7 @@ def search_sort_filter_applicants():
         selected_stage=selected_stage,
         pagination=applicants_pagination
     )
+
+
+
 

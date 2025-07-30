@@ -25,15 +25,8 @@
                         <label class="label" for="dob">
                             <span class="label-text">Date of Birth <span class="text-error">*</span></span>
                         </label>
-                        <input 
-                            id="dob" 
-                            type="date" 
-                            name="dob" 
-                            required class="input input-bordered"
-                            value="{{ applicant.dob if applicant else '' }}" 
-                            max = "2050-12-31"
-
-                        />
+                        <input id="dob" type="date" name="dob" required class="input input-bordered" min="1950-01-01" max="{{ max_dob }}"
+                            value="{{ applicant.dob if applicant else '' }}" />
                     </div>
                     <!-- Email -->
                     <div class="form-control">
@@ -47,7 +40,7 @@
                         <label class="label" for="phone_number">
                             <span class="label-text">Phone Number <span class="text-error">*</span></span>
                         </label>
-                        <input id="phone_number" type="tel" name="phone_number" required placeholder="Enter phone number" pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" class="input input-bordered" value="{{ applicant.phone_number if applicant else '' }}" />
+                        <input id="phone_number" type="tel" name="phone_number" required placeholder="Enter phone number" pattern="^(?!([6-9])\1{9})[6-9][0-9]{9}$" title="Please enter a valid 10-digit phone number" class="input input-bordered" value="{{ applicant.phone_number if applicant else '' }}" />
                     </div>
                     <!-- Gender -->
                     <div class="form-control">
@@ -162,9 +155,9 @@
                     </div>
                 
                 <!-- Job Position Dropdown -->
-                <div class="form-control" id="position-section">
+                <div class="form-control" id="position-section" required>
                     <label class="label-text">Select Job Position:</label>
-                    <select name="position" id="position" class="select select-bordered w-full">
+                    <select name="position" id="position" class="select select-bordered w-full" required>
                         <option value="">-- Choose a Position --</option>
                         {% for id, position in job_positions %}
                             <option value="{{ id }}" {% if form_data and applicant.position == id|string %}selected{% endif %}>{{ position }}</option>
@@ -184,7 +177,7 @@
                             name="graduation_year"
                             placeholder="Enter graduation year"
                             class="input input-bordered w-full"
-                            min="1950"
+                            min="1980"
                             max="2030"
                             required
                             value="{{ applicant.graduation_year if applicant.graduation_year else '' }}"
@@ -284,7 +277,7 @@
                         </label>
                         <input
                             id="experience"
-                            type="text"
+                            type="number"
                             name="experience"
                             required
                             placeholder="Enter years of experience"
@@ -344,6 +337,8 @@
                             id="current_ctc"
                             type="number"
                             name="current_ctc"
+                            min = "1"
+                            step="0.25"
                             placeholder="Enter current CTC"
                             class="input input-bordered w-full"
                             value="{{ applicant.current_ctc if applicant.current_ctc else '' }}"
@@ -358,6 +353,8 @@
                         <input
                             id="expected_ctc"
                             type="number"
+                            min="1"
+                            step="0.25"
                             name="expected_ctc"
                             placeholder="Enter expected CTC"
                             class="input input-bordered w-full"
@@ -382,13 +379,15 @@
 
                     <div id="tenure-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="tenure_at_current_company">
-                            <span class="label-text">Tenure at Current Company <span class="text-error">*</span></span>
+                            <span class="label-text">Tenure at Current Company (in years) <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="tenure_at_current_company"
-                            type="text"
+                            type="number"
+                            min="1"
+                            step="0.1"
                             name="tenure_at_current_company"
-                            placeholder="Enter tenure"
+                            placeholder="Enter tenure in years"
                             class="input input-bordered w-full"
                             value="{{ applicant.tenure_at_current_company if applicant.tenure_at_current_company else '' }}"
                             required

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Upload CV{% endblock %}
+{% block title %}Upload Applicant Details{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
@@ -46,6 +46,8 @@
                             type="date"
                             name="dob"
                             required
+                            min="1950-01-01"
+                            max="{{ 'max_dob' }}"
                             class="input input-bordered"
                             value="{{ form_data.dob if form_data else '' }}"
                             max = "2050-12-31"
@@ -79,7 +81,7 @@
                             name="phone_number"
                             required
                             placeholder="Enter phone number"
-                            pattern="[0-9]{10}"
+                            pattern="^(?!([6-9])\1{9})[6-9][0-9]{9}$"
                             title="Please enter a valid 10-digit phone number"
                             class="input input-bordered"
                             value="{{ form_data.phone_number if form_data else '' }}"
@@ -197,7 +199,7 @@
                 </div>
                     <div class="form-control" id="position-section">
                         <label class="label font-semibold text-lg text-black">Select Job Position:</label>
-                        <select name="position" id="position" class="select select-bordered w-full">
+                        <select name="position" id="position" class="select select-bordered w-full" required>
                             <option value="">-- Choose a Position --</option>
                             {% for id, position in job_positions %}
                                     <option value="{{ id }}"
@@ -227,7 +229,7 @@
                             name="graduation_year"
                             placeholder="Enter graduation year"
                             class="input input-bordered w-full"
-                            min="1950"
+                            min="1980"
                             max="2030"
                             required
                             value="{{ form_data.graduation_year if form_data else '' }}"
@@ -300,7 +302,7 @@
                             name="internship_duration"
                             placeholder="Enter duration in months"
                             class="input input-bordered w-full"
-                            min="0"
+                            min="1"
                             value="{{ form_data.internship_duration if form_data else '' }}"
                         />
                     </div>
@@ -323,17 +325,16 @@
                     <!-- Working Professional Section -->
                     <div id="experience-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="experience">
-                            <span class="label-text">Experience <span class="text-error">*</span></span>
+                            <span class="label-text">Experience (in years) <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="experience"
-                            type="text"
+                            type="number"
                             name="experience"
                             min="1"
                             required
                             placeholder="Enter years of experience"
                             class="input input-bordered w-full"
-                            min="1"
                             value="{{ form_data.experience if form_data else '' }}"
 
                         />
@@ -389,6 +390,8 @@
                             id="current_ctc"
                             type="number"
                             name="current_ctc"
+                            min="1"
+                            step="0.25"
                             placeholder="Enter current CTC"
                             class="input input-bordered w-full"
                             value="{{ form_data.current_ctc if form_data else '' }}"
@@ -403,6 +406,8 @@
                         <input
                             id="expected_ctc"
                             type="number"
+                            min="1"
+                            step="0.25"
                             name="expected_ctc"
                             placeholder="Enter expected CTC"
                             class="input input-bordered w-full"
@@ -427,13 +432,15 @@
 
                     <div id="tenure-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="tenure_at_current_company">
-                            <span class="label-text">Tenure at Current Company <span class="text-error">*</span></span>
+                            <span class="label-text">Tenure at Current Company (in years) <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="tenure_at_current_company"
-                            type="text"
+                            type="number"
+                            min="1"
+                            step="0.1"
                             name="tenure_at_current_company"
-                            placeholder="Enter tenure"
+                            placeholder="Enter tenure in years"
                             class="input input-bordered w-full"
                             value="{{ form_data.tenure_at_current_company if form_data else '' }}"
                             required

@@ -74,7 +74,7 @@
                     </div>
                     <div>
                         <h2 class="card-title">View Active Applicants</h2>
-                        <p class="text-gray-600">View and manage active applicant list</p>
+                        <p class="text-gray-600">View and manage the active applicants</p>
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                     </div>
                     <div>
                         <h2 class="card-title">View Interviews</h2>
-                        <p class="text-gray-600">Access details of the interviewees and submit feedback</p>
+                        <p class="text-gray-600">Access details of the interviews and submit feedback</p>
                     </div>
                 </div>
             </div>
@@ -150,22 +150,6 @@
             </div>
         </a>
 
-        <a href="{{ url_for('admin.view_logs') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
-            <div class="card-body">
-                <div class="flex items-center gap-4">
-                    <div class="bg-teal-100 p-4 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 20v-6M6 20V10M18 20V4"></path>
-                            <rect x="2" y="20" width="20" height="2"></rect>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="card-title">System Logs</h2>
-                        <p class="text-gray-600">View system activity logs</p>
-                    </div>
-                </div>
-            </div>
-        </a>
         <a href="{{ url_for('hr.all_applicants') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <div class="card-body">
                     <div class="flex items-center gap-4">
@@ -181,6 +165,24 @@
                     </div>
                 </div>
             </a>
+
+            <a href="{{ url_for('admin.view_logs') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="bg-teal-100 p-4 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20v-6M6 20V10M18 20V4"></path>
+                            <rect x="2" y="20" width="20" height="2"></rect>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="card-title">System Logs</h2>
+                        <p class="text-gray-600">View system activity logs</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+            
         <a href="{{ url_for('admin.reports') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
                 <div class="flex items-center gap-4">

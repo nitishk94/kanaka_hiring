@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Upload CV{% endblock %}
+{% block title %}Upload Applicant Details{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold mb-4">Upload applicant details </h1>
+        <h1 class="text-4xl font-bold mb-4">Upload Applicant Details </h1>
         <p class="text-lg text-gray-600">Upload applicant information and CV to start the hiring process.</p>
         <p class="text-sm text-error mt-2">Fields marked with <span class="text-error">*</span> are required</p>
     </div>
@@ -42,6 +42,8 @@
                             type="date"
                             name="dob"
                             required
+                            min="1950-01-01"
+                            max="{{ max_dob }}"
                             class="input input-bordered"
                             value="{{ form_data.dob if form_data else '' }}"
                             max = "2050-12-31"
@@ -57,7 +59,7 @@
                             type="email"
                             name="email"
                             required
-                            placeholder="Enter email"
+                            placeholder="Enter email id"
                             pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                             title="Please enter a valid email address"
                             class="input input-bordered"
@@ -75,8 +77,8 @@
                             name="phone_number"
                             required
                             placeholder="Enter phone number"
-                            pattern="[0-9]{10}"
-                            title="Please enter a valid 10-digit phone number"
+                            pattern="^(?!([6-9])\1{9})[6-9][0-9]{9}$"
+                            title="Please enter a valid 10-digit phone number starting with 6-9 and not all digits repeated"
                             class="input input-bordered"
                             value="{{ form_data.phone_number if form_data else '' }}"
                         />
@@ -224,11 +226,11 @@
                             <input type="hidden" name="referred_by" :value="selectedReferrer ? selectedReferrer.id : ''" id="referred_by" required />
                         </div>
                     </div>
-                    
                 </div>
+                
                     <div class="form-control" id="position-section">
-                        <label class="label font-semibold text-lg text-black">Select Job Position:</label>
-                        <select name="position" id="position" class="select select-bordered w-full">
+                        <span><label class="label font-semibold text-lg text-black">Select Job Position:*</label></span>
+                        <select name="position" id="position" class="select select-bordered w-full" required>
                             <option value="">-- Choose a Position --</option>
                             {% for id, position in job_positions %}
                                     <option value="{{ id }}"
@@ -253,7 +255,7 @@
                             name="graduation_year"
                             placeholder="Enter graduation year"
                             class="input input-bordered w-full"
-                            min="1950"
+                            min="1980"
                             max="2030"
                             required
                             value="{{ form_data.graduation_year if form_data else '' }}"
@@ -326,7 +328,7 @@
                             name="internship_duration"
                             placeholder="Enter duration in months"
                             class="input input-bordered w-full"
-                            min="0"
+                            min="1"
                             value="{{ form_data.internship_duration if form_data else '' }}"
                         />
                     </div>
@@ -349,17 +351,16 @@
                     <!-- Working Professional Section -->
                     <div id="experience-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="experience">
-                            <span class="label-text">Experience <span class="text-error">*</span></span>
+                            <span class="label-text">Experience (in years) <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="experience"
-                            type="text"
+                            type="number"
                             name="experience"
                             min="1"
                             required
                             placeholder="Enter years of experience"
                             class="input input-bordered w-full"
-                            min="1"
                             value="{{ form_data.experience if form_data else '' }}"
 
                         />
@@ -413,6 +414,8 @@
                         <input
                             id="current_ctc"
                             type="number"
+                            min="1"
+                            step="0.25"
                             name="current_ctc"
                             placeholder="Enter current CTC"
                             class="input input-bordered w-full"
@@ -429,6 +432,8 @@
                             id="expected_ctc"
                             type="number"
                             name="expected_ctc"
+                            min="1"
+                            step="0.25"
                             placeholder="Enter expected CTC"
                             class="input input-bordered w-full"
                             value="{{ form_data.expected_ctc if form_data else '' }}"
@@ -442,6 +447,7 @@
                         <input
                             id="notice_period"
                             type="number"
+                            min="1"
                             name="notice_period"
                             placeholder="Enter notice period in days"
                             class="input input-bordered w-full"
@@ -452,13 +458,15 @@
 
                     <div id="tenure-field" class="form-control w-full" style="display: none;">
                         <label class="label" for="tenure_at_current_company">
-                            <span class="label-text">Tenure at Current Company <span class="text-error">*</span></span>
+                            <span class="label-text">Tenure at Current Company (in years) <span class="text-error">*</span></span>
                         </label>
                         <input
                             id="tenure_at_current_company"
-                            type="text"
+                            type="number"
+                            min="1"
+                            step="0.1"
                             name="tenure_at_current_company"
-                            placeholder="Enter tenure"
+                            placeholder="Enter tenure in years"
                             class="input input-bordered w-full"
                             value="{{ form_data.tenure_at_current_company if form_data else '' }}"
                             required
@@ -754,19 +762,19 @@
             }
         });
 
-        // Custom validation for referral name
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            if (referralToggle.checked) {
-                const referrerInput = document.getElementById('referred_by');
-                if (!referrerInput.value) {
-                    e.preventDefault();
-                    alert('Please select a referral name.');
-                    return false;
-                }
+        //Validation for negative notice period
+        const noticeInput = document.getElementById('notice_period');
+        const form = noticeInput.closest('form');
+    
+        form.addEventListener('submit', function (e) {
+          if (noticeInput.value < 0) {
+                e.preventDefault();
+                alert("Notice period cannot be negative.");
+                noticeInput.focus();
             }
         });
     });
+
 </script>
 {% endblock %}
 
