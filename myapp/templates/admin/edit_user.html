@@ -51,7 +51,7 @@
         </div>
 
         <!-- Password Update Card -->
-        {% if user.role == 'internal_referrer' and user.auth_type == 'local' %}
+        {% if user.role == 'external_referrer' and user.auth_type == 'local' %}
             <div class="card bg-base-100 shadow-xl">
                 <div class="card-body">
                     <h2 class="card-title mb-4">Change Password</h2>

@@ -10,7 +10,11 @@
             <p class="py-6">Join Kanaka Application Tracking System to help streamline the hiring process and manage applicants effectively.</p>
         </div>
         <div class="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+           
             <form method="POST" action="{{ url_for('auth.handle_register') }}" class="card-body">
+                 <div class="mb-4 p-4 bg-blue-50  border-blue-500 text-sm  rounded">
+                    <strong>Note:</strong> If you are a <strong>Kanaka employee</strong>, please <a href="{{ url_for('auth.login_microsoft') }}" style="color: #0078d4; text-decoration: underline;">login with Microsoft</a> instead of registering manually.
+                </div>
                 <div class="form-control">
                     <label class="label">
                         <span class="label-text">Name <span class="text-error">*</span></span>
@@ -177,15 +181,7 @@
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>
             </form>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} mx-4 mb-4">
-                            <span>{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+            
         </div>
     </div>
 </div>
