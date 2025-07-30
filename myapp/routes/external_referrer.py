@@ -221,5 +221,4 @@ def handle_upload_applicant():
         current_app.logger.error(f"IntegrityError: {e}")
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('external_referrer.show_upload_form'))
-    
-    
+     
