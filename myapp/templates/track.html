@@ -7,7 +7,7 @@
     <div class="container max-w-4xl mx-auto px-4 py-4">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold">Recruitment Progress</h1>
-            <div class="badge badge-lg badge-{{ 'success' if applicant.current_stage == 'Hired' else 'error' if applicant.current_stage == 'Rejected' else 'warning' }}">
+            <div class="badge badge-lg badge-{{ 'success' if applicant.status == 'Hired' or applicant.status == 'Joined' else 'error' if applicant.status == 'Rejected' else 'warning' }}">
                 {{ applicant.current_stage }}
             </div>
         </div>

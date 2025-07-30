@@ -75,11 +75,9 @@ def update_status(id):
 
 def generate_timeline(id):
     history = RecruitmentHistory.query.filter_by(applicant_id=id).first()
-    
     timeline = [
         {'title': 'Application Received', 'date': history.applied_date}
     ]
-    
     # Test scheduling history
     if history.test_date:
         timeline.append({
@@ -127,6 +125,8 @@ def generate_timeline(id):
             timeline.append({'title': 'Pending HR Round'})
         elif history.hr_round_comments and not history.rejected:
             timeline.append({'title': 'Offered', 'date': history.updated_at.date()})
+            if history.current_stage and 'Joined' in history.current_stage:
+                timeline.append({'title': 'Joined', 'date': history.updated_at.date()})
     
     # Sort timeline by date
     timeline.sort(key=lambda x: (x.get('date') or datetime.max.date()))

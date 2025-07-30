@@ -10,11 +10,14 @@
             <form method="GET" action="{{ url_for('admin.manage_users') }}" class="flex items-center gap-2">
                 <select name="role" class="select select-bordered" onchange="this.form.submit()">
                     <option value="" {% if not selected_role %}selected{% endif %}>All Roles</option>
-                    <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
-                    <option value="hr" {% if selected_role == 'hr' %}selected{% endif %}>HR</option>
-                    <option value="interviewer" {% if selected_role == 'interviewer' %}selected{% endif %}>Interviewer</option>
-                    <option value="internal_referrer" {% if selected_role == 'internal_referrer' %}selected{% endif %}>Internal Referrer</option>
-                    <option value="external_referrer" {% if selected_role == 'external_referrer' %}selected{% endif %}>External Referrer</option>
+                    <option value="admin" {% if selected_role=='admin' %}selected{% endif %}>Admin</option>
+                    <option value="hr" {% if selected_role=='hr' %}selected{% endif %}>HR</option>
+                    <option value="interviewer" {% if selected_role=='interviewer' %}selected{% endif %}>Interviewer
+                    </option>
+                    <option value="internal_referrer" {% if selected_role=='internal_referrer' %}selected{% endif %}>
+                        Internal Referrer</option>
+                    <option value="external_referrer" {% if selected_role=='external_referrer' %}selected{% endif %}>
+                        External Referrer</option>
                 </select>
             </form>
             <div class="stats shadow">
@@ -38,60 +41,95 @@
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Current user -->
+                    <tr class="bg-gray-100 font-semibold">
+                        <td>{{ current_user.username }} <span class="text-xs text-gray-500">(You)</span></td>
+                        <td>{{ current_user.email }}</td>
+                        <td>
+                            <div class="badge badge-info">{{ current_user.role.capitalize() }}</div>
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button class="btn btn-sm btn-info cursor-not-allowed" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-error cursor-not-allowed" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 6h18"></path>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                     {% for user in users %}
-                        {% if user.id != current_user.id %}
-                        <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>
-                                {% if not user.role %}
-                                    <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id) }}">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <select name="role" class="select select-bordered select-sm">
-                                            {% if current_user.is_superuser %}
-                                                <option value="admin">Admin</option>
-                                            {% endif %}
-                                            <option value="hr">HR</option>
-                                            <option value="interviewer">Interviewer</option>
-                                            <option value="internal_referrer">Internal Referrer</option>
-                                            <option value="external_referrer">External Referrer</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-primary">Assign Role</button>
-                                    </form>
+                    {% if user.id != current_user.id %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if not user.role %}
+                            <form method="POST" action="{{ url_for('admin.change_role', user_id=user.id) }}">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <select name="role" class="select select-bordered select-sm">
+                                    {% if current_user.is_superuser %}
+                                    <option value="admin">Admin</option>
+                                    {% endif %}
+                                    <option value="hr">HR</option>
+                                    <option value="interviewer">Interviewer</option>
+                                    <option value="internal_referrer">Internal Referrer</option>
+                                    <option value="external_referrer">External Referrer</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Assign Role</button>
+                            </form>
+                            {% else %}
+                            <div class="badge badge-{{ 'success' if user.role == 'admin' else 'warning' }}">
+                                {% if user.role == 'hr' %}
+                                {{ user.role.upper() }}
                                 {% else %}
-                                    <div class="badge badge-{{ 'success' if user.role == 'admin' else 'warning' }}">
-                                        {% if user.role == 'hr' %}
-                                            {{ user.role.upper() }}
-                                        {% else %}
-                                            {{ user.role.capitalize() }}
-                                        {% endif %}
-                                    </div>
+                                {{ user.role.capitalize() }}
                                 {% endif %}
-                            </td>
-                            <td>
-                                {% if current_user.is_superuser or user.role != 'admin' %}
-                                    <div class="flex gap-2">
-                                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-info">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                            </svg>
-                                            Edit
-                                        </a>
-                                        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" class="inline">
-                                            <button type="submit" class="btn btn-sm btn-error">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                    <path d="M3 6h18"></path>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                </svg>
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if current_user.is_superuser or user.role != 'admin' %}
+                            <div class="flex gap-2">
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-sm btn-info">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                    Edit
+                                </a>
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                                    class="inline">
+                                    <button type="submit" class="btn btn-sm btn-error">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M3 6h18"></path>
+                                            <path
+                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                            </path>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

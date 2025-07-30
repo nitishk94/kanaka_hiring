@@ -408,7 +408,15 @@ def view_applicant(id):
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
     current_date = date.today().isoformat() 
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date)
+    
+    # Get the recruitment history record
+    recruitment_history = (
+        db.session.query(RecruitmentHistory)
+        .filter_by(applicant_id=id)
+        .order_by(RecruitmentHistory.updated_at.desc())
+        .first()
+    )
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date, recruitment_history = recruitment_history)
 
 @bp.route('/filter_applicants')
 @no_cache
@@ -701,6 +709,8 @@ def schedule_interview(id):
 
     return redirect(url_for('hr.view_applicant', id=id))
 
+
+# ??? where used
 @bp.route('/offered_application/<int:id>', methods=['POST'])
 @no_cache
 @login_required
