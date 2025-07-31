@@ -23,24 +23,6 @@
             </div>
         </div>
     </div>
-    {% elif request.args.get('password_changed') %}
-    <div class="hero min-h-[calc(100vh-4rem)]">
-        <div class="hero-content text-center">
-            <div class="flex flex-col gap-6">
-                <div class="card bg-error/10 w-96 shadow-sm">
-                    <div class="card-body">
-                        <h2 class="card-title text-error justify-center">Account Password Changed</h2>
-                        <p>
-                            Please contact your administrator.
-                        </p>
-                        <div class="card-actions justify-end">
-                            <a href="{{ url_for('main.home') }}" class="btn btn-error">Dismiss</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     {% else %}
     <div class="hero min-h-[calc(100vh-4rem)]">
         <div class="hero-content text-center">
