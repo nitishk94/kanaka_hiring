@@ -7,46 +7,39 @@
     <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h1 class="text-3xl font-bold">Active Applicants List</h1>
         <div class="flex items-center gap-4 flex-wrap">
-            <form method="GET" action="{{ url_for('hr.search_sort_filter_applicants') }}" class="flex gap-2 min-w-[250px] relative">
-            <div class="relative w-full">
-                <input
-                    type="text"
-                    name="query"
-                    placeholder="Search jobs..."
-                    class="input input-bordered w-full pr-10"
-                    value="{{ search_query or '' }}"
-                    id="searchInput"
-                />
-                <button
-                    type="button"
-                    id="clearSearchBtn"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                    style="display: {{ 'inline' if search_query|default('') else 'none' }};"
-                >
-                    &#10005;
-                </button>
-            </div>
-            <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
-        
-            <!-- Sort By Dropdown (identical to Filter) -->
-            <div class="dropdown dropdown-end ">
-                <div tabindex="0" role="button" class="btn btn-outline btn-primary w-20">
-                    Sort By
+            <form method="GET" action="{{ url_for('hr.search_sort_filter_applicants') }}"
+                class="flex gap-2 min-w-[250px] relative">
+                <div class="relative w-full">
+                    <input type="text" name="query" placeholder="Search jobs..."
+                        class="input input-bordered w-full pr-10" value="{{ search_query or '' }}" id="searchInput" />
+                    <button type="button" id="clearSearchBtn"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                        style="display: {{ 'inline' if search_query|default('') else 'none' }};">
+                        &#10005;
+                    </button>
                 </div>
-                <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-                    
+                <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
+
+                <!-- Sort By Dropdown (identical to Filter) -->
+                <div class="dropdown dropdown-end ">
+                    <div tabindex="0" role="button" class="btn btn-outline btn-primary w-20">
+                        Sort By
+                    </div>
+                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
+
                         <input type="hidden" name="query" value="{{ search_query or '' }}">
                         <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
-                            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
-                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
-                            <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
+                            <option value="date" {% if sort_by=='date' %}selected{% endif %}>Application Date (Latest)
+                            </option>
+                            <option value="name" {% if sort_by=='name' %}selected{% endif %}>Name (A–Z)</option>
+                            <option value="hr" {% if sort_by=='hr' %}selected{% endif %}>HR Name (A–Z)</option>
                         </select>
-                    
-                </div>
-            </div>
 
-            <!-- Filter Dropdown -->
-            
+                    </div>
+                </div>
+
+                <!-- Filter Dropdown -->
+
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-outline btn-primary w-28">
                         Filter
@@ -58,10 +51,10 @@
                             <select name="hr_id" id="hr_id" class="select select-bordered">
                                 <option value="">-- All HR --</option>
                                 {% for hr in users %}
-                                    <option value="{{ hr.id }}"
-                                        {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
-                                        {{ hr.name if hr.name else hr.username }}
-                                    </option>
+                                <option value="{{ hr.id }}" {% if request.args.get('hr_id')|string==hr.id|string
+                                    %}selected{% endif %}>
+                                    {{ hr.name if hr.name else hr.username }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -72,10 +65,10 @@
                             <select name="job_id" id="job_id" class="select select-bordered">
                                 <option value="">-- All Jobs --</option>
                                 {% for job in jobs %}
-                                    <option value="{{ job.id }}"
-                                        {% if request.args.get('job_id')|string == job.id|string %}selected{% endif %}>
-                                        {{ job.position }}
-                                    </option>
+                                <option value="{{ job.id }}" {% if request.args.get('job_id')|string==job.id|string
+                                    %}selected{% endif %}>
+                                    {{ job.position }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -85,13 +78,16 @@
                             <label for="status" class="font-semibold mb-1">Experience:</label>
                             <select name="status" id="status" class="select select-bordered">
                                 <option value="">-- All Applicants --</option>
-                                <option value="fresher" {% if request.args.get('status') == 'fresher' %}selected{% endif %}>Fresher</option>
-                                <option value="experienced" {% if request.args.get('status') == 'experienced' %}selected{% endif %}>Experienced</option>
+                                <option value="fresher" {% if request.args.get('status')=='fresher' %}selected{% endif
+                                    %}>Fresher</option>
+                                <option value="experienced" {% if request.args.get('status')=='experienced' %}selected{%
+                                    endif %}>Experienced</option>
                             </select>
                         </div>
                         <!-- Filter Buttons -->
                         <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
-                        <a href="{{ url_for('hr.search_sort_filter_applicants') }}" class="btn btn-primary mt-2">Clear Filter</a>
+                        <a href="{{ url_for('hr.search_sort_filter_applicants') }}" class="btn btn-primary mt-2">Clear
+                            Filter</a>
                     </div>
                 </div>
             </form>
@@ -125,38 +121,45 @@
             </thead>
             <tbody>
                 {% for applicant in applicants %}
-                    <tr>
-                        <td>{{ applicant.last_applied }}</td>
-                        <td>{{ applicant.name }}</td>
-                        <td>{{ applicant.email }}</td>
-                        <td>{{ applicant.phone_number }}</td>
-                        <td>
-                            {% if applicant.is_fresher %}
-                                Fresher
-                            {% else %}
-                                {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
-                            {% endif %}
-                        </td>
-                        <td>{{ applicant.notice_period if applicant.notice_period else '' }} {{ 'days' if applicant.notice_period else '' }}</td>
-                        <td>{{ applicant.uploader.name }}</td>
-                        <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
-                        <td>
-                            <div class="badge whitespace-normal text-wrap min-h-fit h-auto py-1 px-2 max-w-[120px] text-xs badge-{{ 'success' if applicant.status in ['Offered', 'Joined'] else 'error' if 'Rejected' in applicant.status else 'warning' }}">
-                                {{ applicant.status }}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="flex gap-2">
-                                <a href="{{ url_for('hr.view_applicant', id=applicant.id) }}" class="btn btn-sm btn-info">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
-                                    View Details
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+                <tr>
+                    <td>{{ applicant.last_applied }}</td>
+                    <td>{{ applicant.name }}</td>
+                    <td>{{ applicant.email }}</td>
+                    <td>{{ applicant.phone_number }}</td>
+                    <td>
+                        {% if applicant.is_fresher %}
+                        Fresher
+                        {% else %}
+                        {{ applicant.experience }} {{ 'year' if applicant.experience == 1 else 'years' }}
+                        {% endif %}
+                    </td>
+                    <td>{{ applicant.notice_period if applicant.notice_period else '' }} {{ 'days' if
+                        applicant.notice_period else '' }}</td>
+                    <td>{{ applicant.uploader.name }}</td>
+                    <td>{{ applicant.job.position if applicant.job_id else 'N/A' }}</td>
+                    <td>
+                        <div class="badge text-xs px-3 py-2 min-w-[160px] min-h-fit max-w-fit whitespace-normal break-words text-wrap text-center badge-{{ 
+                            'error' if 'Rejected' in applicant.current_stage 
+                            else 'neutral' if applicant.status == 'On Hold' 
+                            else 'success' if applicant.status in ['Offered', 'Joined'] 
+                            else 'warning' 
+                        }}">
+                            {{ applicant.current_stage or 'N/A' }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <a href="{{ url_for('hr.view_applicant', id=applicant.id) }}" class="btn btn-sm btn-info">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                View Details
+                            </a>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -168,22 +171,23 @@
         <nav class="join">
             {% set args = request.args.copy() %}
             {% if pagination.has_prev %}
-                {% set args = args.to_dict() %}
-                {% set _ = args.update({'page': pagination.prev_num}) %}
-                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">&lsaquo; Prev</a>
+            {% set args = args.to_dict() %}
+            {% set _ = args.update({'page': pagination.prev_num}) %}
+            <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">&lsaquo; Prev</a>
             {% else %}
-                <span class="join-item btn btn-disabled">&lsaquo; Prev</span>
+            <span class="join-item btn btn-disabled">&lsaquo; Prev</span>
             {% endif %}
 
-            <span class="join-item btn font-bold bg-gray-800 text-white">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            <span class="join-item btn font-bold bg-gray-800 text-white">Page {{ pagination.page }} of {{
+                pagination.pages }}</span>
 
             {% if pagination.has_next %}
-                {% set args = request.args.copy() %}
-                {% set args = args.to_dict() %}
-                {% set _ = args.update({'page': pagination.next_num}) %}
-                <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">Next &rsaquo;</a>
+            {% set args = request.args.copy() %}
+            {% set args = args.to_dict() %}
+            {% set _ = args.update({'page': pagination.next_num}) %}
+            <a class="join-item btn" href="{{ url_for(request.endpoint, **args) }}">Next &rsaquo;</a>
             {% else %}
-                <span class="join-item btn btn-disabled">Next &rsaquo;</span>
+            <span class="join-item btn btn-disabled">Next &rsaquo;</span>
             {% endif %}
         </nav>
     </div>
@@ -205,19 +209,19 @@
 {% block extra_js %}
 {{ super() }}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('searchInput');
         const clearBtn = document.getElementById('clearSearchBtn');
         if (clearBtn && searchInput) {
-            clearBtn.addEventListener('click', function(e) {
+            clearBtn.addEventListener('click', function (e) {
                 searchInput.value = '';
                 searchInput.focus();
                 clearBtn.style.display = 'none';
             });
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 clearBtn.style.display = searchInput.value ? 'inline' : 'none';
             });
         }
     });
 </script>
-{% endblock %} 
+{% endblock %}

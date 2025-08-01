@@ -66,7 +66,7 @@
                     <td>{{ interview.applicant.name }}</td>
                     <td>{{ interview.interviewer.name }}</td>
                     <td>{{ interview.date.strftime('%Y-%m-%d') }}</td>
-                    <td>Round {{ interview.round_number }}</td>
+                    <td>{{ interview.round_number }}</td>
                     <td>
                         {{ interview.scheduler.name if interview.scheduler else 'No Scheduler' }}
                     </td>

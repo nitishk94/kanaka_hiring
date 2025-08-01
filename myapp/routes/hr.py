@@ -218,7 +218,7 @@ def handle_upload_applicant():
         reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
         comments=request.form.get('comments') or 'No comments',
         last_applied=date.today(),
-        current_stage='Need to schedule test/interview',
+        current_stage='Need to Schedule Test or Interview',
         uploaded_by=current_user.id,
         is_referred=get_bool('is_referred'),
         referred_by=int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None,
@@ -419,6 +419,7 @@ def view_applicant(id):
     update_status(id)
     applicant = Applicant.query.get_or_404(id)
     interviewers = User.query.filter_by(role='interviewer').all()
+    hr_interviewers = User.query.filter(User.role.in_(['HR', 'Admin', 'Interviewer'])).all()
     current_date = date.today().isoformat() 
     
     # Get the recruitment history record
@@ -428,7 +429,7 @@ def view_applicant(id):
         .order_by(RecruitmentHistory.updated_at.desc())
         .first()
     )
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date, recruitment_history = recruitment_history)
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, hr_interviewers=hr_interviewers, current_date = current_date, recruitment_history = recruitment_history)
 
 
 @bp.route('/filter_applicants')
@@ -557,7 +558,7 @@ def search_applicants():
 @bp.route('/applicants/<int:id>/download_cv')
 @no_cache
 @login_required
-@role_required(*HR_ROLES)
+@role_required(*HR_ROLES, 'interviewer')
 def download_applicant_cv(id):
     applicant = Applicant.query.get_or_404(id)
     if not applicant.cv_file_path or not os.path.exists(applicant.cv_file_path):
@@ -792,7 +793,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users =User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    users =User.query.filter(User.role.in_(['external_referrer', 'internal_referrer', 'hr', 'admin'])).all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -803,7 +804,7 @@ def view_referrals():
 def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
-    referral_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    referral_users = User.query.filter(User.role.in_(['external_referrer', 'internal_referrer', 'hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
@@ -934,7 +935,7 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
         comments=request.form.get('comments') or 'No comments',
         last_applied=date.today(),
-        current_stage='Need to schedule test/interview',
+        current_stage='Need to Schedule Test or Interview',
         uploaded_by=current_user.id,
         is_referred=True,
         referred_by=int(referrer_id),
@@ -1589,6 +1590,7 @@ def available_interviewers():
             return jsonify([])
 
         interviewers = User.query.filter_by(role='interviewer').all()
+        hr_interviewers = User.query.filter(User.role.in_(['HR', 'Admin', 'Interviewer'])).all()
         interviewer_ids = [i.id for i in interviewers]
 
         scheduled_interviews = Interview.query.filter(
@@ -1615,6 +1617,69 @@ def available_interviewers():
 
     except ValueError:
         return jsonify([])
+    
+    
+# @bp.route('/available_interviewers', methods=['GET'])
+# @no_cache
+# @login_required
+# @role_required(*HR_ROLES)
+# def available_interviewers():
+#     date_str = request.args.get('date')
+#     time_str = request.args.get('time')
+
+#     if not date_str or not time_str:
+#         return jsonify({"interviewers": [], "hr_interviewers": []})
+
+#     try:
+#         interview_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+
+#         if not is_future_or_today(interview_datetime.date()):
+#             return jsonify({"interviewers": [], "hr_interviewers": []})
+
+#         # Get normal interviewers
+#         interviewers = User.query.filter_by(role='interviewer').all()
+
+#         # Get HR and Admin users
+#         hr_admin_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+
+#         # Combine all for conflict checking
+#         all_interviewers = interviewers + hr_admin_users
+#         all_interviewer_ids = [u.id for u in all_interviewers]
+
+#         # Scheduled interviews on that date
+#         scheduled_interviews = Interview.query.filter(
+#             Interview.date == interview_datetime.date(),
+#             Interview.interviewer_id.in_(all_interviewer_ids)
+#         ).all()
+
+#         # Identify busy interviewers
+#         busy_ids = set()
+#         for interview in scheduled_interviews:
+#             scheduled_datetime = datetime.combine(interview.date, interview.time)
+#             if abs(scheduled_datetime - interview_datetime) < timedelta(hours=1):
+#                 busy_ids.add(interview.interviewer_id)
+
+#         # Normal available interviewers
+#         available_interviewers = [
+#             {"id": i.id, "name": i.name}
+#             for i in interviewers if i.id not in busy_ids
+#         ]
+
+#         # HR interviewers include HR, Admin, and Interviewers
+#         all_hr_interviewers = interviewers + hr_admin_users
+#         available_hr_interviewers = [
+#             {"id": i.id, "name": f"{i.name} ({i.role.upper()})"}
+#             for i in all_hr_interviewers if i.id not in busy_ids
+#         ]
+
+#         return jsonify({
+#             "interviewers": available_interviewers,
+#             "hr_interviewers": available_hr_interviewers
+#         })
+
+#     except ValueError:
+#         return jsonify({"interviewers": [], "hr_interviewers": []})
+
     
 #View all applicants
 @bp.route('/filter_all_applicants')

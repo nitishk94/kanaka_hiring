@@ -47,7 +47,7 @@ class RecruitmentHistory(db.Model):
     hr_round_time = db.Column(Time)
     hr_round_comments = db.Column(db.Text, default=None)
     rejected = db.Column(db.Boolean, default=False)
-    current_stage = db.Column(db.Text, default='Need to schedule test')
+    current_stage = db.Column(db.Text, default='Need to Schedule Test or Interview')
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 
     applicant = db.relationship("Applicant", back_populates="history_entries")
@@ -61,44 +61,61 @@ class RecruitmentHistory(db.Model):
 
     def compute_current_stage(self):
         today = date.today()
-        hr_date = ensure_date(self.hr_round_date)
-        round2_date = ensure_date(self.interview_round_2_date)
-        round1_date = ensure_date(self.interview_round_1_date)
-        test_date = ensure_date(self.test_date)
+        applicant = self.applicant
 
-        hr_time = ensure_time(self.hr_round_time)
-        round2_time = ensure_time(self.interview_round_2_time)
-        round1_time = ensure_time(self.interview_round_1_time)
-
-        latest_hr = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='HR').order_by(Interview.id.desc()).first()
-        latest_round2 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='Round 2' or 'Client Round 2').order_by(Interview.id.desc()).first()
-        latest_round1 = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='Round 1' or 'Client Round 1').order_by(Interview.id.desc()).first()
-
-        if self.rejected:
+        # Priority overrides
+        if applicant.status == "Rejected" or self.rejected:
             return "Rejected"
-            
-        interview_rounds = [
-            (hr_date, hr_time, latest_hr, "HR round"),
-            (round2_date, round2_time, latest_round2, "Interview round 2"),
-            (round1_date, round1_time, latest_round1, "Interview round 1")
-        ]
-        
-        for interview_date, interview_time, interview, round_name in interview_rounds:
-            if interview_date:
-                if interview and interview_date >= today and not interview.completed:
-                    interviewer_name = self.get_interviewer_name(interview)
-                    return self.format_scheduled_interview(interview_date, interview_time, round_name, interviewer_name)
-                else:
-                    return f"{round_name} completed"
+        if applicant.status == "Joined":
+            return "Joined"
+        if applicant.status == "Offered":
+            return "Offered"
+        if applicant.status == "On Hold":
+            return "On Hold"
 
-        if test_date:
-            if test_date >= today:
-                return f"Test scheduled on {test_date.strftime('%Y-%m-%d')}"
-            elif test_date < today:
-                return "Check Results"
-            
-        return "Need to schedule test"
-        
+        # Latest interviews
+        latest_hr = Interview.query.filter_by(applicant_id=self.applicant_id, round_number='HR') \
+            .order_by(Interview.id.desc()).first()
+        latest_round2 = Interview.query.filter(
+            Interview.applicant_id == self.applicant_id,
+            Interview.round_number.in_(['Round 2', 'Client Round 2'])
+        ).order_by(Interview.id.desc()).first()
+        latest_round1 = Interview.query.filter(
+            Interview.applicant_id == self.applicant_id,
+            Interview.round_number.in_(['Round 1', 'Client Round 1'])
+        ).order_by(Interview.id.desc()).first()
+
+        # HR Round
+        if self.hr_round_date and not self.hr_round_comments:
+            return "HR Round Scheduled"
+        if self.hr_round_comments:
+            return "HR Round Completed"
+
+        # Interview Round 2
+        if self.interview_round_2_date and not self.interview_round_2_comments:
+            return "Interview Round 2 Scheduled"
+        if self.interview_round_2_comments and not self.hr_round_date:
+            return "Interview Round 2 Completed"
+
+        # Interview Round 1
+        if self.interview_round_1_date and not self.interview_round_1_comments:
+            return "Interview Round 1 Scheduled"
+        if self.interview_round_1_comments and not self.interview_round_2_date:
+            return "Interview Round 1 Completed"
+
+        # Test
+        if self.test_date:
+            if not self.test_result:
+                return "Test Scheduled"
+            elif self.test_result and not self.interview_round_1_date:
+                return "Test Completed"
+
+        # Fallbacks
+        if not self.test_date and not self.interview_round_1_date:
+            return "Need to Schedule Test or Interview"
+
+        return "In Progress"
+
 @event.listens_for(RecruitmentHistory, 'after_update')
 def after_history_update(mapper, connection, target):
     from myapp.models.applicants import Applicant
@@ -108,4 +125,3 @@ def after_history_update(mapper, connection, target):
         .where(Applicant.id == target.applicant_id)
         .values(current_stage=new_stage)
     )   
-
