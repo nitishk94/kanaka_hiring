@@ -158,11 +158,20 @@ def handle_upload_applicant():
     
     dob_str = request.form.get('dob')
     if dob_str:
+        # today = date.today()
+        try:
+            dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+            # today = date.today()
+        except (ValueError, TypeError):
+            flash("Invalid DOB!")
         dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
         today = date.today()
         age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
         if age < 18:
             flash("Invalid DOB, the candidate must be at least 18 years old.", "error")
+            return redirect(url_for('hr.show_upload_form'))
+        if age > 60:
+            flash("Invalid DOB, the candidate must be less than 60 years old.", "error")
             return redirect(url_for('hr.show_upload_form'))
     
 
@@ -558,7 +567,7 @@ def download_applicant_cv(id):
 @no_cache
 @login_required
 @role_required(*HR_ROLES)
-def schedule_interview(id):
+def view(id):
     if request.method == 'GET':
         current_date = date.today().isoformat()
         return render_template('hr/schedule_interview.html', current_date=current_date)
@@ -780,7 +789,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users =User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    users =User.query.filter(User.role.in_(['external_referrer', 'internal_referrer', 'hr', 'admin'])).all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -791,7 +800,7 @@ def view_referrals():
 def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
-    referral_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    referral_users = User.query.filter(User.role.in_(['external_referrer', 'internal_referrer', 'hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 
@@ -1559,6 +1568,53 @@ def test_result(id):
         db.session.commit()
         return render_template('hr/test_result.html',id=id, result=result)
 
+# @bp.route('/available_interviewers', methods=['GET'])
+# @no_cache
+# @login_required
+# @role_required(*HR_ROLES)
+# def available_interviewers():
+#     date_str = request.args.get('date')
+#     time_str = request.args.get('time')
+
+#     if not date_str or not time_str:
+#         return jsonify([])
+
+#     try:
+#         interview_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+
+#         if not is_future_or_today(interview_datetime.date()):
+#             return jsonify([])
+
+#         interviewers = User.query.filter_by(role='interviewer').all()
+#         hr_interviewers = User.query.filter_by(role in ['interviewer','hr','admin']).all()
+#         interviewer_ids = [i.id for i in interviewers]
+#         hr_interviewer_ids = [i.id for i in hr_interviewers]
+        
+#         scheduled_interviews = Interview.query.filter(
+#             Interview.date == interview_datetime.date(),
+#             Interview.interviewer_id.in_(interviewer_ids),
+#         ).all()
+
+#         busy_interviewers = set()
+
+#         for interview in scheduled_interviews:
+#             scheduled_datetime = datetime.combine(interview.date, interview.time)
+#             time_diff = abs((scheduled_datetime - interview_datetime))
+
+#             if time_diff < timedelta(hours=1):
+#                 busy_interviewers.add(interview.interviewer_id)
+
+#         available_interviewers = [
+#             {"id": interviewer.id, "name": interviewer.name}
+#             for interviewer in interviewers
+#             if interviewer.id not in busy_interviewers
+#         ]
+
+#         return jsonify(available_interviewers)
+
+#     except ValueError:
+#         return jsonify([])
+
 @bp.route('/available_interviewers', methods=['GET'])
 @no_cache
 @login_required
@@ -1568,41 +1624,58 @@ def available_interviewers():
     time_str = request.args.get('time')
 
     if not date_str or not time_str:
-        return jsonify([])
+        return jsonify({"interviewers": [], "hr_interviewers": []})
 
     try:
         interview_datetime = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
 
         if not is_future_or_today(interview_datetime.date()):
-            return jsonify([])
+            return jsonify({"interviewers": [], "hr_interviewers": []})
 
+        # Get normal interviewers
         interviewers = User.query.filter_by(role='interviewer').all()
-        interviewer_ids = [i.id for i in interviewers]
 
+        # Get HR and Admin users
+        hr_admin_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
+
+        # Combine all for conflict checking
+        all_interviewers = interviewers + hr_admin_users
+        all_interviewer_ids = [u.id for u in all_interviewers]
+
+        # Scheduled interviews on that date
         scheduled_interviews = Interview.query.filter(
             Interview.date == interview_datetime.date(),
-            Interview.interviewer_id.in_(interviewer_ids)
+            Interview.interviewer_id.in_(all_interviewer_ids)
         ).all()
 
-        busy_interviewers = set()
-
+        # Identify busy interviewers
+        busy_ids = set()
         for interview in scheduled_interviews:
             scheduled_datetime = datetime.combine(interview.date, interview.time)
-            time_diff = abs((scheduled_datetime - interview_datetime))
+            if abs(scheduled_datetime - interview_datetime) < timedelta(hours=1):
+                busy_ids.add(interview.interviewer_id)
 
-            if time_diff < timedelta(hours=1):
-                busy_interviewers.add(interview.interviewer_id)
-
+        # Normal available interviewers
         available_interviewers = [
-            {"id": interviewer.id, "name": interviewer.name}
-            for interviewer in interviewers
-            if interviewer.id not in busy_interviewers
+            {"id": i.id, "name": i.name}
+            for i in interviewers if i.id not in busy_ids
         ]
 
-        return jsonify(available_interviewers)
+        # HR interviewers include HR, Admin, and Interviewers
+        all_hr_interviewers = interviewers + hr_admin_users
+        available_hr_interviewers = [
+            {"id": i.id, "name": f"{i.name} ({i.role.upper()})"}
+            for i in all_hr_interviewers if i.id not in busy_ids
+        ]
+
+        return jsonify({
+            "interviewers": available_interviewers,
+            "hr_interviewers": available_hr_interviewers
+        })
 
     except ValueError:
-        return jsonify([])
+        return jsonify({"interviewers": [], "hr_interviewers": []})
+
     
 #View all applicants
 @bp.route('/filter_all_applicants')
