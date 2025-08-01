@@ -780,7 +780,7 @@ def reject_application(id):
 @role_required(*HR_ROLES)
 def view_referrals():
     referrals = Referral.query.all()
-    users =User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    users =User.query.filter(User.role.in_(['external_referrer', 'internal_referrer', 'hr', 'admin'])).all()
     jobs= JobRequirement.query.order_by(JobRequirement.position).all()
     return render_template('hr/view_referrals.html', referrals=referrals,jobs=jobs,users=users)
 
@@ -791,7 +791,7 @@ def view_referrals():
 def filter_referrals():
     referral_id = request.args.get('referral_id', type=int)
     job_id = request.args.get('job_id', type=int)
-    referral_users = User.query.filter(User.role.in_(['referrer', 'hr', 'admin'])).all()
+    referral_users = User.query.filter(User.role.in_(['external_referrer', 'internal_referrer', 'hr', 'admin'])).all()
     jobs = JobRequirement.query.order_by(JobRequirement.position).all()
     query = Referral.query.outerjoin(Referral.job).options(joinedload(Referral.job))
 

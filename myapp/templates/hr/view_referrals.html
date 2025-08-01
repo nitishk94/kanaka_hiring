@@ -25,9 +25,9 @@
                                 <select name="referral_id" id="referral_id" class="select select-bordered">
                                     <option value="">-- All --</option>
                                     <optgroup label="Referrers">
-                                        {% for user in users if user.role == 'referrer' %}
+                                        {% for user in users if user.role in ['internal_referrer', 'external_referrer'] %}
                                             <option value="{{ user.id }}" {% if request.args.get('referral_id')|int == user.id %}selected{% endif %}>
-                                                {{ user.name }}
+                                                {{ user.name }} ({{ user.role|capitalize }})
                                             </option>
                                         {% endfor %}
                                     </optgroup>
@@ -80,6 +80,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Referred By</th>
+                    <th>Referral Type</th>
                     <th>Referral Date</th>
                     <th>Referred for Position</th>
                     <th>Actions</th>
@@ -90,6 +91,7 @@
                 <tr>
                     <td>{{ referral.name }}</td>
                     <td>{{ referral.referred_by }}</td>
+                    <td>{{ 'External' if referral.is_external_referrer else 'Internal'}}</td>
                     <td>{{ referral.referral_date }}</td>
                     <td>{{ referral.job.position if referral.job_id else 'N/A' }}</td>
                     <td>
