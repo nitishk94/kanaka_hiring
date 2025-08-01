@@ -407,7 +407,8 @@ def update_applicant(id):
 def view_applicant(id):
     update_status(id)
     applicant = Applicant.query.get_or_404(id)
-    interviewers = User.query.filter_by(role='interviewer').all()
+    # interviewers = User.query.filter_by(role='interviewer').all()
+    interviewers = User.query.filter(User.role.in_(['hr','admin','interviewer'])).all()
     current_date = date.today().isoformat() 
     
     # Get the recruitment history record
@@ -711,7 +712,6 @@ def schedule_interview(id):
     return redirect(url_for('hr.view_applicant', id=id))
 
 
-# ??? where used
 @bp.route('/offered_application/<int:id>', methods=['POST'])
 @no_cache
 @login_required
@@ -1576,7 +1576,8 @@ def available_interviewers():
         if not is_future_or_today(interview_datetime.date()):
             return jsonify([])
 
-        interviewers = User.query.filter_by(role='interviewer').all()
+        # interviewers = User.query.filter_by(role='interviewer').all()
+        interviewers = User.query.filter(User.role.in_(['hr','admin','interviewer'])).all()
         interviewer_ids = [i.id for i in interviewers]
 
         scheduled_interviews = Interview.query.filter(
@@ -1594,7 +1595,7 @@ def available_interviewers():
                 busy_interviewers.add(interview.interviewer_id)
 
         available_interviewers = [
-            {"id": interviewer.id, "name": interviewer.name}
+            {"id": interviewer.id, "name": interviewer.name, "role": interviewer.role}
             for interviewer in interviewers
             if interviewer.id not in busy_interviewers
         ]

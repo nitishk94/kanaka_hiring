@@ -31,7 +31,9 @@ def view_interviews():
         return render_template('interviewer/interviews.html', interviews=interviews, applicants=applicants)
     else:
         hr_users = User.query.filter(User.role.in_(['hr', 'admin'])).all()
-        interviewers = User.query.filter_by(role='interviewer').all()
+        # interviewers = User.query.filter_by(role='interviewer').all()
+        interviewers = User.query.filter(User.role.in_(['hr', 'admin','interviewer'])).all()
+
         
         # Get interviews with relationships
         interviews = db.session.query(Interview)\
