@@ -9,7 +9,7 @@
         <div class="flex items-center gap-4 flex-wrap">
             <form method="GET" action="{{ url_for('hr.search_sort_filter_applicants') }}" class="flex gap-2 min-w-[250px] relative">
             <div class="relative w-full">
-                <input
+                <input 
                     type="text"
                     name="query"
                     placeholder="Search jobs..."
@@ -39,7 +39,7 @@
                         <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
                             <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
                             <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
-                            <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR Name (A–Z)</option>
+                            <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR/Vendor Name (A–Z)</option>
                         </select>
                     
                 </div>
@@ -57,7 +57,7 @@
                             <label for="hr_id" class="font-semibold mb-1">HR:</label>
                             <select name="hr_id" id="hr_id" class="select select-bordered">
                                 <option value="">-- All HR --</option>
-                                {% for hr in users %}
+                                {% for hr in users if hr.role == "hr" or hr.role == "admin"%}
                                     <option value="{{ hr.id }}"
                                         {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
                                         {{ hr.name if hr.name else hr.username }}
@@ -65,6 +65,21 @@
                                 {% endfor %}
                             </select>
                         </div>
+                        <br>
+                        <!-- External referrer Filter -->
+                        <div class="flex flex-col">
+                            <label for="external_id" class="font-semibold mb-1">Vendors:</label>
+                            <select name="external_id" id="external_id" class="select select-bordered">
+                                <option value="">-- All Vendors --</option>
+                                {% for vendor in users if vendor.role == 'external_referrer' %}
+                                    <option value="{{ vendor.id }}"
+                                        {% if request.args.get('external_id')|string == vendor.id|string %}selected{% endif %}>
+                                        {{ vendor.name if vendor.name else vendor.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
                         <br>
                         <!-- Job Filter -->
                         <div class="flex flex-col">
@@ -117,7 +132,7 @@
                     <th>Phone</th>
                     <th>Experience</th>
                     <th>Notice Period</th>
-                    <th>HR</th>
+                    <th>HR/Vendor</th>
                     <th>Job Position</th>
                     <th>Current Stage</th>
                     <th>Actions</th>
