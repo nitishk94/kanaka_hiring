@@ -195,6 +195,7 @@ def handle_upload_applicant():
             cv_file_path = file_path,
             is_external_referrer = True
         )
+        
         db.session.add(new_referral)
 
         history = RecruitmentHistory(

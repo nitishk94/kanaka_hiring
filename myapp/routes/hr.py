@@ -225,6 +225,7 @@ def handle_upload_applicant():
         job_id=int_or_none(request.form.get('position')) if not get_bool('is_fresher') else None,
     )
 
+
     # Save file
     upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'applicants')
     os.makedirs(upload_dir, exist_ok=True)
@@ -232,6 +233,7 @@ def handle_upload_applicant():
     file_path = os.path.join(upload_dir, filename)
     file.save(file_path)
     new_applicant.cv_file_path = file_path
+
 
     # Insert into DB
     try:
@@ -245,9 +247,26 @@ def handle_upload_applicant():
         db.session.add(history)
         db.session.commit()
 
+        if(new_applicant.is_referred):
+            new_referral = Referral(
+                name=new_applicant.name,
+                applicant_id=new_applicant.id,
+                is_fresher=is_fresher,
+                job_id=new_applicant.job_id, 
+                referrer_id=new_applicant.referred_by,
+                referred_by=User.query.get(current_user.id).name,
+                referral_date=date.today(),
+                cv_file_path = file_path,
+                is_external_referrer = False
+            )
+
+        db.session.add(new_referral)
+        db.session.commit()
+
         flash('New applicant successfully created!', 'success')
         current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
         return redirect(url_for('hr.show_upload_form'))
+    
 
     except IntegrityError as e:
         db.session.rollback()
@@ -429,7 +448,7 @@ def view_applicant(id):
         .order_by(RecruitmentHistory.updated_at.desc())
         .first()
     )
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, hr_interviewers=hr_interviewers, current_date = current_date, recruitment_history = recruitment_history)
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, hr_interviewers=interviewers, current_date = current_date, recruitment_history = recruitment_history)
 
 
 @bp.route('/filter_applicants')
