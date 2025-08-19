@@ -218,7 +218,7 @@ def handle_upload_applicant():
         reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
         comments=request.form.get('comments') or 'No comments',
         last_applied=date.today(),
-        current_stage='Need to schedule test/interview',
+        current_stage='Need to Schedule Test or Interview',
         uploaded_by=current_user.id,
         is_referred=get_bool('is_referred'),
         referred_by=int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None,
@@ -400,6 +400,17 @@ def update_applicant(id):
         session['form_data'] = request.form.to_dict()
         return redirect(url_for('show_update_form'), id=id)
 
+# @bp.route('/view_applicant/<int:id>')
+# @no_cache
+# @login_required
+# @role_required(*HR_ROLES)
+# def view_applicant(id):
+#     update_status(id)
+#     applicant = Applicant.query.get_or_404(id)
+#     interviewers = User.query.filter_by(role='interviewer').all()
+#     current_date = date.today().isoformat() 
+#     return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date)
+
 @bp.route('/view_applicant/<int:id>')
 @no_cache
 @login_required
@@ -418,7 +429,8 @@ def view_applicant(id):
         .order_by(RecruitmentHistory.updated_at.desc())
         .first()
     )
-    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, current_date = current_date, recruitment_history = recruitment_history)
+    return render_template('hr/view_applicant.html', applicant=applicant, interviewers=interviewers, hr_interviewers=hr_interviewers, current_date = current_date, recruitment_history = recruitment_history)
+
 
 @bp.route('/filter_applicants')
 @no_cache
@@ -614,11 +626,11 @@ def schedule_interview(id):
             history.hr_round_time = time
     else:
         if not history.interview_round_1_date:
-            round = 1
+            round = 'Client Round 1'
             history.interview_round_1_date = date
             history.interview_round_1_time = time
         elif not history.interview_round_2_date:
-            round = 2
+            round = 'Client Round 2'
             history.interview_round_2_date = date
             history.interview_round_2_time = time
         else:
@@ -626,7 +638,7 @@ def schedule_interview(id):
             history.hr_round_date = date
             history.hr_round_time = time
     
-    existing = Interview.query.filter_by(applicant_id=id, round_number=round).first()
+    existing = Interview.query.filter_by(applicant_id=id, round_number=str(round)).first()
     if existing:
         flash("This interview round has already been scheduled.", "warning")
         return redirect(url_for('hr.view_applicant', id=id))
@@ -720,7 +732,7 @@ def offered_application(id):
     applicant = Applicant.query.get_or_404(id)
     applicant.status = 'Offered'
     db.session.commit()
-    current_app.logger.info(f"Candidate {applicant.name} offered a job")
+    current_app.logger.info(f"Candidate {applicant.name} is offered a job")
     flash('Applicant has been offered a job.', 'success')
     return redirect(url_for('hr.view_applicant', id=id))
 
@@ -922,7 +934,7 @@ def upload_referral_applicant(referral_id,referrer_id, name):
         reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
         comments=request.form.get('comments') or 'No comments',
         last_applied=date.today(),
-        current_stage='Need to schedule test/interview',
+        current_stage='Need to Schedule Test or Interview',
         uploaded_by=current_user.id,
         is_referred=True,
         referred_by=int(referrer_id),
@@ -1089,7 +1101,7 @@ def reschedule_interview(id):
         flash('No active interviews found to reschedule.', 'error')
         return redirect(url_for('hr.view_applicant', id=id))
     
-    round_number = existing_interviews[0].round_number
+    round_number = str(existing_interviews[0].round_number)
     
     interviewers = User.query.filter(User.id.in_(interviewer_ids)).all()
     if len(interviewers) != len(interviewer_ids):
@@ -1108,7 +1120,7 @@ def reschedule_interview(id):
             applicant_id=id,
             date=date,
             time=time,
-            round_number=round_number,
+            round_number=str(round_number),
             interviewer_id=interviewers[i].id,
             scheduler_id=current_user.id
         )

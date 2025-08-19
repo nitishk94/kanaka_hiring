@@ -165,7 +165,7 @@ def handle_upload_applicant():
         reason_for_change=request.form.get('reason_for_change') or 'Not Provided',
         comments=request.form.get('comments') or 'No comments',
         last_applied=date.today(),
-        current_stage='Need to schedule test/interview',
+        current_stage='Need to Schedule Test or Interview',
         uploaded_by=current_user.id,
         is_referred=get_bool('is_referred'),
         referred_by=int_or_none(request.form.get('referred_by')) if get_bool('is_referred') else None,
