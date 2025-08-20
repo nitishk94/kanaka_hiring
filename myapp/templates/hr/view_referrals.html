@@ -80,6 +80,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Referred By</th>
+                    <th>Referral Type</th>
                     <th>Referral Date</th>
                     <th>Referred for Position</th>
                     <th>Actions</th>
@@ -90,6 +91,7 @@
                 <tr>
                     <td>{{ referral.name }}</td>
                     <td>{{ referral.referred_by }}</td>
+                    <td>{{ 'External' if referral.is_external_referrer else 'Internal'}}</td>
                     <td>{{ referral.referral_date }}</td>
                     <td>{{ referral.job.position if referral.job_id else 'N/A' }}</td>
                     <td>

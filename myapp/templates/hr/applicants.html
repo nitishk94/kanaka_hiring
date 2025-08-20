@@ -7,32 +7,39 @@
     <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h1 class="text-3xl font-bold">Active Applicants List</h1>
         <div class="flex items-center gap-4 flex-wrap">
-            <form method="GET" action="{{ url_for('hr.search_sort_filter_applicants') }}"
-                class="flex gap-2 min-w-[250px] relative">
-                <div class="relative w-full">
-                    <input type="text" name="query" placeholder="Search jobs..."
-                        class="input input-bordered w-full pr-10" value="{{ search_query or '' }}" id="searchInput" />
-                    <button type="button" id="clearSearchBtn"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
-                        style="display: {{ 'inline' if search_query|default('') else 'none' }};">
-                        &#10005;
-                    </button>
+            <form method="GET" action="{{ url_for('hr.search_sort_filter_applicants') }}" class="flex gap-2 min-w-[250px] relative">
+            <div class="relative w-full">
+                <input 
+                    type="text"
+                    name="query"
+                    placeholder="Search jobs..."
+                    class="input input-bordered w-full pr-10"
+                    value="{{ search_query or '' }}"
+                    id="searchInput"
+                />
+                <button
+                    type="button"
+                    id="clearSearchBtn"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 focus:outline-none"
+                    style="display: {{ 'inline' if search_query|default('') else 'none' }};"
+                >
+                    &#10005;
+                </button>
+            </div>
+            <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
+        
+            <!-- Sort By Dropdown (identical to Filter) -->
+            <div class="dropdown dropdown-end ">
+                <div tabindex="0" role="button" class="btn btn-outline btn-primary w-20">
+                    Sort By
                 </div>
-                <button type="submit" class="btn btn-primary whitespace-nowrap">Search</button>
-
-                <!-- Sort By Dropdown (identical to Filter) -->
-                <div class="dropdown dropdown-end ">
-                    <div tabindex="0" role="button" class="btn btn-outline btn-primary w-20">
-                        Sort By
-                    </div>
-                    <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
-
+                <div tabindex="0" class="dropdown-content z-[1] menu p-4 shadow bg-base-100 rounded-box w-64">
+                    
                         <input type="hidden" name="query" value="{{ search_query or '' }}">
                         <select name="sort_by" class="select select-bordered" onchange="this.form.submit()">
-                            <option value="date" {% if sort_by=='date' %}selected{% endif %}>Application Date (Latest)
-                            </option>
-                            <option value="name" {% if sort_by=='name' %}selected{% endif %}>Name (A–Z)</option>
-                            <option value="hr" {% if sort_by=='hr' %}selected{% endif %}>HR Name (A–Z)</option>
+                            <option value="date" {% if sort_by == 'date' %}selected{% endif %}>Application Date (Latest)</option>
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name (A–Z)</option>
+                            <option value="hr" {% if sort_by == 'hr' %}selected{% endif %}>HR/Vendor Name (A–Z)</option>
                         </select>
 
                     </div>
@@ -50,14 +57,29 @@
                             <label for="hr_id" class="font-semibold mb-1">HR:</label>
                             <select name="hr_id" id="hr_id" class="select select-bordered">
                                 <option value="">-- All HR --</option>
-                                {% for hr in users %}
-                                <option value="{{ hr.id }}" {% if request.args.get('hr_id')|string==hr.id|string
-                                    %}selected{% endif %}>
-                                    {{ hr.name if hr.name else hr.username }}
-                                </option>
+                                {% for hr in users if hr.role == "hr" or hr.role == "admin"%}
+                                    <option value="{{ hr.id }}"
+                                        {% if request.args.get('hr_id')|string == hr.id|string %}selected{% endif %}>
+                                        {{ hr.name if hr.name else hr.username }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </div>
+                        <br>
+                        <!-- External referrer Filter -->
+                        <div class="flex flex-col">
+                            <label for="external_id" class="font-semibold mb-1">Vendors:</label>
+                            <select name="external_id" id="external_id" class="select select-bordered">
+                                <option value="">-- All Vendors --</option>
+                                {% for vendor in users if vendor.role == 'external_referrer' %}
+                                    <option value="{{ vendor.id }}"
+                                        {% if request.args.get('external_id')|string == vendor.id|string %}selected{% endif %}>
+                                        {{ vendor.name if vendor.name else vendor.username }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
                         <br>
                         <!-- Job Filter -->
                         <div class="flex flex-col">
@@ -113,7 +135,7 @@
                     <th>Phone</th>
                     <th>Experience</th>
                     <th>Notice Period</th>
-                    <th>HR</th>
+                    <th>HR/Vendor</th>
                     <th>Job Position</th>
                     <th>Current Stage</th>
                     <th>Actions</th>

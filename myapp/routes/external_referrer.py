@@ -195,6 +195,7 @@ def handle_upload_applicant():
             cv_file_path = file_path,
             is_external_referrer = True
         )
+        
         db.session.add(new_referral)
 
         history = RecruitmentHistory(
@@ -204,8 +205,7 @@ def handle_upload_applicant():
         db.session.add(history)
         db.session.commit()
 
-        flash('New applicant successfully created!', 'success')
-        flash('New referral successfully created!', 'success')
+        flash('Referral submitted successfully', 'success')
         current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")
         current_app.logger.info(f"New referral (Name = {new_referral.name.title()}) added by {current_user.username}")
         return redirect(url_for('external_referrer.show_upload_form'))

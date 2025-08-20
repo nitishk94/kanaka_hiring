@@ -32,7 +32,8 @@
                         <option value="">All Interviewers</option>
                         {% for interviewer in interviewers %}
                             <option value="{{ interviewer.id }}" {% if request.args.get('interviewer_id')|string == interviewer.id|string %}selected{% endif %}>
-                                {{ interviewer.name if interviewer.name else interviewer.username }}
+                                {{ interviewer.name if interviewer.name else interviewer.username }} ({{ interviewer.role|capitalize }})
+                                
                             </option>
                         {% endfor %}
                     </select>
