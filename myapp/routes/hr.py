@@ -260,8 +260,8 @@ def handle_upload_applicant():
                 is_external_referrer = False
             )
 
-        db.session.add(new_referral)
-        db.session.commit()
+            db.session.add(new_referral)
+            db.session.commit()
 
         flash('New applicant successfully created!', 'success')
         current_app.logger.info(f"New applicant (Name: {new_applicant.name}) added by {current_user.username}")

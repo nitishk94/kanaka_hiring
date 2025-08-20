@@ -4,12 +4,12 @@
 
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
-            <p class="text-sm sm:text-base text-gray-600">Welcome back, {{ current_user.username }}</p>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="md:w-1/2">
+            <h1 class="text-3xl  font-bold ">Admin Dashboard</h1>
+            <p class="text-sm-base text-gray-600">Welcome back, {{ current_user.username }}</p>
         </div>
-        <div class="w-full flex justify-center lg:justify-end mt-6">
+        <div class="w-full md:w-1/2 flex justify-center md:justify-end mt-6">
             <div class="stats shadow ">
                 <div class="stat">
                     <div class="stat-figure text-primary">
@@ -98,7 +98,7 @@
 
             <a href="{{ url_for('hr.show_job_form') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <div class="card-body">
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 md:mt-4 lg:mt-3">
                         <div class="bg-sky-100 p-4 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 20h9" />
@@ -132,7 +132,7 @@
 
         <a href="{{ url_for('hr.view_referrals') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 lg: mt-3">
                     <div class="bg-red-200 p-4 rounded-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -168,7 +168,7 @@
 
             <a href="{{ url_for('admin.view_logs') }}" class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300">
             <div class="card-body">
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 md: mt-2 lg:mt-3">
                     <div class="bg-teal-100 p-4 rounded-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-teal-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 20v-6M6 20V10M18 20V4"></path>
